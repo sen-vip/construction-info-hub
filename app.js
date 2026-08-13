@@ -848,8 +848,8 @@
     if (!state.projects.length) { showToast('내보낼 공사가 없습니다.', 'warn'); return; }
     const years = [...new Set(state.projects.map(p=>p.fiscalYear).filter(Boolean))].sort().reverse();
     openModal({
-      eyebrow: '감사용 공사이력현황', title: '기존 학교 양식으로 내보내기',
-      body: `<div class="notice">업로드해주신 감사용 공사이력현황 양식의 열과 서식을 기준으로 생성합니다.</div><div class="field" style="margin-top:16px"><label>범위</label><select id="auditExportYear"><option value="all">전체 연도 (${state.projects.length}건)</option>${years.map(y=>`<option value="${e(y)}">${e(y)}회계연도 (${state.projects.filter(p=>p.fiscalYear===y).length}건)</option>`).join('')}</select></div>`,
+      eyebrow: '학교 공사 이력 현황', title: '학교 양식으로 내보내기',
+      body: `<div class="notice">새로 정리한 학교 공사 이력 현황 양식의 열과 서식을 기준으로 생성합니다.</div><div class="field" style="margin-top:16px"><label>범위</label><select id="auditExportYear"><option value="all">전체 연도 (${state.projects.length}건)</option>${years.map(y=>`<option value="${e(y)}">${e(y)}회계연도 (${state.projects.filter(p=>p.fiscalYear===y).length}건)</option>`).join('')}</select></div>`,
       actions: `<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="auditExportConfirm">엑셀 받기</button>`
     });
     modalActions.querySelector('[data-modal-close]').addEventListener('click', closeModal);
@@ -958,7 +958,7 @@
       body:`<div class="notice"><strong>핵심 원칙</strong><br>같은 공사정보는 한 번 입력하고 다시 입력하지 않습니다.</div>
       <div style="display:grid;gap:16px;margin-top:18px;font-size:14px">
         <div><strong>1. 공사를 여러 건 저장</strong><p class="muted">전기·건축·체육관 공사를 동시에 등록해도 각 공사는 독립적으로 자동저장됩니다.</p></div>
-        <div><strong>2. 기존 엑셀 재사용</strong><p class="muted">감사용 공사이력현황.xlsx 또는 K-에듀파인 자료관리목록.xlsx를 불러오면 새 공사를 만들거나 기존 공사의 빈 정보를 보완합니다.</p></div>
+        <div><strong>2. 기존 엑셀 재사용</strong><p class="muted">학교 공사 이력 현황.xlsx 또는 K-에듀파인 자료관리목록.xlsx를 불러오면 새 공사를 만들거나 기존 공사의 빈 정보를 보완합니다.</p></div>
         <div><strong>3. 업체 재사용</strong><p class="muted">업체명·대표자·사업자번호·주소·전화·면허를 업체 보관함에 저장해 다음 공사에서 다시 고를 수 있습니다.</p></div>
         <div><strong>4. 인수인계</strong><p class="muted">전체 백업(JSON)은 앱 복원용이고, 공사이력 엑셀은 감사·업무용 결과물입니다.</p></div>
         <div><strong>보안</strong><p class="muted">공사정보와 엑셀 내용은 서버로 전송하지 않습니다. 브라우저 저장소에 남으므로 공용 Windows 계정에서는 PC 접근통제와 정기 백업이 필요합니다.</p></div>

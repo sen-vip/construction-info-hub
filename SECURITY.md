@@ -7,7 +7,7 @@
 ## 네트워크로 보내지 않는 것
 
 - 사용자가 입력한 공사정보
-- 업로드한 감사용 공사이력 Excel 내용
+- 업로드한 학교 공사 이력 Excel 내용
 - 업로드한 K-에듀파인 자료관리목록 내용
 - 전체 백업 JSON 내용
 
@@ -33,6 +33,6 @@ Vercel용 `vercel.json`에는 CSP, `X-Content-Type-Options`, `Referrer-Policy`, 
 
 공사정보는 URL query string이나 hash에 포함하지 않습니다.
 
-## 포함된 감사용 템플릿
+## 포함된 공사이력 템플릿
 
-배포용 `assets/audit-template.xlsx`는 원본의 개인 작성자명과 로컬 PC 경로 메타데이터를 제거하고 샘플 공사행을 비운 사본입니다.
+배포용 `assets/audit-template.xlsx`는 새 `학교 공사 이력 현황.xlsx`의 화면 서식은 유지하면서 개인 작성자명과 로컬 PC 경로 같은 문서 메타데이터가 포함되지 않도록 정리한 사본입니다. 샘플 행의 값은 실제 다운로드 시 공사 데이터로 대체됩니다.

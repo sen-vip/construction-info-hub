@@ -7,7 +7,7 @@
   const AUDIT_HEADERS = [
     '회계연도','번호','공사명','계약상대자','계약방법','계약금액','예정가격','낙찰율 ',
     'G2B/S2B','계약일','착공일','현장대리인\n자격증종류','준공기한','준공일','준공검사원발행일',
-    '준공검사원 문서등록일','준공검사조서작성일','선금지급여부','세금계산서 발행일','지출일',
+    '준공검사원 문서등록일','준공검사조서작성일(3천이하 생략가능)','선금지급여부','세금계산서 발행일','지출일',
     '지출금액','하자보증서/각서','등록면허종류','하자기간(~','~까지)','전화번호','대표','사업자번호',
     '재원구분','공사대장출력','비고'
   ];
@@ -56,11 +56,11 @@
 
   function parseSharedStrings(xml = '') {
     const out = [];
-    const siRe = /<si\b[^>]*>([\s\S]*?)<\/si>/g;
+    const siRe = /<(?:[A-Za-z_][\w.-]*:)?si\b[^>]*>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?si>/g;
     let m;
     while ((m = siRe.exec(xml))) {
       const chunks = [];
-      const tRe = /<t\b[^>]*>([\s\S]*?)<\/t>/g;
+      const tRe = /<(?:[A-Za-z_][\w.-]*:)?t\b[^>]*>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?t>/g;
       let tm;
       while ((tm = tRe.exec(m[1]))) chunks.push(decodeXml(tm[1]));
       out.push(chunks.join(''));
@@ -70,7 +70,7 @@
 
   function parseSheetCells(xml = '', sharedStrings = []) {
     const cells = new Map();
-    const re = /<c\b([^>]*)\/>|<c\b([^>]*)>([\s\S]*?)<\/c>/g;
+    const re = /<(?:[A-Za-z_][\w.-]*:)?c\b([^>]*)\/>|<(?:[A-Za-z_][\w.-]*:)?c\b([^>]*)>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?c>/g;
     let m;
     while ((m = re.exec(xml))) {
       const attrs = m[1] || m[2] || '';
@@ -81,12 +81,12 @@
       let value = '';
       if (type === 'inlineStr') {
         const parts = [];
-        const tr = /<t\b[^>]*>([\s\S]*?)<\/t>/g;
+        const tr = /<(?:[A-Za-z_][\w.-]*:)?t\b[^>]*>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?t>/g;
         let tm;
         while ((tm = tr.exec(body))) parts.push(decodeXml(tm[1]));
         value = parts.join('');
       } else {
-        const vm = /<v>([\s\S]*?)<\/v>/.exec(body);
+        const vm = /<(?:[A-Za-z_][\w.-]*:)?v>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?v>/.exec(body);
         const raw = vm ? decodeXml(vm[1]) : '';
         if (type === 's' && raw !== '') value = sharedStrings[Number(raw)] ?? '';
         else value = raw;
@@ -116,7 +116,7 @@
 
   async function firstSheetPath(zip) {
     const wbXml = await zip.file('xl/workbook.xml').async('string');
-    const id = /<sheet\b[^>]*r:id="([^"]+)"/.exec(wbXml)?.[1];
+    const id = /<(?:[A-Za-z_][\w.-]*:)?sheet\b[^>]*r:id="([^"]+)"/.exec(wbXml)?.[1];
     if (!id) return 'xl/worksheets/sheet1.xml';
     const relXml = await zip.file('xl/_rels/workbook.xml.rels').async('string');
     const relRe = /<Relationship\b[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"[^>]*\/?\s*>/g;
@@ -188,10 +188,21 @@
     return dateIso ? dateIso.slice(0, 4) : cleanText(fallback);
   }
 
+  function findAuditHeaderRow(cells) {
+    const last = Math.min(maxRow(cells), 12);
+    for (let r = 1; r <= last; r++) {
+      const row = rowMap(cells, r);
+      if (cleanText(row.A) === '회계연도' && cleanText(row.C) === '공사명') return r;
+    }
+    return 0;
+  }
+
   function parseAudit(cells) {
     const projects = [];
     const last = maxRow(cells);
-    for (let r = 5; r <= last; r++) {
+    const headerRow = findAuditHeaderRow(cells);
+    if (!headerRow) return { type: 'audit', label: '학교 공사 이력 현황', projects, ignored: 0 };
+    for (let r = headerRow + 1; r <= last; r++) {
       const row = rowMap(cells, r);
       const projectName = cleanText(row.C);
       if (!projectName) continue;
@@ -232,7 +243,7 @@
         sourceUpdatedAt: new Date().toISOString()
       });
     }
-    return { type: 'audit', label: '감사용 공사이력현황', projects, ignored: 0 };
+    return { type: 'audit', label: '학교 공사 이력 현황', projects, ignored: 0 };
   }
 
   function parseEdufine(cells) {
@@ -291,11 +302,12 @@
 
   async function parseImport(file) {
     const { cells } = await readWorkbook(file);
-    const isAudit = cleanText(cells.get('A4')) === '회계연도' && cleanText(cells.get('C4')) === '공사명';
+    const auditHeaderRow = findAuditHeaderRow(cells);
+    const isAudit = auditHeaderRow > 0;
     const isEdufine = cleanText(cells.get('A3')) === '계약번호' && cleanText(cells.get('E3')) === '계약명';
     if (isAudit) return parseAudit(cells);
     if (isEdufine) return parseEdufine(cells);
-    throw new Error('지원하는 엑셀 형식을 찾지 못했습니다. 감사용 공사이력현황 또는 K-에듀파인 자료관리목록인지 확인해주세요.');
+    throw new Error('지원하는 엑셀 형식을 찾지 못했습니다. 학교 공사 이력 현황 또는 K-에듀파인 자료관리목록인지 확인해주세요.');
   }
 
   function projectToAuditRow(p, index) {
@@ -334,42 +346,72 @@
     ];
   }
 
-  function cellStyleMap(rowXml) {
+  function cellStyleMap(rowXml, rowNum) {
     const map = {};
-    const re = /<c\b([^>]*)\/>|<c\b([^>]*)>([\s\S]*?)<\/c>/g;
+    const re = /<(?:[A-Za-z_][\w.-]*:)?c\b([^>]*)\/>|<(?:[A-Za-z_][\w.-]*:)?c\b([^>]*)>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?c>/g;
     let m;
     while ((m = re.exec(rowXml))) {
       const attrs = m[1] || m[2] || '';
-      const address = /\br="([A-Z]+)5"/.exec(attrs)?.[1];
+      const address = new RegExp(`\\br="([A-Z]+)${rowNum}"`).exec(attrs)?.[1];
       if (!address) continue;
       map[address] = /\bs="([^"]+)"/.exec(attrs)?.[1] || '';
     }
     return map;
   }
 
-  function cellXml(col, rowNum, value, style) {
+  function rowOpenTagFromTemplate(rowXml, rowNum) {
+    const match = /<((?:[A-Za-z_][\w.-]*:)?row)\b([^>]*)>/.exec(rowXml);
+    const tag = match?.[1] || 'row';
+    const attrs = match?.[2] || '';
+    let next = attrs.replace(/\br="\d+"/, `r="${rowNum}"`);
+    if (!/\br="/.test(next)) next = ` r="${rowNum}"${next}`;
+    return `<${tag}${next}>`;
+  }
+
+  function xmlPrefixFromTemplate(rowXml) {
+    return /<([A-Za-z_][\w.-]*:)c\b/.exec(rowXml)?.[1] || '';
+  }
+
+  function rowTagFromTemplate(rowXml) {
+    return /<((?:[A-Za-z_][\w.-]*:)?row)\b/.exec(rowXml)?.[1] || 'row';
+  }
+
+  function cellXml(col, rowNum, value, style, prefix = '') {
     const address = `${col}${rowNum}`;
     const s = style ? ` s="${style}"` : '';
-    if (value === '' || value == null) return `<c r="${address}"${s}/>`;
-    if (typeof value === 'number' && Number.isFinite(value)) return `<c r="${address}"${s}><v>${value}</v></c>`;
+    const c = `${prefix}c`, v = `${prefix}v`, is = `${prefix}is`, t = `${prefix}t`;
+    if (value === '' || value == null) return `<${c} r="${address}"${s}/>`;
+    if (typeof value === 'number' && Number.isFinite(value)) return `<${c} r="${address}"${s}><${v}>${value}</${v}></${c}>`;
     const text = escapeXml(value);
-    return `<c r="${address}"${s} t="inlineStr"><is><t xml:space="preserve">${text}</t></is></c>`;
+    return `<${c} r="${address}"${s} t="inlineStr"><${is}><${t} xml:space="preserve">${text}</${t}></${is}></${c}>`;
   }
 
   async function exportAuditWorkbook(projects, options = {}) {
     let buffer = options.templateBuffer || null;
     if (!buffer) {
       const response = await fetch('./assets/audit-template.xlsx', { cache: 'no-store' });
-      if (!response.ok) throw new Error('감사용 공사이력 템플릿을 불러오지 못했습니다.');
+      if (!response.ok) throw new Error('학교 공사 이력 현황 템플릿을 불러오지 못했습니다.');
       buffer = await response.arrayBuffer();
     }
     const zip = await JSZipLib.loadAsync(buffer);
     const path = await firstSheetPath(zip);
     let xml = await zip.file(path).async('string');
-    const templateRow = /<row\b[^>]*r="5"[^>]*>[\s\S]*?<\/row>/.exec(xml)?.[0];
-    if (!templateRow) throw new Error('감사용 템플릿의 데이터 행을 찾지 못했습니다.');
-    const styles = cellStyleMap(templateRow);
-    const rows = [];
+
+    let shared = [];
+    if (zip.file('xl/sharedStrings.xml')) {
+      shared = parseSharedStrings(await zip.file('xl/sharedStrings.xml').async('string'));
+    }
+    const templateCells = parseSheetCells(xml, shared);
+    const headerRow = findAuditHeaderRow(templateCells);
+    if (!headerRow) throw new Error('학교 공사 이력 현황 템플릿의 헤더를 찾지 못했습니다.');
+    const dataRow = headerRow + 1;
+    const templateRowRe = new RegExp(`<(?:[A-Za-z_][\\w.-]*:)?row\\b[^>]*r="${dataRow}"[^>]*>[\\s\\S]*?<\\/(?:[A-Za-z_][\\w.-]*:)?row>`);
+    const templateRow = templateRowRe.exec(xml)?.[0];
+    if (!templateRow) throw new Error('학교 공사 이력 현황 템플릿의 데이터 행을 찾지 못했습니다.');
+    const styles = cellStyleMap(templateRow, dataRow);
+    const xmlPrefix = xmlPrefixFromTemplate(templateRow);
+    const rowTag = rowTagFromTemplate(templateRow);
+
     const ordered = [...projects].sort((a,b) => {
       const ay = Number(a.fiscalYear) || 0, by = Number(b.fiscalYear) || 0;
       if (ay !== by) return ay - by;
@@ -377,28 +419,28 @@
       if (ad !== bd) return ad.localeCompare(bd);
       return (a.projectName || '').localeCompare(b.projectName || '', 'ko');
     });
-    ordered.forEach((project, idx) => {
-      const rowNum = 5 + idx;
-      const values = projectToAuditRow(project, idx);
+
+    const makeRow = (rowNum, values) => {
       const cells = values.map((value, ci) => {
         const col = numberToCol(ci + 1);
-        return cellXml(col, rowNum, value, styles[col]);
+        return cellXml(col, rowNum, value, styles[col], xmlPrefix);
       }).join('');
-      rows.push(`<row r="${rowNum}" spans="1:31">${cells}</row>`);
-    });
-    if (!rows.length) rows.push(templateRow.replace(/r="5"/g, 'r="5"'));
+      return `${rowOpenTagFromTemplate(templateRow, rowNum)}${cells}</${rowTag}>`;
+    };
 
-    const existingDataRows = /<row\b[^>]*r="5"[^>]*>[\s\S]*?<\/row>(?:[\s\S]*?)(?=<\/sheetData>)/;
+    const rows = ordered.map((project, idx) => makeRow(dataRow + idx, projectToAuditRow(project, idx)));
+    if (!rows.length) rows.push(makeRow(dataRow, new Array(31).fill('')));
+
+    const existingDataRows = new RegExp(`<(?:[A-Za-z_][\\w.-]*:)?row\\b[^>]*r="${dataRow}"[^>]*>[\\s\\S]*?<\\/(?:[A-Za-z_][\\w.-]*:)?row>(?:[\\s\\S]*?)(?=<\\/(?:[A-Za-z_][\\w.-]*:)?sheetData>)`);
     if (existingDataRows.test(xml)) xml = xml.replace(existingDataRows, rows.join(''));
-    else xml = xml.replace('</sheetData>', rows.join('') + '</sheetData>');
+    else xml = xml.replace(/<\/(?:[A-Za-z_][\w.-]*:)?sheetData>/, m => rows.join('') + m);
 
-    const endRow = Math.max(5, 4 + ordered.length);
-    xml = xml.replace(/<dimension\b[^>]*ref="[^"]+"\s*\/?\s*>/, `<dimension ref="A1:AE${endRow}"/>`);
-    xml = xml
-      .replace(/sqref="V1:V\d+"/, `sqref="V1:V${endRow}"`)
-      .replace(/sqref="AD1:AD\d+"/, `sqref="AD1:AD${endRow}"`)
-      .replace(/sqref="I3:I\d+"/, `sqref="I3:I${endRow}"`)
-      .replace(/sqref="E3:E\d+"/, `sqref="E3:E${endRow}"`);
+    const endRow = Math.max(dataRow, headerRow + ordered.length);
+    xml = xml.replace(/<((?:[A-Za-z_][\w.-]*:)?dimension)\b[^>]*ref="[^"]+"\s*\/?\s*>/, (_, tag) => `<${tag} ref="A1:AE${endRow}"/>`);
+    for (const col of ['V', 'AD', 'I', 'E']) {
+      const re = new RegExp(`sqref="${col}(\\d+):${col}\\d+"`);
+      xml = xml.replace(re, (_, startRow) => `sqref="${col}${startRow}:${col}${endRow}"`);
+    }
     zip.file(path, xml);
 
     const output = await zip.generateAsync({
@@ -409,7 +451,7 @@
     });
     if (options.returnUint8Array) return output;
     const suffix = options.year ? `_${options.year}` : '';
-    downloadBlob(output, `학교_공사_이력_현황${suffix}.xlsx`);
+    downloadBlob(output, `학교 공사 이력 현황${suffix}.xlsx`);
     return output;
   }
 
