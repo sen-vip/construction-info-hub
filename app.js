@@ -82,23 +82,48 @@
   }
 
   function statusOf(p) {
+    const inspected = !!(p.completionInspectionDate || p.completionInspectionRecordDate);
     if (p.paymentDate) return { key:'done', label:'완료', cls:'done' };
-    if (p.actualCompletionDate) return { key:'waiting', label:'준공·지출대기', cls:'wait' };
-    if (p.startDate) return { key:'active', label:'공사진행', cls:'' };
-    if (p.contractDate) return { key:'contract', label:'계약', cls:'' };
-    return { key:'draft', label:'준비', cls:'wait' };
+    if (p.actualCompletionDate && inspected) return { key:'payment_wait', label:'지출 대기', cls:'wait' };
+    if (p.actualCompletionDate) return { key:'inspection_wait', label:'준공검사 대기', cls:'wait' };
+    if (p.startDate) return { key:'active', label:'공사 진행중', cls:'' };
+    if (p.contractDate) return { key:'start_wait', label:'착공 대기', cls:'' };
+    return { key:'contract_prep', label:'계약 준비', cls:'wait' };
   }
 
   function missingFor(p) {
     const s = statusOf(p).key;
     const list = [];
     if (!p.projectName) list.push('공사명');
-    if (!p.vendorName) list.push('업체');
-    if (['contract','active','waiting','done'].includes(s) && !meaningful(p.currentContractAmount)) list.push('계약금액');
-    if (['contract','active','waiting','done'].includes(s) && !p.contractDate) list.push('계약일');
-    if (['active','waiting','done'].includes(s) && !p.completionDueDate) list.push('준공기한');
-    if (s === 'waiting' && !p.paymentDate) list.push('지출일');
+    if (s === 'contract_prep') {
+      if (!p.vendorName) list.push('업체');
+      if (!meaningful(p.currentContractAmount)) list.push('계약금액');
+      if (!p.contractDate) list.push('계약일');
+    }
+    if (s === 'start_wait') {
+      if (!p.startDate) list.push('착공일');
+      if (!p.completionDueDate) list.push('준공기한');
+    }
+    if (s === 'active' && !p.completionDueDate) list.push('준공기한');
+    if (s === 'inspection_wait' && !p.completionInspectionDate) list.push('검사·검수일');
+    if (s === 'payment_wait') {
+      if (!p.taxInvoiceDate) list.push('세금계산서일');
+      if (!p.paymentDate) list.push('지출일');
+      if (!meaningful(p.paymentAmount)) list.push('지출금액');
+    }
     return list;
+  }
+
+  function workflowOf(p) {
+    const current = statusOf(p).key;
+    const steps = [
+      { key:'contract', label:'계약', done:!!p.contractDate, active:current==='contract_prep', stateText:'지금 입력', summary:p.contractDate ? `계약일 ${formatDate(p.contractDate)}` : '계약정보 입력' },
+      { key:'start', label:'착공', done:!!p.startDate, active:current==='start_wait', stateText:'지금 입력', summary:p.startDate ? `착공일 ${formatDate(p.startDate)}` : '착공정보 대기' },
+      { key:'completion', label:'준공', done:!!p.actualCompletionDate && !!(p.completionInspectionDate || p.completionInspectionRecordDate || p.paymentDate), active:['active','inspection_wait'].includes(current), stateText:current==='active'?'공사 진행 중':'지금 입력', summary:p.actualCompletionDate ? `준공일 ${formatDate(p.actualCompletionDate)}` : '공사 진행 중' },
+      { key:'payment', label:'지출', done:!!p.paymentDate, active:current==='payment_wait', stateText:'지금 입력', summary:p.paymentDate ? `지출일 ${formatDate(p.paymentDate)}` : '준공 후 입력' },
+      { key:'defect', label:'하자', done:!!p.defectStartDate && !!p.defectEndDate, active:!!p.paymentDate && !(p.defectStartDate && p.defectEndDate), stateText:'확인', summary:p.defectEndDate ? `종료 ${formatDate(p.defectEndDate)}` : '해당 시 관리' }
+    ];
+    return steps.map(step => ({ ...step, future: !step.done && !step.active }));
   }
 
   function projectSubtitle(p) {
@@ -155,7 +180,7 @@
 
   function renderDashboard() {
     const active = state.projects.filter(p => statusOf(p).key !== 'done').length;
-    const waiting = state.projects.filter(p => statusOf(p).key === 'waiting').length;
+    const waiting = state.projects.filter(p => ['inspection_wait','payment_wait'].includes(statusOf(p).key)).length;
     const done = state.projects.filter(p => statusOf(p).key === 'done').length;
 
     let filtered = [...state.projects];
@@ -286,6 +311,16 @@
     if (!p) { state.currentProjectId = null; renderDashboard(); return; }
     const status = statusOf(p);
     const missing = missingFor(p);
+    const workflow = workflowOf(p);
+    const step = Object.fromEntries(workflow.map(x => [x.key, x]));
+    const currentOpen = {
+      basic: status.key === 'contract_prep',
+      contract: status.key === 'contract_prep',
+      start: status.key === 'start_wait',
+      completion: ['active','inspection_wait'].includes(status.key),
+      payment: status.key === 'payment_wait',
+      defect: status.key === 'done' && !(p.defectStartDate && p.defectEndDate)
+    };
     const vendorOptions = [`<option value="">직접 입력 / 새 업체</option>`, ...state.vendors.map(v => `<option value="${e(v.id)}" ${p.vendorId===v.id?'selected':''}>${e(v.name)}${v.businessNumber ? ` · ${e(v.businessNumber)}` : ''}</option>`)].join('');
 
     main.innerHTML = `
@@ -299,17 +334,16 @@
         <div class="save-state" id="saveState"><span class="pulse"></span><span>이 기기에 저장됨</span></div>
       </div>
 
+      <section class="workflow-strip" aria-label="공사 진행 단계">
+        ${workflow.map(workflowStepHtml).join('')}
+      </section>
+
       <div class="detail-layout">
         <section class="panel form-panel" id="projectForm">
-          ${sectionHtml('기본정보','공사 자체를 식별하는 핵심 정보', [
+          ${workflowSectionHtml('basic','공사 기본정보','한 번 입력해 계속 재사용하는 공사·업체 정보', {label:'기본', done:!!p.projectName && !!p.vendorName, active:status.key==='contract_prep'}, [
             field('projectName','공사명',p.projectName,'text',true),
             field('fiscalYear','회계연도',p.fiscalYear,'number'),
             selectField('workType','공종',p.workType,['','건축공사','전기공사','통신공사','소방공사','기계설비공사','토목공사','기타']),
-            selectField('contractMethod','계약방법',p.contractMethod,['','1인수의','2인이상수의','제한경쟁','일반경쟁','조달계약','기타']),
-            moneyField('estimatedPrice','예정가격',p.estimatedPrice),
-            moneyField('currentContractAmount','계약금액',p.currentContractAmount)
-          ])}
-          ${sectionHtml('업체정보','한 번 저장한 업체는 다음 공사에서 선택해 재사용할 수 있습니다.', [
             `<div class="field full"><label for="vendorPicker">업체 보관함에서 선택</label><select id="vendorPicker">${vendorOptions}</select><span class="hint">선택하면 대표자·사업자번호·주소·전화가 현재 공사에 자동 반영됩니다.</span></div>`,
             field('vendorName','업체명',p.vendorName),
             field('representative','대표자',p.representative),
@@ -318,8 +352,12 @@
             field('vendorAddress','사업장 주소',p.vendorAddress,'text',true),
             field('licenseType','등록면허 / 업종',p.licenseType,'text',true),
             `<div class="field full"><button class="button secondary small" id="saveVendorBtn" type="button">현재 업체정보를 보관함에 반영</button></div>`
-          ])}
-          ${sectionHtml('계약','계약이 확정되면 생기는 정보를 추가합니다.', [
+          ], currentOpen.basic)}
+
+          ${workflowSectionHtml('contract','계약','계약이 확정되면 한 번만 입력합니다.',step.contract,[
+            selectField('contractMethod','계약방법',p.contractMethod,['','1인수의','2인이상수의','제한경쟁','일반경쟁','조달계약','기타']),
+            moneyField('estimatedPrice','예정가격',p.estimatedPrice),
+            moneyField('currentContractAmount','현재 계약금액',p.currentContractAmount),
             field('contractNumber','계약번호',p.contractNumber),
             field('contractDate','계약일',p.contractDate,'date'),
             moneyField('originalContractAmount','최초 계약금액',p.originalContractAmount),
@@ -327,55 +365,63 @@
             field('procurementMethod','G2B / S2B / 조달방식',p.procurementMethod),
             field('contractSecurityType','계약보증 방법',p.contractSecurityType),
             field('contractSecurityRate','계약보증률',p.contractSecurityRate,'number'),
-            moneyField('contractSecurityAmount','계약보증금액',p.contractSecurityAmount)
-          ])}
-          ${sectionHtml('착공 · 준공','공사가 진행되면서 새로 생기는 값만 덧붙입니다.', [
+            moneyField('contractSecurityAmount','계약보증금액',p.contractSecurityAmount),
+            `<div class="field full contract-change-block">
+              <div class="subsection-head"><div><strong>변경계약 이력</strong><span>최초 계약을 덮어쓰지 않고 변경 내용을 남깁니다.</span></div><button class="button secondary small" id="addContractChangeBtn" type="button">+ 변경계약 추가</button></div>
+              ${contractChangeHistoryHtml(p)}
+            </div>`
+          ], currentOpen.contract)}
+
+          ${workflowSectionHtml('start','착공','착공하면서 새로 생긴 값만 추가합니다.',step.start,[
             field('plannedStartDate','착공예정일',p.plannedStartDate,'date'),
             field('startDate','착공일',p.startDate,'date'),
             field('completionDueDate','준공기한',p.completionDueDate,'date'),
-            field('actualCompletionDate','실제 준공일',p.actualCompletionDate,'date'),
             field('siteManager','현장대리인',p.siteManager),
-            field('siteManagerLicense','현장대리인 자격증 종류',p.siteManagerLicense),
+            field('siteManagerLicense','현장대리인 자격증 종류',p.siteManagerLicense)
+          ], currentOpen.start)}
+
+          ${workflowSectionHtml('completion','준공','준공 및 검사 단계에서 필요한 값만 추가합니다.',step.completion,[
+            field('actualCompletionDate','실제 준공일',p.actualCompletionDate,'date'),
             field('completionInspectionDate','검사·검수일',p.completionInspectionDate,'date'),
             field('completionRequestIssueDate','준공검사원 발행일',p.completionRequestIssueDate,'date'),
             field('completionRequestDocDate','준공검사원 문서등록일',p.completionRequestDocDate,'date'),
             field('completionInspectionRecordDate','준공검사조서 작성일',p.completionInspectionRecordDate,'date')
-          ])}
-          ${sectionHtml('지출 · 하자','준공 후 생기는 정보를 마지막으로 채웁니다.', [
+          ], currentOpen.completion)}
+
+          ${workflowSectionHtml('payment','지출','준공 후 지급 단계에서 확인하는 정보입니다.',step.payment,[
             field('advancePayment','선금 지급 여부',p.advancePayment),
             field('taxInvoiceDate','세금계산서 발행일',p.taxInvoiceDate,'date'),
             field('paymentDate','지출일',p.paymentDate,'date'),
             moneyField('paymentAmount','지출금액',p.paymentAmount),
+            field('fundingSource','재원구분',p.fundingSource),
+            field('ledgerPrint','공사대장 출력',p.ledgerPrint)
+          ], currentOpen.payment)}
+
+          ${workflowSectionHtml('defect','하자','지출 이후 하자관리 정보가 필요한 경우에만 입력합니다.',step.defect,[
             field('defectSecurityType','하자보증서 / 각서',p.defectSecurityType),
             field('defectPeriodYears','하자담보기간(년)',p.defectPeriodYears,'number'),
             field('defectStartDate','하자 시작일',p.defectStartDate,'date'),
             field('defectEndDate','하자 종료일',p.defectEndDate,'date'),
             field('defectSecurityRate','하자보증률',p.defectSecurityRate,'number'),
             moneyField('defectSecurityAmount','하자보증금액',p.defectSecurityAmount),
-            field('fundingSource','재원구분',p.fundingSource),
-            field('ledgerPrint','공사대장 출력',p.ledgerPrint),
             textareaField('notes','비고',p.notes)
-          ])}
+          ], currentOpen.defect)}
         </section>
 
         <aside class="side-stack">
-          <section class="side-card">
-            <h3>현재 단계</h3>
-            <p>입력된 날짜를 기준으로 자동 판단합니다.</p>
-            <div class="progress-list">
-              ${progressRow('계약', !!p.contractDate)}
-              ${progressRow('착공', !!p.startDate)}
-              ${progressRow('준공', !!p.actualCompletionDate)}
-              ${progressRow('지출', !!p.paymentDate)}
-            </div>
+          <section class="side-card next-action-card">
+            <p class="eyebrow">지금 확인할 것</p>
+            <h3>${e(status.label)}</h3>
+            ${missing.length ? `<p>현재 단계에서는 아래 정보만 먼저 확인하면 됩니다.</p><ul class="missing-list">${missing.map(x=>`<li>${e(x)}</li>`).join('')}</ul><button class="button primary small" type="button" id="jumpCurrentStage">입력하러 가기</button>` : `<p class="all-good">✓ 현재 단계의 핵심정보가 입력되어 있습니다.</p>`}
           </section>
           <section class="side-card">
-            <h3>빠진 정보</h3>
-            ${missing.length ? `<p>현재 단계에서 확인하면 좋은 항목입니다.</p><ul class="missing-list">${missing.map(x=>`<li>${e(x)}</li>`).join('')}</ul>` : `<p>✓ 현재 단계의 핵심정보가 입력되어 있습니다.</p>`}
+            <h3>변경계약</h3>
+            <p>${p.contractChanges?.length ? `변경계약 ${p.contractChanges.length}건이 기록되어 있습니다.` : '아직 변경계약 이력이 없습니다.'}</p>
+            <button class="button secondary small" id="sideAddContractChangeBtn" type="button" style="margin-top:10px">+ 변경계약 추가</button>
           </section>
           <section class="side-card">
             <h3>공사서류</h3>
-            <p>v0.2는 반복입력 절감 흐름을 먼저 안정화합니다.</p>
+            <p>현재 공사정보를 그대로 사용해 서류를 생성하는 기능을 다음 단계에서 연결합니다.</p>
             <div class="doc-list">
               <div class="doc-item"><span>착공계</span><em>다음 버전</em></div>
               <div class="doc-item"><span>준공계</span><em>다음 버전</em></div>
@@ -400,12 +446,59 @@
     document.getElementById('vendorPicker').addEventListener('change', applyVendorToCurrentProject);
     document.getElementById('saveVendorBtn').addEventListener('click', saveCurrentVendor);
     document.getElementById('deleteProjectBtn').addEventListener('click', confirmDeleteProject);
+    document.getElementById('addContractChangeBtn')?.addEventListener('click', openContractChangeModal);
+    document.getElementById('sideAddContractChangeBtn')?.addEventListener('click', openContractChangeModal);
+    document.getElementById('jumpCurrentStage')?.addEventListener('click', () => jumpToSection(sectionForStatus(status.key)));
+    main.querySelectorAll('[data-jump-section]').forEach(btn => btn.addEventListener('click', () => jumpToSection(btn.dataset.jumpSection)));
+    main.querySelectorAll('[data-change-delete]').forEach(btn => btn.addEventListener('click', () => confirmDeleteContractChange(btn.dataset.changeDelete)));
     main.querySelectorAll('[data-field]').forEach(input => {
       input.addEventListener('input', onProjectInput);
       input.addEventListener('change', onProjectInput);
     });
     initDateInputs(main);
     initMoneyInputs(main);
+  }
+
+  function sectionForStatus(statusKey) {
+    const p = currentProject();
+    if (statusKey === 'contract_prep') return (!p?.projectName || !p?.vendorName) ? 'basic' : 'contract';
+    if (statusKey === 'start_wait') return 'start';
+    if (['active','inspection_wait'].includes(statusKey)) return 'completion';
+    if (statusKey === 'payment_wait') return 'payment';
+    return 'defect';
+  }
+
+  function jumpToSection(key) {
+    const target = document.getElementById(`section-${key}`);
+    if (!target) return;
+    if (target.tagName === 'DETAILS') target.open = true;
+    target.scrollIntoView({ behavior:'smooth', block:'start' });
+    setTimeout(() => target.querySelector('input:not([type="hidden"]), select, textarea')?.focus({ preventScroll:true }), 380);
+  }
+
+  function workflowStepHtml(step) {
+    const stateClass = step.done ? 'done' : step.active ? 'active' : 'future';
+    const icon = step.done ? '✓' : step.active ? '●' : '○';
+    return `<button type="button" class="workflow-step ${stateClass}" data-jump-section="${e(step.key)}"><span class="workflow-icon">${icon}</span><span class="workflow-copy"><strong>${e(step.label)}</strong><small>${e(step.summary)}</small></span></button>`;
+  }
+
+  function workflowSectionHtml(key, title, description, step, fields, open = false) {
+    const stateClass = step.done ? 'done' : step.active ? 'active' : 'future';
+    const stateText = step.done ? '입력 완료' : step.active ? (step.stateText || '지금 입력') : '필요할 때 입력';
+    return `<details class="section workflow-section ${stateClass}" id="section-${e(key)}" ${open?'open':''}>
+      <summary class="section-head"><div><h2>${e(title)}</h2><p>${e(description)}</p></div><div class="section-state ${stateClass}">${e(stateText)}</div></summary>
+      <div class="form-grid">${fields.join('')}</div>
+    </details>`;
+  }
+
+  function contractChangeHistoryHtml(p) {
+    const changes = Array.isArray(p.contractChanges) ? p.contractChanges : [];
+    if (!changes.length) return `<div class="contract-change-empty">변경계약이 생기면 여기에서 금액·준공기한 변경 이력을 남길 수 있습니다.</div>`;
+    return `<div class="contract-change-list">${changes.map((c, index) => {
+      const amountText = meaningful(c.afterAmount) ? `${formatMoney(c.beforeAmount)} → ${formatMoney(c.afterAmount)}` : '금액 변경 없음';
+      const dueText = c.afterCompletionDueDate ? `${formatDate(c.beforeCompletionDueDate)} → ${formatDate(c.afterCompletionDueDate)}` : '준공기한 변경 없음';
+      return `<div class="contract-change-item"><div class="change-index">${index+1}차</div><div class="change-copy"><strong>${e(formatDate(c.changeDate) || '변경일 미입력')}</strong><span>${e(amountText)}</span><span>${e(dueText)}</span>${c.reason ? `<small>${e(c.reason)}</small>` : ''}</div><button class="button ghost small" type="button" data-change-delete="${e(c.id)}">삭제</button></div>`;
+    }).join('')}</div>`;
   }
 
   function sectionHtml(title, description, fields) {
@@ -614,6 +707,7 @@
     else if (ev.target.type === 'number' && value !== '') value = Number(value);
     p[fieldName] = value;
     if (fieldName === 'contractDate' && value && !p.fiscalYear) p.fiscalYear = value.slice(0,4);
+    if (fieldName === 'currentContractAmount' && ev.type === 'change' && !(p.contractChanges?.length)) p.originalContractAmount = value;
     p.updatedAt = new Date().toISOString();
     scheduleSave(p);
   }
@@ -721,6 +815,7 @@
       workType: modalBody.querySelector('#newWorkType').value,
       contractMethod: modalBody.querySelector('#newContractMethod').value,
       currentContractAmount: parseMoneyInput(modalBody.querySelector('#newContractAmount').value),
+      originalContractAmount: parseMoneyInput(modalBody.querySelector('#newContractAmount').value),
       contractDate,
       vendorId: vendor?.id || '',
       vendorName: vendor?.name || '', representative: vendor?.representative || '', businessNumber: vendor?.businessNumber || '',
@@ -731,6 +826,83 @@
     closeModal();
     openProject(p.id);
     showToast('새 공사를 만들었습니다. 필요한 정보만 이어서 추가하면 됩니다.');
+  }
+
+  function openContractChangeModal() {
+    const p = currentProject();
+    if (!p) return;
+    const beforeAmount = meaningful(p.currentContractAmount) ? p.currentContractAmount : '';
+    openModal({
+      eyebrow:'변경계약', title:'변경된 내용만 기록하세요',
+      body:`<div class="notice">최초 계약정보를 지우지 않고 변경 이력을 남깁니다. 금액 또는 준공기한 중 변경된 항목만 입력해도 됩니다.</div>
+        <div class="modal-grid" style="margin-top:16px">
+          ${modalDateField('changeDate','변경계약일')}
+          <div class="field"><label>변경 전 계약금액</label><input class="readonly" value="${e(formatMoneyInput(beforeAmount))}" readonly><span class="money-korean">${meaningful(beforeAmount)?e(koreanMoney(beforeAmount)):''}</span></div>
+          <div class="field"><label for="changeAmount">변경 후 계약금액</label>${moneyInputHtml('changeAmount','')}</div>
+          <div class="field"><label>변경 전 준공기한</label><input class="readonly" value="${e(p.completionDueDate || '')}" readonly></div>
+          ${modalDateField('changeDueDate','변경 후 준공기한')}
+          <div class="field full"><label>변경 사유</label><textarea id="changeReason" placeholder="예: 설계변경에 따른 계약금액 및 공사기간 변경"></textarea></div>
+        </div>`,
+      actions:`<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="saveContractChangeBtn">변경계약 기록</button>`
+    });
+    initDateInputs(modalBody);
+    initMoneyInputs(modalBody);
+    modalActions.querySelector('[data-modal-close]').addEventListener('click', closeModal);
+    modalActions.querySelector('#saveContractChangeBtn').addEventListener('click', saveContractChange);
+  }
+
+  async function saveContractChange() {
+    const p = currentProject();
+    if (!p) return;
+    const changeDate = v('#changeDate');
+    const afterAmount = parseMoneyInput(modalBody.querySelector('#changeAmount')?.value || '');
+    const afterCompletionDueDate = v('#changeDueDate');
+    const reason = v('#changeReason');
+    if (!changeDate) { showToast('변경계약일을 입력해주세요.', 'warn'); return; }
+    if (!meaningful(afterAmount) && !afterCompletionDueDate) { showToast('변경된 계약금액 또는 준공기한을 입력해주세요.', 'warn'); return; }
+    const beforeAmount = p.currentContractAmount;
+    const beforeCompletionDueDate = p.completionDueDate || '';
+    if (meaningful(afterAmount) && meaningful(beforeAmount) && Number(afterAmount) === Number(beforeAmount) && (!afterCompletionDueDate || afterCompletionDueDate === beforeCompletionDueDate)) {
+      showToast('현재 값과 동일합니다. 변경된 내용을 입력해주세요.', 'warn'); return;
+    }
+    if (!Array.isArray(p.contractChanges)) p.contractChanges = [];
+    if (!meaningful(p.originalContractAmount) && meaningful(beforeAmount)) p.originalContractAmount = beforeAmount;
+    p.contractChanges.push({
+      id: DB.uuid(),
+      changeDate,
+      beforeAmount: meaningful(beforeAmount) ? beforeAmount : '',
+      afterAmount: meaningful(afterAmount) ? afterAmount : '',
+      beforeCompletionDueDate,
+      afterCompletionDueDate,
+      reason,
+      createdAt: new Date().toISOString()
+    });
+    if (meaningful(afterAmount)) p.currentContractAmount = afterAmount;
+    if (afterCompletionDueDate) p.completionDueDate = afterCompletionDueDate;
+    p.updatedAt = new Date().toISOString();
+    await DB.put('projects', p);
+    closeModal();
+    renderProjectDetail();
+    showToast('변경계약 이력을 기록했습니다. 현재 계약정보에도 반영했습니다.');
+  }
+
+  function confirmDeleteContractChange(changeId) {
+    const p = currentProject();
+    const changes = Array.isArray(p?.contractChanges) ? p.contractChanges : [];
+    const change = changes.find(x => x.id === changeId);
+    if (!p || !change) return;
+    openModal({
+      eyebrow:'변경계약 삭제', title:'이 변경이력을 삭제할까요?',
+      body:`<div class="notice warn">변경이력만 삭제합니다. 현재 계약금액과 준공기한은 자동으로 되돌리지 않습니다. 필요하면 현재 계약정보를 직접 확인해주세요.</div>`,
+      actions:`<button class="button secondary" type="button" data-modal-close>취소</button><button class="button danger" type="button" id="deleteChangeConfirm">이력 삭제</button>`
+    });
+    modalActions.querySelector('[data-modal-close]').addEventListener('click', closeModal);
+    modalActions.querySelector('#deleteChangeConfirm').addEventListener('click', async () => {
+      p.contractChanges = changes.filter(x => x.id !== changeId);
+      p.updatedAt = new Date().toISOString();
+      await DB.put('projects', p);
+      closeModal(); renderProjectDetail(); showToast('변경계약 이력을 삭제했습니다.');
+    });
   }
 
   async function confirmDeleteProject() {
@@ -1007,7 +1179,7 @@
 
   function openHelp() {
     openModal({
-      eyebrow:'도움말', title:'v0.2 사용 흐름',
+      eyebrow:'도움말', title:'v0.2.1 사용 흐름',
       body:`<div class="notice"><strong>핵심 원칙</strong><br>같은 공사정보는 한 번 입력하고 다시 입력하지 않습니다.</div>
       <div style="display:grid;gap:16px;margin-top:18px;font-size:14px">
         <div><strong>1. 공사를 여러 건 저장</strong><p class="muted">전기·건축·체육관 공사를 동시에 등록해도 각 공사는 독립적으로 자동저장됩니다.</p></div>
