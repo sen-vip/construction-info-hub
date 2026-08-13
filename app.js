@@ -22,7 +22,8 @@
     filter: 'active',
     search: '',
     autosaveTimer: null,
-    saveToken: 0
+    saveToken: 0,
+    importMode: 'auto'
   };
 
   const FIELDS_FOR_IMPORT = [
@@ -105,6 +106,14 @@
     return bits.join(' · ') || '기본정보 입력 중';
   }
 
+  function sourceLabel(p) {
+    if (String(p.source || '').includes('edufine') && String(p.source || '').includes('audit')) return '기존 공사이력에서 불러온 뒤 K-에듀파인 자료로 보완한 공사';
+    if (p.source === 'manual+edufine') return '웹에서 만든 뒤 K-에듀파인 자료로 보완한 공사';
+    if (p.source === 'edufine') return 'K-에듀파인에서 불러온 공사';
+    if (p.source === 'audit-excel') return '기존 학교 공사이력에서 불러온 공사';
+    return '웹에서 직접 만든 공사';
+  }
+
   function showToast(message, type = '') {
     const region = document.getElementById('toastRegion');
     const div = document.createElement('div');
@@ -123,6 +132,11 @@
   }
 
   function closeModal() { if (modal.open) modal.close(); }
+
+  function openExcelPicker(mode = 'auto') {
+    state.importMode = mode;
+    excelFileInput.click();
+  }
 
   async function loadState() {
     await DB.openDb();
@@ -155,11 +169,29 @@
     main.innerHTML = `
       <section class="hero">
         <div>
-          <p class="eyebrow">공사 마스터</p>
+          <p class="eyebrow">공사정보 한 번만</p>
           <h1>${state.school.name ? `${e(state.school.name)} 공사` : '우리학교 공사'}</h1>
-          <p>공사정보를 한 번 등록하고 감사용 공사이력과 공사서류에 계속 재사용합니다.</p>
+          <p>직접 입력하거나 기존 자료를 불러오세요. 이미 있는 정보는 다시 입력하지 않습니다.</p>
           <div class="security-note"><span class="security-dot"></span>브라우저 자동저장 · 입력 데이터 서버 미전송</div>
         </div>
+      </section>
+
+      <section class="start-grid" aria-label="공사정보 시작 방법">
+        <button class="start-card primary-start" type="button" data-start-new>
+          <span class="start-step">1</span>
+          <span class="start-copy"><strong>새 공사 직접등록</strong><small>공사명만으로도 시작하고, 확정된 정보만 덧붙입니다.</small></span>
+          <span class="start-arrow">›</span>
+        </button>
+        <button class="start-card" type="button" data-start-history>
+          <span class="start-step">2</span>
+          <span class="start-copy"><strong>기존 공사이력 불러오기</strong><small>학교 공사 이력 현황.xlsx의 여러 공사를 한꺼번에 가져옵니다.</small></span>
+          <span class="start-arrow">›</span>
+        </button>
+        <button class="start-card" type="button" data-start-edufine>
+          <span class="start-step">3</span>
+          <span class="start-copy"><strong>에듀파인으로 정보 업데이트</strong><small>자료관리목록.xlsx에서 계약·준공·지출 정보를 찾아 기존 공사를 보완합니다.</small></span>
+          <span class="start-arrow">›</span>
+        </button>
       </section>
 
       <section class="summary-grid" aria-label="공사 현황 요약">
@@ -195,8 +227,9 @@
     });
     main.querySelectorAll('[data-filter]').forEach(btn => btn.addEventListener('click', () => { state.filter = btn.dataset.filter; renderDashboard(); }));
     main.querySelectorAll('[data-project-id]').forEach(row => row.addEventListener('click', () => openProject(row.dataset.projectId)));
-    main.querySelector('[data-empty-new]')?.addEventListener('click', openNewProjectModal);
-    main.querySelector('[data-empty-import]')?.addEventListener('click', () => excelFileInput.click());
+    main.querySelector('[data-start-new]')?.addEventListener('click', openNewProjectModal);
+    main.querySelector('[data-start-history]')?.addEventListener('click', () => openExcelPicker('history'));
+    main.querySelector('[data-start-edufine]')?.addEventListener('click', () => openExcelPicker('edufine'));
   }
 
   function projectRowHtml(p) {
@@ -236,8 +269,7 @@
     return `<div class="empty-state">
       <div class="empty-icon">工</div>
       <h3>아직 등록된 공사가 없어요</h3>
-      <p>새 공사를 만들거나, 기존 학교 공사이력현황 엑셀을 한 번 불러오면 여러 공사를 한꺼번에 시작할 수 있습니다.</p>
-      <div class="empty-actions"><button class="button primary" type="button" data-empty-new>+ 새 공사</button><button class="button secondary" type="button" data-empty-import>공사이력 엑셀 불러오기</button></div>
+      <p>위의 세 가지 시작 방법 중 지금 가지고 있는 자료에 맞는 방법을 선택하세요.</p>
     </div>`;
   }
 
@@ -343,7 +375,7 @@
           </section>
           <section class="side-card">
             <h3>공사서류</h3>
-            <p>v0.1은 공사정보 기반을 먼저 안정화합니다.</p>
+            <p>v0.2는 반복입력 절감 흐름을 먼저 안정화합니다.</p>
             <div class="doc-list">
               <div class="doc-item"><span>착공계</span><em>다음 버전</em></div>
               <div class="doc-item"><span>준공계</span><em>다음 버전</em></div>
@@ -353,7 +385,7 @@
           </section>
           <section class="side-card">
             <h3>자료 출처</h3>
-            <p>${p.source === 'edufine' ? 'K-에듀파인에서 불러온 공사' : p.source === 'audit-excel' ? '기존 감사용 공사이력에서 불러온 공사' : '웹에서 직접 만든 공사'}</p>
+            <p>${e(sourceLabel(p))}</p>
             ${p.sourceUpdatedAt ? `<p style="margin-top:6px">최근 반영 ${e(formatDateTime(p.sourceUpdatedAt))}</p>` : ''}
           </section>
           <section class="side-card danger-zone">
@@ -656,19 +688,18 @@
   function openNewProjectModal() {
     const options = state.vendors.map(v => `<option value="${e(v.id)}">${e(v.name)}${v.businessNumber ? ` · ${e(v.businessNumber)}` : ''}</option>`).join('');
     openModal({
-      eyebrow: '새 공사',
-      title: '최소 정보만 먼저 등록하세요',
-      body: `<div class="notice">준공일·지출일처럼 아직 생기지 않은 정보는 나중에 채우면 됩니다.</div>
-        <div class="modal-grid" style="margin-top:16px">
-          <div class="field full"><label>공사명</label><input id="newProjectName" autocomplete="off" placeholder="예: 체육관 환경개선공사"></div>
-          <div class="field"><label>공종</label><select id="newWorkType"><option value="">선택</option><option>건축공사</option><option>전기공사</option><option>통신공사</option><option>소방공사</option><option>기계설비공사</option><option>토목공사</option><option>기타</option></select></div>
-          <div class="field"><label>업체 보관함</label><select id="newVendorId"><option value="">나중에 입력</option>${options}</select></div>
+      eyebrow: '새 공사 직접등록',
+      title: '공사명만으로도 시작할 수 있어요',
+      body: `<div class="notice">지금 확정된 정보만 입력하세요. 착공일·준공기한·준공일·지출일은 공사를 만든 뒤 필요한 시점에 추가하면 됩니다.</div>
+        <div class="modal-grid new-project-grid" style="margin-top:16px">
+          <div class="field full"><label>공사명 <span class="required-mark">필수</span></label><input id="newProjectName" autocomplete="off" placeholder="예: 체육관 환경개선공사"></div>
+          <div class="field"><label>공종</label><select id="newWorkType"><option value="">나중에 입력</option><option>건축공사</option><option>전기공사</option><option>통신공사</option><option>소방공사</option><option>기계설비공사</option><option>토목공사</option><option>기타</option></select></div>
+          <div class="field"><label>업체</label><select id="newVendorId"><option value="">나중에 입력 / 새 업체</option>${options}</select><span class="hint">저장된 업체를 고르면 대표자·사업자번호·주소까지 자동으로 연결됩니다.</span></div>
           <div class="field"><label for="newContractAmount">계약금액</label>${moneyInputHtml('newContractAmount', '')}</div>
-          <div class="field"><label>계약방법</label><select id="newContractMethod"><option value="">선택</option><option>1인수의</option><option>2인이상수의</option><option>제한경쟁</option><option>일반경쟁</option><option>조달계약</option><option>기타</option></select></div>
+          <div class="field"><label>계약방법</label><select id="newContractMethod"><option value="">나중에 입력</option><option>1인수의</option><option>2인이상수의</option><option>제한경쟁</option><option>일반경쟁</option><option>조달계약</option><option>기타</option></select></div>
           ${modalDateField('newContractDate','계약일')}
-          ${modalDateField('newStartDate','착공일')}
-          ${modalDateField('newDueDate','준공기한')}
-        </div>`,
+        </div>
+        <div class="new-project-tip"><strong>입력은 여기까지.</strong><span>공사를 만든 뒤 에듀파인 자료를 불러오면 계약번호·예정가격·착공·준공·지출 정보를 추가로 채울 수 있습니다.</span></div>`,
       actions: `<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="createProjectBtn">공사 만들기</button>`
     });
     initDateInputs(modalBody);
@@ -691,8 +722,6 @@
       contractMethod: modalBody.querySelector('#newContractMethod').value,
       currentContractAmount: parseMoneyInput(modalBody.querySelector('#newContractAmount').value),
       contractDate,
-      startDate: modalBody.querySelector('#newStartDate').value,
-      completionDueDate: modalBody.querySelector('#newDueDate').value,
       vendorId: vendor?.id || '',
       vendorName: vendor?.name || '', representative: vendor?.representative || '', businessNumber: vendor?.businessNumber || '',
       vendorAddress: vendor?.address || '', vendorPhone: vendor?.phone || '', licenseType: vendor?.licenseType || ''
@@ -701,7 +730,7 @@
     state.projects.unshift(p);
     closeModal();
     openProject(p.id);
-    showToast('새 공사를 만들었습니다. 입력내용은 자동저장됩니다.');
+    showToast('새 공사를 만들었습니다. 필요한 정보만 이어서 추가하면 됩니다.');
   }
 
   async function confirmDeleteProject() {
@@ -756,12 +785,20 @@
 
   async function handleExcelFile(file) {
     if (!file) return;
+    const mode = state.importMode || 'auto';
+    state.importMode = 'auto';
     try {
       showToast('엑셀을 브라우저에서 분석하고 있습니다.');
       const parsed = await Excel.parseImport(file);
       if (!parsed.projects.length) throw new Error('불러올 공사 행을 찾지 못했습니다.');
+      if (mode === 'history' && parsed.type === 'edufine') {
+        throw new Error('이 파일은 K-에듀파인 자료관리목록으로 보입니다. 「에듀파인으로 정보 업데이트」에서 선택해주세요.');
+      }
+      if (mode === 'edufine' && parsed.type !== 'edufine') {
+        throw new Error('이 파일은 학교 공사 이력 현황으로 보입니다. 「기존 공사이력 불러오기」에서 선택해주세요.');
+      }
       const analysis = analyzeImport(parsed);
-      openImportPreview(parsed, analysis);
+      openImportPreview(parsed, analysis, mode);
     } catch (err) {
       showToast(err.message || '엑셀을 읽지 못했습니다.', 'danger');
     } finally {
@@ -769,28 +806,37 @@
     }
   }
 
-  function openImportPreview(parsed, analysis) {
+  function openImportPreview(parsed, analysis, mode = 'auto') {
     const newCount = analysis.filter(x => !x.match).length;
-    const updateCount = analysis.filter(x => x.match && !x.conflicts.length).length;
+    const updateCount = analysis.filter(x => x.match && x.additions.length && !x.conflicts.length).length;
     const conflictCount = analysis.filter(x => x.conflicts.length).length;
+    const unchangedCount = analysis.filter(x => x.match && !x.additions.length && !x.conflicts.length).length;
+    const isEdufine = parsed.type === 'edufine';
+    const title = isEdufine ? '에듀파인 정보 업데이트 결과' : '기존 공사이력 불러오기 결과';
+    const guide = isEdufine
+      ? '기존 공사와 계약번호·공사명·업체·금액·계약일을 비교했습니다. 빈 값은 보완하고, 서로 다른 값은 선택한 경우에만 바꿉니다.'
+      : '공사이력의 각 행을 기존 공사와 비교했습니다. 처음 보는 공사는 새로 만들고, 기존 공사는 부족한 값만 보완합니다.';
     const previews = analysis.map(a => {
       const label = !a.match ? '새 공사' : a.conflicts.length ? '확인 필요' : a.additions.length ? '기존 공사 보완' : '변경 없음';
       return `<div class="preview-item" data-import-index="${a.index}">
-        <div class="preview-top"><div><strong>${e(a.incoming.projectName || '이름 없는 공사')}</strong><p>${e(a.incoming.vendorName || '업체 미확인')} · ${e(formatMoney(a.incoming.currentContractAmount))}${a.incoming.contractNumber ? ` · ${e(a.incoming.contractNumber)}` : ''}</p></div><span class="preview-badge ${a.conflicts.length?'conflict':''}">${label}</span></div>
-        ${a.match ? `<p style="margin-top:7px">기존: ${e(a.match.projectName)}${a.additions.length ? ` · 새로 채울 값 ${a.additions.length}개` : ''}</p>` : ''}
+        <div class="preview-top"><div><strong>${e(a.incoming.projectName || '이름 없는 공사')}</strong><p>${e(a.incoming.vendorName || '업체 미확인')} · ${e(formatMoney(a.incoming.currentContractAmount))}${a.incoming.contractNumber ? ` · ${e(a.incoming.contractNumber)}` : ''}</p></div><span class="preview-badge ${a.conflicts.length?'conflict':a.match&&!a.additions.length?'muted-badge':''}">${label}</span></div>
+        ${a.match ? `<p style="margin-top:7px">기존: ${e(a.match.projectName)}${a.additions.length ? ` · 새로 채울 값 ${a.additions.length}개` : ''}</p>` : '<p style="margin-top:7px">현재 목록에 같은 공사가 없어 새 공사로 등록됩니다.</p>'}
         ${a.conflicts.length ? `<div class="conflict-box">${a.conflicts.map(c => conflictHtml(a.index,c)).join('')}</div>` : ''}
       </div>`;
     }).join('');
     openModal({
       eyebrow: parsed.label,
-      title: `${parsed.projects.length}건을 찾았습니다`,
-      body: `<div class="notice">파일은 서버로 업로드하지 않고 이 브라우저에서만 읽었습니다.${parsed.ignored ? ` 공사가 아닌 계약 ${parsed.ignored}건은 제외했습니다.` : ''}</div>
-        <div class="import-summary"><div class="import-stat"><strong>${newCount}</strong><span>새 공사</span></div><div class="import-stat"><strong>${updateCount}</strong><span>자동 보완</span></div><div class="import-stat"><strong>${conflictCount}</strong><span>값 확인 필요</span></div></div>
+      title,
+      body: `<div class="notice"><strong>${e(guide)}</strong><br>파일은 서버로 업로드하지 않고 이 브라우저에서만 읽었습니다.${parsed.ignored ? ` 공사가 아닌 계약 ${parsed.ignored}건은 제외했습니다.` : ''}</div>
+        <div class="import-summary four"><div class="import-stat"><strong>${newCount}</strong><span>새 공사</span></div><div class="import-stat"><strong>${updateCount}</strong><span>자동 보완</span></div><div class="import-stat"><strong>${conflictCount}</strong><span>확인 필요</span></div><div class="import-stat"><strong>${unchangedCount}</strong><span>변경 없음</span></div></div>
+        <div class="import-result-note">총 ${parsed.projects.length}건 · ${newCount + updateCount + conflictCount}건에 반영할 내용이 있습니다.</div>
         <div class="preview-list">${previews}</div>`,
-      actions: `<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="applyImportBtn">반영하기</button>`
+      actions: `<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="applyImportBtn">${newCount + updateCount + conflictCount ? '반영하기' : '변경 없음'}</button>`
     });
     modalActions.querySelector('[data-modal-close]').addEventListener('click', closeModal);
-    modalActions.querySelector('#applyImportBtn').addEventListener('click', () => applyImport(parsed, analysis));
+    const applyBtn = modalActions.querySelector('#applyImportBtn');
+    applyBtn.disabled = !(newCount + updateCount + conflictCount);
+    applyBtn.addEventListener('click', () => applyImport(parsed, analysis));
   }
 
   function conflictHtml(index, c) {
@@ -802,7 +848,7 @@
   }
 
   async function applyImport(parsed, analysis) {
-    let created = 0, updated = 0;
+    let created = 0, updated = 0, unchanged = 0;
     for (const a of analysis) {
       let p;
       if (!a.match) {
@@ -811,22 +857,29 @@
         created++;
       } else {
         p = a.match;
-        for (const item of a.additions) p[item.field] = item.value;
+        let changed = false;
+        for (const item of a.additions) { p[item.field] = item.value; changed = true; }
         for (const c of a.conflicts) {
           const choice = modalBody.querySelector(`input[name="conf_${a.index}_${c.field}"]:checked`)?.value;
-          if (choice === 'incoming') p[c.field] = c.incoming;
+          if (choice === 'incoming') { p[c.field] = c.incoming; changed = true; }
         }
-        p.sourceUpdatedAt = new Date().toISOString();
-        if (p.source === 'manual' && parsed.type === 'edufine') p.source = 'manual+edufine';
-        p.updatedAt = new Date().toISOString();
-        await DB.put('projects', p);
-        updated++;
+        if (changed) {
+          p.sourceUpdatedAt = new Date().toISOString();
+          if (parsed.type === 'edufine') {
+            if (p.source === 'manual') p.source = 'manual+edufine';
+            else if (p.source === 'audit-excel') p.source = 'audit+edufine';
+            else if (!String(p.source || '').includes('edufine')) p.source = 'edufine';
+          }
+          p.updatedAt = new Date().toISOString();
+          await DB.put('projects', p);
+          updated++;
+        } else unchanged++;
       }
       await upsertVendorFromProject(p);
     }
     await loadState();
     closeModal(); renderDashboard();
-    showToast(`반영 완료 · 새 공사 ${created}건 · 기존 공사 ${updated}건 업데이트`);
+    showToast(`반영 완료 · 새 공사 ${created}건 · 기존 공사 ${updated}건 보완${unchanged ? ` · 변경 없음 ${unchanged}건` : ''}`);
   }
 
   async function upsertVendorFromProject(p) {
@@ -954,13 +1007,13 @@
 
   function openHelp() {
     openModal({
-      eyebrow:'도움말', title:'v0.1 사용 흐름',
+      eyebrow:'도움말', title:'v0.2 사용 흐름',
       body:`<div class="notice"><strong>핵심 원칙</strong><br>같은 공사정보는 한 번 입력하고 다시 입력하지 않습니다.</div>
       <div style="display:grid;gap:16px;margin-top:18px;font-size:14px">
         <div><strong>1. 공사를 여러 건 저장</strong><p class="muted">전기·건축·체육관 공사를 동시에 등록해도 각 공사는 독립적으로 자동저장됩니다.</p></div>
-        <div><strong>2. 기존 엑셀 재사용</strong><p class="muted">학교 공사 이력 현황.xlsx 또는 K-에듀파인 자료관리목록.xlsx를 불러오면 새 공사를 만들거나 기존 공사의 빈 정보를 보완합니다.</p></div>
-        <div><strong>3. 업체 재사용</strong><p class="muted">업체명·대표자·사업자번호·주소·전화·면허를 업체 보관함에 저장해 다음 공사에서 다시 고를 수 있습니다.</p></div>
-        <div><strong>4. 인수인계</strong><p class="muted">전체 백업(JSON)은 앱 복원용이고, 공사이력 엑셀은 감사·업무용 결과물입니다.</p></div>
+        <div><strong>2. 기존 공사이력 재사용</strong><p class="muted">학교 공사 이력 현황.xlsx를 불러오면 여러 공사를 한꺼번에 등록하고 기존 공사의 빈 정보를 보완합니다.</p></div><div><strong>3. 에듀파인으로 업데이트</strong><p class="muted">자료관리목록.xlsx를 다시 내려받아 올리면 계약·준공·지출 단계에서 새로 생긴 값만 기존 공사에 보완합니다. 다른 값은 자동 덮어쓰지 않습니다.</p></div>
+        <div><strong>4. 업체 재사용</strong><p class="muted">업체명·대표자·사업자번호·주소·전화·면허를 업체 보관함에 저장해 다음 공사에서 다시 고를 수 있습니다.</p></div>
+        <div><strong>5. 인수인계</strong><p class="muted">전체 백업(JSON)은 앱 복원용이고, 공사이력 엑셀은 감사·업무용 결과물입니다.</p></div>
         <div><strong>보안</strong><p class="muted">공사정보와 엑셀 내용은 서버로 전송하지 않습니다. 브라우저 저장소에 남으므로 공용 Windows 계정에서는 PC 접근통제와 정기 백업이 필요합니다.</p></div>
       </div>`,
       actions:`<button class="button primary" type="button" data-modal-close>확인</button>`
@@ -971,13 +1024,13 @@
   function wireGlobal() {
     document.getElementById('goHomeBtn').addEventListener('click',()=>{state.currentProjectId=null;renderDashboard();});
     document.getElementById('newProjectBtn').addEventListener('click',openNewProjectModal);
-    document.getElementById('importBtn').addEventListener('click',()=>excelFileInput.click());
+    document.getElementById('importBtn').addEventListener('click',()=>openExcelPicker('auto'));
     document.getElementById('exportAuditBtn').addEventListener('click',openExportAuditModal);
     document.getElementById('moreBtn').addEventListener('click',(ev)=>{ev.stopPropagation();moreMenu.hidden=!moreMenu.hidden;ev.currentTarget.setAttribute('aria-expanded',String(!moreMenu.hidden));});
     document.addEventListener('click',(ev)=>{if(!moreMenu.hidden&&!moreMenu.contains(ev.target)&&ev.target.id!=='moreBtn'){moreMenu.hidden=true;document.getElementById('moreBtn').setAttribute('aria-expanded','false');}});
     moreMenu.addEventListener('click',ev=>{
       const action=ev.target.dataset.action;if(!action)return;moreMenu.hidden=true;
-      if(action==='import')excelFileInput.click(); if(action==='export')openExportAuditModal(); if(action==='vendors')openVendorLibrary(); if(action==='school')openSchoolModal(); if(action==='backup')backupAll(); if(action==='restore')backupFileInput.click(); if(action==='help')openHelp();
+      if(action==='import')openExcelPicker('auto'); if(action==='export')openExportAuditModal(); if(action==='vendors')openVendorLibrary(); if(action==='school')openSchoolModal(); if(action==='backup')backupAll(); if(action==='restore')backupFileInput.click(); if(action==='help')openHelp();
     });
     excelFileInput.addEventListener('change',()=>handleExcelFile(excelFileInput.files[0]));
     backupFileInput.addEventListener('change',()=>handleBackupFile(backupFileInput.files[0]));
