@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
+  <title>공사정보 허브 v0.1.2</title>
+  <meta name="description" content="학교 공사정보를 한 번 입력하고 계속 재사용하는 브라우저 기반 공사정보 허브" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-wrap">
+        <button class="brand-button" id="goHomeBtn" type="button" aria-label="공사 목록으로 이동">
+          <span class="brand-mark" aria-hidden="true">工</span>
+          <span>
+            <strong>공사정보 허브</strong>
+            <small>한 번 입력하고 계속 재사용</small>
+          </span>
+        </button>
+      </div>
+      <div class="top-actions">
+        <button class="button secondary" id="importBtn" type="button">엑셀 불러오기</button>
+        <button class="button secondary desktop-only" id="exportAuditBtn" type="button">공사이력 엑셀</button>
+        <button class="button primary" id="newProjectBtn" type="button">+ 새 공사</button>
+        <button class="icon-button" id="moreBtn" type="button" aria-label="더보기" aria-expanded="false">•••</button>
+        <div class="popover" id="moreMenu" hidden>
+          <button type="button" data-action="import">엑셀 불러오기</button>
+          <button type="button" data-action="export">공사이력 엑셀</button>
+          <button type="button" data-action="vendors">업체 보관함</button>
+          <button type="button" data-action="school">학교 기본정보</button>
+          <button type="button" data-action="backup">전체 백업</button>
+          <button type="button" data-action="restore">백업 불러오기</button>
+          <button type="button" data-action="help">도움말</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="appMain" class="main"></main>
+
+    <footer class="footer">
+      <span>학돌랩</span>
+      <span class="dot">·</span>
+      <span>입력한 공사정보와 업로드한 엑셀 내용은 서버로 전송하지 않습니다.</span>
+    </footer>
+  </div>
+
+  <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+  <dialog id="modal" class="modal">
+    <form method="dialog" class="modal-card" id="modalForm">
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow" id="modalEyebrow"></p>
+          <h2 id="modalTitle"></h2>
+        </div>
+        <button class="icon-button" id="modalCloseX" aria-label="닫기" type="button">×</button>
+      </div>
+      <div id="modalBody" class="modal-body"></div>
+      <div id="modalActions" class="modal-actions"></div>
+    </form>
+  </dialog>
+
+  <input type="file" id="excelFileInput" accept=".xlsx" hidden />
+  <input type="file" id="backupFileInput" accept=".json" hidden />
+
+  <script src="./vendor/jszip.min.js"></script>
+  <script src="./db.js"></script>
+  <script src="./excel.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
