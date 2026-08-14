@@ -539,7 +539,7 @@
 
   function documentsTabHtml(p) {
     return `<div class="documents-panel">
-      <div class="documents-head"><div><p class="eyebrow">행정기관 내부 양식 우선</p><h2>공사서류</h2><p>별도 입력폼을 만들지 않고 현재 공사 마스터의 값을 그대로 사용합니다. 없는 정보만 해당 순간에 추가합니다.</p></div><div class="documents-head-note"><strong>v0.3.0.1</strong><span>착공·준공 핵심 3종</span></div></div>
+      <div class="documents-head"><div><p class="eyebrow">행정기관 내부 양식 우선</p><h2>공사서류</h2><p>별도 입력폼을 만들지 않고 현재 공사 마스터의 값을 그대로 사용합니다. 없는 정보만 해당 순간에 추가합니다.</p></div><div class="documents-head-note"><strong>v0.3.0.2</strong><span>착공·준공 핵심 3종</span></div></div>
       <div class="document-group"><div class="document-group-title"><strong>착공</strong><span>공사를 시작할 때</span></div><div class="document-grid">${documentCardHtml('startReport',p)}</div></div>
       <div class="document-group"><div class="document-group-title"><strong>준공</strong><span>공사를 완료했을 때</span></div><div class="document-grid">${documentCardHtml('completionReport',p)}${documentCardHtml('completionInspectionRequest',p)}</div></div>
       <div class="document-footnote">출력양식은 제공받은 「공사서류 원클릭 프로그램(2026.4.)」의 내부 서식을 기준으로 구현했습니다. 화면 디자인은 웹에 맞게 구성하되 출력물의 문구와 구조는 기존 행정양식을 우선합니다.</div>
@@ -583,6 +583,10 @@
     frame.className = 'document-print-frame';
     frame.setAttribute('aria-hidden', 'true');
     frame.setAttribute('tabindex', '-1');
+    // Give the print document a real A4 viewport. A 0×0 iframe can make some
+    // Chromium-based browsers calculate the print layout against a tiny viewport.
+    frame.style.width = '210mm';
+    frame.style.height = '297mm';
     document.body.appendChild(frame);
 
     const cssUrl = new URL('styles.css', window.location.href).href;
@@ -594,6 +598,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>${e(title)}</title>
   <link rel="stylesheet" href="${e(cssUrl)}">
+  <style>
+    @page { size: A4 portrait; margin: 0; }
+    html, body { width: 210mm; height: 297mm; margin: 0; padding: 0; background: #fff; }
+  </style>
 </head>
 <body class="print-only-document">
   ${documentMarkup(type, p)}
@@ -712,7 +720,7 @@
     const schoolName = state.school?.name || '';
     const recipient = recipientFor(schoolName);
     if (type === 'startReport') {
-      return `<article id="documentPrintArea" class="paper-a4 admin-document">
+      return `<article id="documentPrintArea" class="paper-a4 admin-document start-report">
         <h1 class="doc-title wide-spacing">착 공 신 고 서</h1>
         ${documentFacts([
           ['1. 공 사 명 :',e(p.projectName)],
@@ -729,7 +737,7 @@
       </article>`;
     }
     if (type === 'completionReport') {
-      return `<article id="documentPrintArea" class="paper-a4 admin-document">
+      return `<article id="documentPrintArea" class="paper-a4 admin-document completion-report">
         <h1 class="doc-title wide-spacing">준 공 계</h1>
         ${documentFacts([
           ['1. 공 사 명 :',e(p.projectName)],
@@ -1482,7 +1490,7 @@
 
   function openHelp() {
     openModal({
-      eyebrow:'도움말', title:'v0.3.0.1 사용 흐름',
+      eyebrow:'도움말', title:'v0.3.0.2 사용 흐름',
       body:`<div class="notice"><strong>핵심 원칙</strong><br>같은 공사정보는 한 번 입력하고 다시 입력하지 않습니다.</div>
       <div style="display:grid;gap:16px;margin-top:18px;font-size:14px">
         <div><strong>1. 공사를 여러 건 저장</strong><p class="muted">전기·건축·체육관 공사를 동시에 등록해도 각 공사는 독립적으로 자동저장됩니다.</p></div>
