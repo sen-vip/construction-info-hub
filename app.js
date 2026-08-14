@@ -539,7 +539,7 @@
 
   function documentsTabHtml(p) {
     return `<div class="documents-panel">
-      <div class="documents-head"><div><p class="eyebrow">행정기관 내부 양식 우선</p><h2>공사서류</h2><p>별도 입력폼을 만들지 않고 현재 공사 마스터의 값을 그대로 사용합니다. 없는 정보만 해당 순간에 추가합니다.</p></div><div class="documents-head-note"><strong>v0.3.0</strong><span>착공·준공 핵심 3종</span></div></div>
+      <div class="documents-head"><div><p class="eyebrow">행정기관 내부 양식 우선</p><h2>공사서류</h2><p>별도 입력폼을 만들지 않고 현재 공사 마스터의 값을 그대로 사용합니다. 없는 정보만 해당 순간에 추가합니다.</p></div><div class="documents-head-note"><strong>v0.3.0.1</strong><span>착공·준공 핵심 3종</span></div></div>
       <div class="document-group"><div class="document-group-title"><strong>착공</strong><span>공사를 시작할 때</span></div><div class="document-grid">${documentCardHtml('startReport',p)}</div></div>
       <div class="document-group"><div class="document-group-title"><strong>준공</strong><span>공사를 완료했을 때</span></div><div class="document-grid">${documentCardHtml('completionReport',p)}${documentCardHtml('completionInspectionRequest',p)}</div></div>
       <div class="document-footnote">출력양식은 제공받은 「공사서류 원클릭 프로그램(2026.4.)」의 내부 서식을 기준으로 구현했습니다. 화면 디자인은 웹에 맞게 구성하되 출력물의 문구와 구조는 기존 행정양식을 우선합니다.</div>
@@ -569,7 +569,70 @@
       actions:`<button class="button secondary" type="button" data-modal-close>닫기</button><button class="button primary" type="button" id="printDocumentBtn">인쇄 / PDF 저장</button>`
     });
     modalActions.querySelector('[data-modal-close]').addEventListener('click', closeModal);
-    modalActions.querySelector('#printDocumentBtn').addEventListener('click', () => window.print());
+    modalActions.querySelector('#printDocumentBtn').addEventListener('click', () => printAdministrativeDocument(type, p));
+  }
+
+  function printAdministrativeDocument(type, p) {
+    const def = DOCUMENT_DEFINITIONS[type];
+    if (!def || !p) return;
+
+    // Print only the A4 document in an isolated frame. Printing the preview modal
+    // directly leaves the dialog/scroll layout in the browser print flow and can
+    // push a single-page form onto two pages.
+    const frame = document.createElement('iframe');
+    frame.className = 'document-print-frame';
+    frame.setAttribute('aria-hidden', 'true');
+    frame.setAttribute('tabindex', '-1');
+    document.body.appendChild(frame);
+
+    const cssUrl = new URL('styles.css', window.location.href).href;
+    const title = `${def.label} - ${p.projectName || '공사서류'}`;
+    const html = `<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>${e(title)}</title>
+  <link rel="stylesheet" href="${e(cssUrl)}">
+</head>
+<body class="print-only-document">
+  ${documentMarkup(type, p)}
+</body>
+</html>`;
+
+    let printed = false;
+    const startPrint = () => {
+      if (printed || !frame.contentWindow) return;
+      printed = true;
+      const win = frame.contentWindow;
+      const cleanup = () => {
+        if (frame.isConnected) frame.remove();
+      };
+      win.addEventListener('afterprint', cleanup, { once:true });
+      // Fallback cleanup for browsers that do not reliably fire afterprint.
+      window.setTimeout(cleanup, 120000);
+      window.setTimeout(() => {
+        try { win.focus(); win.print(); }
+        catch (err) { cleanup(); showToast('인쇄창을 열지 못했습니다. 다시 시도해주세요.', 'warn'); }
+      }, 120);
+    };
+
+    const printDoc = frame.contentDocument;
+    if (!printDoc) {
+      frame.remove();
+      showToast('인쇄영역을 만들지 못했습니다. 다시 시도해주세요.', 'warn');
+      return;
+    }
+    printDoc.open();
+    printDoc.write(html);
+    printDoc.close();
+
+    const stylesheet = printDoc.querySelector('link[rel="stylesheet"]');
+    if (stylesheet) stylesheet.addEventListener('load', startPrint, { once:true });
+    // Fallback for cached stylesheets / browsers that skip the link load event.
+    window.setTimeout(() => {
+      if (printDoc.readyState === 'complete') startPrint();
+    }, 500);
   }
 
   function openDocumentMissingModal(type, missing) {
@@ -1419,7 +1482,7 @@
 
   function openHelp() {
     openModal({
-      eyebrow:'도움말', title:'v0.3.0 사용 흐름',
+      eyebrow:'도움말', title:'v0.3.0.1 사용 흐름',
       body:`<div class="notice"><strong>핵심 원칙</strong><br>같은 공사정보는 한 번 입력하고 다시 입력하지 않습니다.</div>
       <div style="display:grid;gap:16px;margin-top:18px;font-size:14px">
         <div><strong>1. 공사를 여러 건 저장</strong><p class="muted">전기·건축·체육관 공사를 동시에 등록해도 각 공사는 독립적으로 자동저장됩니다.</p></div>
