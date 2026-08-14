@@ -692,3 +692,244 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
   }
 }
 
+
+/* v0.3.1 기관용 준공·지출 서류 */
+.payout-section-head {
+  margin-top: 6px;
+  padding: 13px 14px;
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+.payout-section-head strong { font-size: 13px; }
+.payout-section-head strong span { margin-left: 5px; color: var(--muted-2); font-size: 10px; font-weight: 700; }
+.payout-section-head p { margin: 4px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+
+.official-record .doc-title { margin: 1mm 0 9mm; font-size: 25pt; }
+.official-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 11.4pt; line-height: 1.35; }
+.official-table th, .official-table td { border: .35mm solid #222; padding: 2.3mm 3mm; vertical-align: middle; }
+.official-table th { width: 31mm; text-align: center; font-weight: 400; letter-spacing: .13em; white-space: nowrap; }
+.official-table th.mini-head { width: 16mm; letter-spacing: 0; }
+.official-table td { overflow-wrap: anywhere; }
+.official-table .memo-row th, .official-table .memo-row td { height: 14mm; }
+.record-statement { margin-top: 16mm; font-size: 11.8pt; line-height: 2.2; }
+.record-statement p { margin: 0; }
+.record-date { margin: 20mm 0 0; text-align: center; font-size: 12pt; }
+.record-signature-row { display: grid; grid-template-columns: 35mm 58mm minmax(0,1fr); align-items: center; gap: 5mm; margin-top: 26mm; font-size: 12pt; }
+.record-signature-row span:last-child { text-align: right; }
+
+.completion-inspection-record .doc-title { margin-bottom: 8mm; }
+.completion-inspection-record .official-table th, .completion-inspection-record .official-table td { padding-top: 2mm; padding-bottom: 2mm; }
+.completion-inspection-record .official-table .attachment-row td { font-size: 10.4pt; line-height: 1.35; }
+.inspection-finished { margin: 18mm 0 0; text-align: center; font-size: 12.2pt; }
+.record-date.inspection-date { margin-top: 19mm; }
+.inspection-signatures { display: grid; gap: 12mm; margin-top: 24mm; font-size: 11.8pt; }
+.inspection-signatures > div { display: grid; grid-template-columns: 32mm 64mm minmax(0,1fr); align-items: center; gap: 4mm; }
+.inspection-signatures > div span:last-child { text-align: right; }
+
+.payment-request { display: block; padding-top: 15mm; }
+.payment-request .doc-title { margin: 2mm 0 11mm; font-size: 27pt; }
+.payment-lines { display: flex; flex-direction: column; gap: 7.2mm; }
+.payment-lines > div { display: flex; align-items: baseline; min-width: 0; }
+.payment-label { flex: 0 0 48mm; }
+.payment-value { flex: 0 0 49mm; }
+.payment-words { flex: 1 1 auto; }
+.payment-label { white-space: nowrap; }
+.payment-value { white-space: nowrap; }
+.payment-words { min-width: 0; font-size: 11.2pt; overflow-wrap: anywhere; }
+.payment-statement { margin: 11mm 0 0 7mm; }
+.payment-account-title { margin: 10mm 0 4mm 3mm; }
+.payment-account-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.payment-account-table th, .payment-account-table td { border: .35mm solid #222; padding: 3mm 4mm; text-align: center; font-size: 11.8pt; font-weight: 400; }
+.payment-account-table th { width: 46mm; letter-spacing: .14em; }
+.record-date.payment-date { margin-top: 10mm; }
+.payment-vendor { display: grid; gap: 5mm; width: 118mm; margin: 10mm 0 0 45mm; }
+.payment-vendor > div { display: grid; grid-template-columns: 42mm minmax(0,1fr); gap: 4mm; align-items: baseline; }
+.payment-vendor span { white-space: nowrap; letter-spacing: .08em; }
+.payment-vendor strong { font-weight: 400; overflow-wrap: anywhere; }
+.payment-note { margin: 10mm 0 0; font-size: 10.7pt; }
+
+@media print {
+  body.print-only-document .official-record .doc-title { margin-top: 0; }
+  body.print-only-document .official-table,
+  body.print-only-document .record-signature-row,
+  body.print-only-document .inspection-signatures,
+  body.print-only-document .payment-account-table,
+  body.print-only-document .payment-vendor { break-inside: avoid !important; page-break-inside: avoid !important; }
+  body.print-only-document .supervision-record .record-statement { margin-top: 14mm; }
+  body.print-only-document .supervision-record .record-date { margin-top: 16mm; }
+  body.print-only-document .supervision-record .record-signature-row { margin-top: 20mm; }
+  body.print-only-document .completion-inspection-record .inspection-finished { margin-top: 14mm; }
+  body.print-only-document .completion-inspection-record .record-date { margin-top: 14mm; }
+  body.print-only-document .completion-inspection-record .inspection-signatures { margin-top: 18mm; gap: 10mm; }
+  body.print-only-document .payment-request .payment-lines { gap: 6.2mm; }
+  body.print-only-document .payment-request .payment-statement { margin-top: 9mm; }
+  body.print-only-document .payment-request .payment-account-title { margin-top: 8mm; }
+  body.print-only-document .payment-request .payment-vendor { margin-top: 8mm; }
+  body.print-only-document .payment-request .payment-note { margin-top: 7mm; }
+}
+
+.payment-lines-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.payment-lines-table th, .payment-lines-table td { border: 0; padding: 3.1mm 0; vertical-align: baseline; text-align: left; font-size: 12pt; font-weight: 400; }
+.payment-lines-table th { width: 48mm; white-space: nowrap; }
+.payment-lines-table td.payment-value { width: 52mm; white-space: nowrap; }
+.payment-lines-table td.payment-words { overflow-wrap: anywhere; font-size: 11.2pt; }
+@media print { body.print-only-document .payment-lines-table { break-inside: avoid !important; page-break-inside: avoid !important; } }
+
+/* v0.3.2 묶음 선택 · 연속 미리보기 · 일괄 인쇄 */
+.document-batch-toolbar {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--line);
+  background: #fbfcfe;
+}
+.document-set-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.document-batch-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid #ccd8e8;
+  border-radius: 12px;
+  background: #fff;
+}
+.document-batch-summary > div { min-width: 0; }
+.document-batch-summary strong { display: block; font-size: 14px; }
+.document-batch-summary span { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+.document-batch-summary .button { flex: none; }
+.document-select { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 11px; font-weight: 800; cursor: pointer; }
+.document-select input { width: 16px; height: 16px; margin: 0; accent-color: var(--primary); }
+.document-card.selected { border-color: #86a8d4; box-shadow: 0 0 0 2px rgba(49,91,150,.08); }
+.document-card-top > div { display: flex; align-items: center; gap: 7px; }
+.batch-doc-labels { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.batch-doc-labels span { padding: 5px 8px; border-radius: 999px; background: var(--primary-soft); color: var(--primary-strong); font-size: 10px; font-weight: 800; }
+.batch-missing-grid { align-items: start; }
+.batch-missing-field { min-width: 0; }
+.batch-missing-field > .field { margin: 0; }
+.batch-used-by { margin: 5px 2px 0; color: var(--muted-2); font-size: 10px; }
+.batch-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+.batch-preview-head > div:first-child { display: flex; align-items: baseline; gap: 9px; }
+.batch-preview-head strong { color: var(--primary-strong); font-size: 13px; }
+.batch-preview-head span { font-size: 13px; font-weight: 800; }
+.batch-preview-pages { display: flex; gap: 5px; }
+.batch-preview-pages button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.batch-preview-pages button.active { border-color: var(--primary); background: var(--primary); color: #fff; }
+.modal-action-spacer { flex: 1; }
+.print-history {
+  display: grid;
+  gap: 5px;
+  margin: 14px 24px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+}
+.print-history strong { font-size: 11px; }
+.print-history span { color: var(--muted); font-size: 10px; }
+
+@media (max-width: 720px) {
+  .document-batch-toolbar { padding: 14px 18px; }
+  .document-batch-summary { align-items: stretch; flex-direction: column; }
+  .document-batch-summary .button { width: 100%; }
+  .batch-preview-head { align-items: flex-start; flex-direction: column; }
+  .batch-preview-pages { flex-wrap: wrap; }
+  .modal-action-spacer { display: none; }
+  .print-history { margin-left: 18px; margin-right: 18px; }
+}
+
+.print-batch-documents { margin: 0; background: #fff; }
+.print-batch-documents .paper-a4 { margin: 0; box-shadow: none; }
+
+@media print {
+  body.print-batch-documents {
+    width: 210mm !important;
+    height: auto !important;
+    min-width: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  body.print-batch-documents * { visibility: visible !important; }
+  body.print-batch-documents .batch-print-page {
+    position: relative !important;
+    box-sizing: border-box !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+  body.print-batch-documents .batch-print-page:last-child {
+    break-after: auto !important;
+    page-break-after: auto !important;
+  }
+  body.print-batch-documents .batch-print-page #documentPrintArea {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    box-sizing: border-box !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    min-height: 0 !important;
+    max-height: 297mm !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  body.print-batch-documents .doc-recipient {
+    position: absolute !important;
+    right: 16mm !important;
+    bottom: 11mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  body.print-batch-documents .doc-facts,
+  body.print-batch-documents .doc-attachments,
+  body.print-batch-documents .doc-vendor-block,
+  body.print-batch-documents .official-table,
+  body.print-batch-documents .record-signature-row,
+  body.print-batch-documents .inspection-signatures,
+  body.print-batch-documents .payment-account-table,
+  body.print-batch-documents .payment-vendor,
+  body.print-batch-documents .payment-lines-table {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  body.print-batch-documents .start-report .doc-facts { gap: 7.8mm; }
+  body.print-batch-documents .start-report .doc-attachments { margin-top: 9mm; }
+  body.print-batch-documents .start-report .doc-statement { margin-top: 15mm; }
+  body.print-batch-documents .start-report .doc-date-center { margin-top: 11mm; }
+  body.print-batch-documents .start-report .doc-vendor-block { margin-top: 14mm; }
+  body.print-batch-documents .official-record .doc-title { margin-top: 0; }
+  body.print-batch-documents .supervision-record .record-statement { margin-top: 14mm; }
+  body.print-batch-documents .supervision-record .record-date { margin-top: 16mm; }
+  body.print-batch-documents .supervision-record .record-signature-row { margin-top: 20mm; }
+  body.print-batch-documents .completion-inspection-record .inspection-finished { margin-top: 14mm; }
+  body.print-batch-documents .completion-inspection-record .record-date { margin-top: 14mm; }
+  body.print-batch-documents .completion-inspection-record .inspection-signatures { margin-top: 18mm; gap: 10mm; }
+  body.print-batch-documents .payment-request .payment-statement { margin-top: 9mm; }
+  body.print-batch-documents .payment-request .payment-account-title { margin-top: 8mm; }
+  body.print-batch-documents .payment-request .payment-vendor { margin-top: 8mm; }
+  body.print-batch-documents .payment-request .payment-note { margin-top: 7mm; }
+}

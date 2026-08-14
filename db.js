@@ -2,7 +2,7 @@
   'use strict';
 
   const DB_NAME = 'construction-info-hub';
-  const DB_VERSION = 1;
+  const DB_VERSION = 2;
   let dbPromise = null;
 
   function uuid() {
@@ -29,6 +29,9 @@
         }
         if (!db.objectStoreNames.contains('settings')) {
           db.createObjectStore('settings', { keyPath: 'key' });
+        }
+        if (!db.objectStoreNames.contains('payouts')) {
+          db.createObjectStore('payouts', { keyPath: 'vendorId' });
         }
       };
       req.onsuccess = () => resolve(req.result);
@@ -147,6 +150,9 @@
       completionInspectionRecordDate: seed.completionInspectionRecordDate || '',
       siteManager: seed.siteManager || '',
       siteManagerLicense: seed.siteManagerLicense || '',
+      settlementAmount: seed.settlementAmount ?? '',
+      priorPaymentAmount: seed.priorPaymentAmount ?? '',
+      deductionAmount: seed.deductionAmount ?? '',
       supervisor: seed.supervisor || '',
       inspector: seed.inspector || '',
       witness: seed.witness || '',
@@ -169,6 +175,7 @@
       source: seed.source || 'manual',
       sourceUpdatedAt: seed.sourceUpdatedAt || '',
       contractChanges: Array.isArray(seed.contractChanges) ? seed.contractChanges : [],
+      printHistory: Array.isArray(seed.printHistory) ? seed.printHistory : [],
       createdAt: seed.createdAt || now,
       updatedAt: seed.updatedAt || now
     };
@@ -190,16 +197,30 @@
     };
   }
 
+
+  function createPayout(seed = {}) {
+    const now = new Date().toISOString();
+    return {
+      vendorId: seed.vendorId || '',
+      bankName: seed.bankName || '',
+      accountNumber: seed.accountNumber || '',
+      accountHolder: seed.accountHolder || '',
+      createdAt: seed.createdAt || now,
+      updatedAt: seed.updatedAt || now
+    };
+  }
+
   async function exportBackup() {
-    const [projects, vendors, settings] = await Promise.all([
-      getAll('projects'), getAll('vendors'), getAll('settings')
+    const [projects, vendors, payouts, settings] = await Promise.all([
+      getAll('projects'), getAll('vendors'), getAll('payouts'), getAll('settings')
     ]);
     return {
       app: 'construction-info-hub',
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
       projects,
       vendors,
+      payouts,
       settings
     };
   }
@@ -211,6 +232,7 @@
     await Promise.all([
       replaceAll('projects', data.projects || []),
       replaceAll('vendors', data.vendors || []),
+      replaceAll('payouts', data.payouts || []),
       replaceAll('settings', data.settings || [])
     ]);
   }
@@ -226,6 +248,7 @@
     replaceAll,
     createProject,
     createVendor,
+    createPayout,
     exportBackup,
     importBackup
   };
