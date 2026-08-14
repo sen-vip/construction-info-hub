@@ -473,3 +473,146 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
   .contract-change-item { grid-template-columns: 36px minmax(0, 1fr); }
   .contract-change-item .button { grid-column: 2; justify-self: start; }
 }
+
+/* v0.3.0 — 공사서류 생성 / A4 미리보기 */
+.detail-tabs {
+  display: inline-flex;
+  gap: 4px;
+  margin: 0 0 16px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #edf1f5;
+}
+.detail-tab {
+  min-height: 38px;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 13px;
+}
+.detail-tab:hover { color: var(--text); }
+.detail-tab.active { background: #fff; color: var(--primary-strong); box-shadow: 0 1px 5px rgba(25,38,58,.10); }
+.detail-tab span { display: inline-grid; place-items: center; min-width: 18px; height: 18px; margin-left: 4px; padding: 0 5px; border-radius: 999px; background: var(--primary-soft); color: var(--primary); font-size: 10px; }
+.tab-panel { margin-top: 2px; }
+.tab-panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 22px 24px; border-bottom: 1px solid var(--line); }
+.tab-panel-head h2, .documents-head h2 { margin: 0; font-size: 22px; letter-spacing: -.4px; }
+.tab-panel-head p:not(.eyebrow), .documents-head p:not(.eyebrow) { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+.contract-tab-panel { overflow: hidden; }
+.contract-tab-summary { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; padding: 18px 24px; background: var(--surface-soft); border-bottom: 1px solid var(--line); }
+.contract-tab-summary > div { padding: 12px 14px; border: 1px solid var(--line); border-radius: 11px; background: #fff; }
+.contract-tab-summary span { display: block; color: var(--muted); font-size: 11px; }
+.contract-tab-summary strong { display: block; margin-top: 5px; font-size: 15px; }
+.contract-tab-history { padding: 20px 24px 24px; }
+.document-side-card .full-button { width: 100%; margin-top: 10px; }
+.doc-item-button { width: 100%; border: 1px solid transparent; cursor: pointer; text-align: left; }
+.doc-item-button:hover { border-color: #c8d4e2; background: #f5f8fc; }
+.doc-item-button.ready em { color: var(--success); font-weight: 800; }
+.doc-item-button.needs-info em { color: var(--warn); font-weight: 800; }
+
+.documents-panel { overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; }
+.documents-head { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; padding: 24px; border-bottom: 1px solid var(--line); background: linear-gradient(180deg,#fff 0%,#fbfcfe 100%); }
+.documents-head-note { flex: none; padding: 9px 12px; border: 1px solid #cfdaea; border-radius: 11px; background: var(--primary-soft); text-align: right; }
+.documents-head-note strong, .documents-head-note span { display: block; }
+.documents-head-note strong { color: var(--primary-strong); font-size: 12px; }
+.documents-head-note span { margin-top: 2px; color: var(--muted); font-size: 10px; }
+.document-group { padding: 22px 24px 4px; }
+.document-group + .document-group { border-top: 1px solid #edf0f4; }
+.document-group-title { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
+.document-group-title strong { font-size: 15px; }
+.document-group-title span { color: var(--muted); font-size: 11px; }
+.document-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; padding-bottom: 18px; }
+.document-card { display: flex; flex-direction: column; min-height: 235px; padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+.document-card.ready { border-color: #cde3d8; background: linear-gradient(180deg,#fff 0%,#fbfefc 100%); }
+.document-card.needs-info { border-color: #ebdfc7; }
+.document-card-top { display: flex; justify-content: space-between; gap: 10px; }
+.document-stage { display: inline-flex; padding: 4px 8px; border-radius: 999px; background: var(--primary-soft); color: var(--primary-strong); font-size: 10px; font-weight: 850; }
+.document-version { color: var(--muted-2); font-size: 10px; }
+.document-card h3 { margin: 15px 0 4px; font-size: 18px; }
+.document-card > p { margin: 0; min-height: 38px; color: var(--muted); font-size: 12px; }
+.document-requirement { display: grid; gap: 3px; margin: 15px 0; padding: 10px 11px; border-radius: 9px; background: var(--warn-soft); }
+.document-requirement strong { color: var(--warn); font-size: 11px; }
+.document-requirement span { color: #755a2e; font-size: 10px; }
+.document-requirement.ready { background: var(--success-soft); }
+.document-requirement.ready strong { color: var(--success); }
+.document-requirement.ready span { color: #557264; }
+.document-card .button { width: 100%; margin-top: auto; }
+.document-footnote { margin: 8px 24px 24px; padding: 12px 14px; border-radius: 10px; background: var(--surface-soft); color: var(--muted); font-size: 11px; }
+
+.modal.wide-modal { width: min(1120px, calc(100vw - 28px)); }
+.doc-preview-note { margin-bottom: 12px; color: var(--muted); font-size: 12px; }
+.doc-preview-scroll { overflow: auto; padding: 20px; border-radius: 12px; background: #e9edf2; }
+.paper-a4 {
+  box-sizing: border-box;
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 18mm 16mm 14mm;
+  background: #fff;
+  color: #111;
+  box-shadow: 0 6px 28px rgba(20,30,44,.17);
+  font-family: "Malgun Gothic", "맑은 고딕", Arial, sans-serif;
+  font-size: 12.8pt;
+  line-height: 1.55;
+}
+.admin-document { position: relative; display: flex; flex-direction: column; }
+.doc-title { margin: 3mm 0 16mm; text-align: center; font-size: 27pt; line-height: 1.15; font-weight: 700; }
+.doc-title.wide-spacing { letter-spacing: .28em; text-indent: .28em; }
+.doc-facts { display: grid; gap: 8.5mm; }
+.doc-fact-row { display: grid; grid-template-columns: 45mm minmax(0,1fr); align-items: baseline; }
+.doc-fact-label { white-space: nowrap; }
+.doc-fact-value { min-width: 0; }
+.doc-attachments { display: grid; grid-template-columns: 38mm minmax(0,1fr); margin-top: 11mm; }
+.doc-attachments > span { white-space: nowrap; }
+.doc-attachments ol { margin: 0; padding: 0; list-style-position: inside; }
+.doc-attachments li { margin: 0 0 1.5mm; }
+.doc-statement { margin: 19mm 0 0; }
+.doc-statement.completion-statement { margin-top: 22mm; text-align: center; }
+.doc-date-center { margin: 13mm 0 0; text-align: center; }
+.doc-vendor-block { display: grid; gap: 4mm; width: 112mm; margin: 18mm 0 0 47mm; }
+.doc-vendor-block > div { display: grid; grid-template-columns: 47mm minmax(0,1fr); gap: 3mm; align-items: baseline; }
+.doc-vendor-block span { white-space: pre; }
+.doc-vendor-block strong { font-weight: 400; overflow-wrap: anywhere; }
+.doc-recipient { margin: auto 0 0; padding-top: 10mm; text-align: right; font-size: 17pt; font-weight: 700; }
+.inspection-request .doc-title { margin-bottom: 13mm; }
+.inspection-request .doc-facts { gap: 6.5mm; }
+.doc-pledge { margin-top: 15mm; line-height: 2.15; }
+.doc-pledge p { margin: 0; }
+.inspection-request .doc-date-center { margin-top: 12mm; }
+.inspection-request .doc-vendor-block { margin-top: 13mm; }
+.document-missing-grid .money-korean { margin-bottom: 0; }
+
+@media (max-width: 720px) {
+  .detail-tabs { width: 100%; }
+  .detail-tab { flex: 1; padding-left: 8px; padding-right: 8px; }
+  .tab-panel-head, .documents-head { flex-direction: column; padding: 18px; }
+  .contract-tab-summary { grid-template-columns: 1fr; padding: 14px 18px; }
+  .contract-tab-history { padding: 16px 18px 20px; }
+  .document-group { padding-left: 18px; padding-right: 18px; }
+  .document-grid { grid-template-columns: 1fr; }
+  .document-footnote { margin-left: 18px; margin-right: 18px; }
+  .doc-preview-scroll { padding: 10px; }
+  .paper-a4 { margin: 0; }
+}
+
+@media print {
+  @page { size: A4 portrait; margin: 0; }
+  html, body { background: #fff !important; }
+  body * { visibility: hidden !important; }
+  #documentPrintArea, #documentPrintArea * { visibility: visible !important; }
+  #documentPrintArea {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    min-height: 297mm !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+  }
+}

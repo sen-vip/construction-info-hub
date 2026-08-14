@@ -23,7 +23,8 @@
     search: '',
     autosaveTimer: null,
     saveToken: 0,
-    importMode: 'auto'
+    importMode: 'auto',
+    detailTab: 'info'
   };
 
   const FIELDS_FOR_IMPORT = [
@@ -148,7 +149,8 @@
     setTimeout(() => div.remove(), 3200);
   }
 
-  function openModal({ title, eyebrow = '', body = '', actions = '' }) {
+  function openModal({ title, eyebrow = '', body = '', actions = '', wide = false }) {
+    modal.classList.toggle('wide-modal', !!wide);
     modalTitle.textContent = title;
     modalEyebrow.textContent = eyebrow;
     modalBody.innerHTML = body;
@@ -300,6 +302,7 @@
 
   function openProject(id) {
     state.currentProjectId = id;
+    state.detailTab = 'info';
     window.scrollTo({ top: 0, behavior: 'instant' });
     render();
   }
@@ -334,11 +337,17 @@
         <div class="save-state" id="saveState"><span class="pulse"></span><span>이 기기에 저장됨</span></div>
       </div>
 
-      <section class="workflow-strip" aria-label="공사 진행 단계">
+      <nav class="detail-tabs" aria-label="공사 상세 메뉴">
+        <button type="button" class="detail-tab ${state.detailTab==='info'?'active':''}" data-detail-tab="info">공사정보</button>
+        <button type="button" class="detail-tab ${state.detailTab==='changes'?'active':''}" data-detail-tab="changes">변경계약${p.contractChanges?.length ? ` <span>${p.contractChanges.length}</span>` : ''}</button>
+        <button type="button" class="detail-tab ${state.detailTab==='documents'?'active':''}" data-detail-tab="documents">서류 <span>3</span></button>
+      </nav>
+
+      <section class="workflow-strip ${state.detailTab==='info'?'':'hidden'}" aria-label="공사 진행 단계">
         ${workflow.map(workflowStepHtml).join('')}
       </section>
 
-      <div class="detail-layout">
+      <div class="detail-layout ${state.detailTab==='info'?'':'hidden'}">
         <section class="panel form-panel" id="projectForm">
           ${workflowSectionHtml('basic','공사 기본정보','한 번 입력해 계속 재사용하는 공사·업체 정보', {label:'기본', done:!!p.projectName && !!p.vendorName, active:status.key==='contract_prep'}, [
             field('projectName','공사명',p.projectName,'text',true),
@@ -419,15 +428,15 @@
             <p>${p.contractChanges?.length ? `변경계약 ${p.contractChanges.length}건이 기록되어 있습니다.` : '아직 변경계약 이력이 없습니다.'}</p>
             <button class="button secondary small" id="sideAddContractChangeBtn" type="button" style="margin-top:10px">+ 변경계약 추가</button>
           </section>
-          <section class="side-card">
+          <section class="side-card document-side-card">
             <h3>공사서류</h3>
-            <p>현재 공사정보를 그대로 사용해 서류를 생성하는 기능을 다음 단계에서 연결합니다.</p>
+            <p>저장된 공사정보로 행정기관 내부 양식을 바로 만듭니다.</p>
             <div class="doc-list">
-              <div class="doc-item"><span>착공계</span><em>다음 버전</em></div>
-              <div class="doc-item"><span>준공계</span><em>다음 버전</em></div>
-              <div class="doc-item"><span>준공검사조서</span><em>다음 버전</em></div>
-              <div class="doc-item"><span>대금청구서</span><em>다음 버전</em></div>
+              ${documentQuickItemHtml('startReport', p)}
+              ${documentQuickItemHtml('completionReport', p)}
+              ${documentQuickItemHtml('completionInspectionRequest', p)}
             </div>
+            <button class="button secondary small full-button" id="openDocumentsTab" type="button">서류 전체 보기</button>
           </section>
           <section class="side-card">
             <h3>자료 출처</h3>
@@ -440,15 +449,31 @@
             <button class="button danger small" id="deleteProjectBtn" type="button" style="margin-top:10px">이 공사 삭제</button>
           </section>
         </aside>
-      </div>`;
+      </div>
+
+      <section class="tab-panel ${state.detailTab==='changes'?'':'hidden'}">
+        <div class="panel contract-tab-panel">
+          <div class="tab-panel-head"><div><p class="eyebrow">계약 변경 이력</p><h2>변경계약</h2><p>최초 계약정보를 지우지 않고 금액과 준공기한 변경 이력을 계속 남깁니다.</p></div><button class="button primary" id="tabAddContractChangeBtn" type="button">+ 변경계약 추가</button></div>
+          <div class="contract-tab-summary"><div><span>최초 계약금액</span><strong>${e(formatMoney(p.originalContractAmount))}</strong></div><div><span>현재 계약금액</span><strong>${e(formatMoney(p.currentContractAmount))}</strong></div><div><span>현재 준공기한</span><strong>${e(formatDate(p.completionDueDate))}</strong></div></div>
+          <div class="contract-tab-history">${contractChangeHistoryHtml(p)}</div>
+        </div>
+      </section>
+
+      <section class="tab-panel ${state.detailTab==='documents'?'':'hidden'}">
+        ${documentsTabHtml(p)}
+      </section>`;
 
     document.getElementById('backToList').addEventListener('click', () => { state.currentProjectId = null; renderDashboard(); });
-    document.getElementById('vendorPicker').addEventListener('change', applyVendorToCurrentProject);
-    document.getElementById('saveVendorBtn').addEventListener('click', saveCurrentVendor);
-    document.getElementById('deleteProjectBtn').addEventListener('click', confirmDeleteProject);
+    document.getElementById('vendorPicker')?.addEventListener('change', applyVendorToCurrentProject);
+    document.getElementById('saveVendorBtn')?.addEventListener('click', saveCurrentVendor);
+    document.getElementById('deleteProjectBtn')?.addEventListener('click', confirmDeleteProject);
     document.getElementById('addContractChangeBtn')?.addEventListener('click', openContractChangeModal);
     document.getElementById('sideAddContractChangeBtn')?.addEventListener('click', openContractChangeModal);
+    document.getElementById('tabAddContractChangeBtn')?.addEventListener('click', openContractChangeModal);
+    document.getElementById('openDocumentsTab')?.addEventListener('click', () => { state.detailTab='documents'; renderProjectDetail(); });
     document.getElementById('jumpCurrentStage')?.addEventListener('click', () => jumpToSection(sectionForStatus(status.key)));
+    main.querySelectorAll('[data-detail-tab]').forEach(btn => btn.addEventListener('click', () => { state.detailTab = btn.dataset.detailTab; renderProjectDetail(); }));
+    main.querySelectorAll('[data-doc-open]').forEach(btn => btn.addEventListener('click', () => openDocumentPreview(btn.dataset.docOpen)));
     main.querySelectorAll('[data-jump-section]').forEach(btn => btn.addEventListener('click', () => jumpToSection(btn.dataset.jumpSection)));
     main.querySelectorAll('[data-change-delete]').forEach(btn => btn.addEventListener('click', () => confirmDeleteContractChange(btn.dataset.changeDelete)));
     main.querySelectorAll('[data-field]').forEach(input => {
@@ -457,6 +482,221 @@
     });
     initDateInputs(main);
     initMoneyInputs(main);
+  }
+
+
+  const DOCUMENT_DEFINITIONS = {
+    startReport: {
+      key:'startReport', label:'착공계', outputTitle:'착 공 신 고 서', stage:'착공', version:'2026.04',
+      description:'착공 신고 시 제출하는 기본 착공계',
+      required:['schoolName','projectName','currentContractAmount','contractDate','startDate','completionDueDate','vendorName','businessNumber','vendorAddress','representative']
+    },
+    completionReport: {
+      key:'completionReport', label:'준공계', outputTitle:'준 공 계', stage:'준공', version:'2026.04',
+      description:'공사 완료 후 제출하는 준공계',
+      required:['schoolName','projectName','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','vendorName','businessNumber','vendorAddress','representative']
+    },
+    completionInspectionRequest: {
+      key:'completionInspectionRequest', label:'준공검사원', outputTitle:'준 공 검 사 원', stage:'준공', version:'2026.04',
+      description:'준공 사실을 확인하고 검사를 요청하는 서류',
+      required:['schoolName','projectName','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','vendorName','businessNumber','vendorAddress','representative']
+    }
+  };
+
+  const DOCUMENT_FIELD_LABELS = {
+    schoolName:'기관명', projectName:'공사명', currentContractAmount:'계약금액', contractDate:'계약일', startDate:'착공일', completionDueDate:'준공기한', actualCompletionDate:'실제 준공일', vendorName:'업체명', businessNumber:'사업자등록번호', vendorAddress:'사업장 주소', representative:'대표자'
+  };
+
+  function documentValue(field, p) {
+    if (field === 'schoolName') return state.school?.name || '';
+    return p?.[field] ?? '';
+  }
+
+  function documentMissing(type, p) {
+    const def = DOCUMENT_DEFINITIONS[type];
+    if (!def) return [];
+    return def.required.filter(field => !meaningful(documentValue(field, p)));
+  }
+
+  function documentQuickItemHtml(type, p) {
+    const def = DOCUMENT_DEFINITIONS[type];
+    const missing = documentMissing(type, p);
+    const status = missing.length ? `${missing.length}개 정보 필요` : '생성 가능';
+    return `<button class="doc-item doc-item-button ${missing.length?'needs-info':'ready'}" type="button" data-doc-open="${e(type)}"><span>${e(def.label)}</span><em>${e(status)}</em></button>`;
+  }
+
+  function documentCardHtml(type, p) {
+    const def = DOCUMENT_DEFINITIONS[type];
+    const missing = documentMissing(type, p);
+    const labels = missing.map(x => DOCUMENT_FIELD_LABELS[x] || x);
+    return `<article class="document-card ${missing.length?'needs-info':'ready'}">
+      <div class="document-card-top"><span class="document-stage">${e(def.stage)}</span><span class="document-version">양식 ${e(def.version)}</span></div>
+      <h3>${e(def.label)}</h3><p>${e(def.description)}</p>
+      ${missing.length ? `<div class="document-requirement"><strong>추가 입력 ${missing.length}개</strong><span>${e(labels.slice(0,3).join(' · '))}${labels.length>3?' 외':''}</span></div>` : `<div class="document-requirement ready"><strong>✓ 바로 생성 가능</strong><span>현재 공사정보를 그대로 사용합니다.</span></div>`}
+      <button class="button ${missing.length?'secondary':'primary'}" type="button" data-doc-open="${e(type)}">${missing.length?'부족정보 입력하고 만들기':'미리보기'}</button>
+    </article>`;
+  }
+
+  function documentsTabHtml(p) {
+    return `<div class="documents-panel">
+      <div class="documents-head"><div><p class="eyebrow">행정기관 내부 양식 우선</p><h2>공사서류</h2><p>별도 입력폼을 만들지 않고 현재 공사 마스터의 값을 그대로 사용합니다. 없는 정보만 해당 순간에 추가합니다.</p></div><div class="documents-head-note"><strong>v0.3.0</strong><span>착공·준공 핵심 3종</span></div></div>
+      <div class="document-group"><div class="document-group-title"><strong>착공</strong><span>공사를 시작할 때</span></div><div class="document-grid">${documentCardHtml('startReport',p)}</div></div>
+      <div class="document-group"><div class="document-group-title"><strong>준공</strong><span>공사를 완료했을 때</span></div><div class="document-grid">${documentCardHtml('completionReport',p)}${documentCardHtml('completionInspectionRequest',p)}</div></div>
+      <div class="document-footnote">출력양식은 제공받은 「공사서류 원클릭 프로그램(2026.4.)」의 내부 서식을 기준으로 구현했습니다. 화면 디자인은 웹에 맞게 구성하되 출력물의 문구와 구조는 기존 행정양식을 우선합니다.</div>
+    </div>`;
+  }
+
+  function documentMissingFieldHtml(field, p) {
+    const id = `docMissing_${field}`;
+    const label = DOCUMENT_FIELD_LABELS[field] || field;
+    const value = documentValue(field, p);
+    if (field === 'currentContractAmount') return `<div class="field"><label for="${e(id)}">${e(label)}</label>${moneyInputHtml(id, value)}</div>`;
+    if (['contractDate','startDate','completionDueDate','actualCompletionDate'].includes(field)) return modalDateField(id, label, value);
+    return modalField(id, label, value, field === 'vendorAddress' || field === 'projectName');
+  }
+
+  function openDocumentPreview(type) {
+    const p = currentProject();
+    const def = DOCUMENT_DEFINITIONS[type];
+    if (!p || !def) return;
+    const missing = documentMissing(type, p);
+    if (missing.length) { openDocumentMissingModal(type, missing); return; }
+    openModal({
+      eyebrow:`${def.stage} 서류 · 양식 ${def.version}`,
+      title:`${def.label} 미리보기`,
+      wide:true,
+      body:`<div class="doc-preview-note">실제 출력될 A4 모습을 확인하세요. 수정이 필요하면 닫고 공사정보에서 고치면 모든 서류에 함께 반영됩니다.</div><div class="doc-preview-scroll">${documentMarkup(type,p)}</div>`,
+      actions:`<button class="button secondary" type="button" data-modal-close>닫기</button><button class="button primary" type="button" id="printDocumentBtn">인쇄 / PDF 저장</button>`
+    });
+    modalActions.querySelector('[data-modal-close]').addEventListener('click', closeModal);
+    modalActions.querySelector('#printDocumentBtn').addEventListener('click', () => window.print());
+  }
+
+  function openDocumentMissingModal(type, missing) {
+    const p = currentProject();
+    const def = DOCUMENT_DEFINITIONS[type];
+    openModal({
+      eyebrow:`${def.label} 만들기`, title:`${missing.length}개 정보만 더 입력해주세요`,
+      body:`<div class="notice"><strong>이미 저장된 정보는 다시 묻지 않습니다.</strong><br>아래 값은 공사정보에 저장되어 다른 서류에서도 그대로 재사용됩니다.</div><div class="modal-grid document-missing-grid" style="margin-top:16px">${missing.map(field => documentMissingFieldHtml(field,p)).join('')}</div>`,
+      actions:`<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="saveMissingDocFields">저장하고 ${e(def.label)} 보기</button>`
+    });
+    initDateInputs(modalBody);
+    initMoneyInputs(modalBody);
+    modalActions.querySelector('[data-modal-close]').addEventListener('click', closeModal);
+    modalActions.querySelector('#saveMissingDocFields').addEventListener('click', () => saveDocumentMissingFields(type, missing));
+  }
+
+  async function saveDocumentMissingFields(type, fields) {
+    const p = currentProject();
+    if (!p) return;
+    let schoolChanged = false;
+    for (const field of fields) {
+      const el = modalBody.querySelector(`#docMissing_${CSS.escape(field)}`);
+      let value = el?.value?.trim?.() ?? '';
+      if (field === 'currentContractAmount') value = parseMoneyInput(value);
+      if (!meaningful(value)) { showToast(`${DOCUMENT_FIELD_LABELS[field] || field}을(를) 입력해주세요.`, 'warn'); return; }
+      if (field === 'schoolName') { state.school = { ...(state.school||{}), name:value }; schoolChanged = true; }
+      else p[field] = value;
+    }
+    p.updatedAt = new Date().toISOString();
+    if (!meaningful(p.originalContractAmount) && meaningful(p.currentContractAmount)) p.originalContractAmount = p.currentContractAmount;
+    await DB.put('projects',p);
+    if (schoolChanged) await DB.put('settings',{key:'school',value:state.school});
+    closeModal();
+    renderProjectDetail();
+    openDocumentPreview(type);
+  }
+
+  function formatKoreanDate(value) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || '');
+    return m ? `${Number(m[1])}년 ${Number(m[2])}월 ${Number(m[3])}일` : e(value || '');
+  }
+
+  function documentMoney(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return e(value || '');
+    const words = koreanMoney(n).replace(/^금\s*/, '').replace(/원$/, '').replace(/\s+/g, '');
+    return `금 ${n.toLocaleString('ko-KR')} 원(금 ${words} 원정)`;
+  }
+
+  function representativeWithSeal(value) {
+    const text = String(value || '').trim();
+    if (!text) return '';
+    return /\(인\)|（인）/.test(text) ? text : `${text}  (인)`;
+  }
+
+  function recipientFor(name) {
+    const n = String(name || '').trim();
+    if (!n) return '';
+    if (n.endsWith('교육지원청')) return `${n} 교육장 귀하`;
+    if (n.endsWith('교육청')) return `${n} 교육감 귀하`;
+    return `${n}장 귀하`;
+  }
+
+  function documentFacts(rows) {
+    return `<div class="doc-facts">${rows.map(([label,value]) => `<div class="doc-fact-row"><span class="doc-fact-label">${e(label)}</span><span class="doc-fact-value">${value}</span></div>`).join('')}</div>`;
+  }
+
+  function documentVendorBlock(p, inspection = false) {
+    const business = Excel.normalizeBusinessNumber(p.businessNumber || '');
+    const labels = inspection
+      ? [['업   체   명',p.vendorName],['사업자등록번호',business],['주        소',p.vendorAddress],['대   표   자',representativeWithSeal(p.representative)]]
+      : [['회     사     명',p.vendorName],['사업자등록번호',business],['주             소',p.vendorAddress],['대     표     자',representativeWithSeal(p.representative)]];
+    return `<div class="doc-vendor-block ${inspection?'inspection':''}">${labels.map(([label,value]) => `<div><span>${e(label)} :</span><strong>${e(value)}</strong></div>`).join('')}</div>`;
+  }
+
+  function documentMarkup(type, p) {
+    const schoolName = state.school?.name || '';
+    const recipient = recipientFor(schoolName);
+    if (type === 'startReport') {
+      return `<article id="documentPrintArea" class="paper-a4 admin-document">
+        <h1 class="doc-title wide-spacing">착 공 신 고 서</h1>
+        ${documentFacts([
+          ['1. 공 사 명 :',e(p.projectName)],
+          ['2. 계 약 금 액 :',e(documentMoney(p.currentContractAmount))],
+          ['3. 계약연월일 :',e(formatKoreanDate(p.contractDate))],
+          ['4. 착공연월일 :',e(formatKoreanDate(p.startDate))],
+          ['5. 준 공 기 한 :',e(formatKoreanDate(p.completionDueDate))]
+        ])}
+        <div class="doc-attachments"><span>붙&nbsp;&nbsp;&nbsp;&nbsp;임 :</span><ol><li>현장대리인계(재직증명서, 건설기술경력증수첩 사본)</li><li>공사예정공정표</li><li>공사도급내역서</li></ol></div>
+        <p class="doc-statement start-statement">상기와 같이 공사를 착공하였기에 착공계를 제출합니다.</p>
+        <p class="doc-date-center">${e(formatKoreanDate(p.startDate))}</p>
+        ${documentVendorBlock(p)}
+        <p class="doc-recipient">${e(recipient)}</p>
+      </article>`;
+    }
+    if (type === 'completionReport') {
+      return `<article id="documentPrintArea" class="paper-a4 admin-document">
+        <h1 class="doc-title wide-spacing">준 공 계</h1>
+        ${documentFacts([
+          ['1. 공 사 명 :',e(p.projectName)],
+          ['2. 계약금액 :',e(documentMoney(p.currentContractAmount))],
+          ['3. 계약일자 :',e(formatKoreanDate(p.contractDate))],
+          ['4. 착공일자 :',e(formatKoreanDate(p.startDate))],
+          ['5. 준공기한 :',e(formatKoreanDate(p.completionDueDate))],
+          ['6. 준공일자 :',e(formatKoreanDate(p.actualCompletionDate))]
+        ])}
+        <p class="doc-statement completion-statement">상기공사를 준공하였기에 준공계를 제출합니다.</p>
+        <p class="doc-date-center">${e(formatKoreanDate(p.actualCompletionDate))}</p>
+        ${documentVendorBlock(p)}
+        <p class="doc-recipient">${e(recipient)}</p>
+      </article>`;
+    }
+    return `<article id="documentPrintArea" class="paper-a4 admin-document inspection-request">
+      <h1 class="doc-title wide-spacing">준 공 검 사 원</h1>
+      ${documentFacts([
+        ['1. 공 사 명 :',e(p.projectName)],
+        ['2. 계약금액 :',e(documentMoney(p.currentContractAmount))],
+        ['3. 계약일자 :',e(formatKoreanDate(p.contractDate))],
+        ['4. 착공일자 :',e(formatKoreanDate(p.startDate))],
+        ['5. 준공기한 :',e(formatKoreanDate(p.completionDueDate))],
+        ['6. 준공일자 :',e(formatKoreanDate(p.actualCompletionDate))]
+      ])}
+      <div class="doc-pledge"><p>위 공사의 도급시행에 있어서 공사전반에 걸쳐 공사설계도서, 품질관리기준 및 기타</p><p>약정대로 어김없이 준공되었음을 확인하오며, 만약 공사시공, 감독 및 검사에 관하여</p><p>하자가 발견될 시는 하자담보기간 전후를 막론하고 실액변상 또는 재시공할 것을</p><p>서약하고 이에 준공검사원을 제출합니다.</p></div>
+      <p class="doc-date-center">${e(formatKoreanDate(p.actualCompletionDate))}</p>
+      ${documentVendorBlock(p,true)}
+      <p class="doc-recipient">${e(recipient)}</p>
+    </article>`;
   }
 
   function sectionForStatus(statusKey) {
@@ -1179,13 +1419,14 @@
 
   function openHelp() {
     openModal({
-      eyebrow:'도움말', title:'v0.2.1 사용 흐름',
+      eyebrow:'도움말', title:'v0.3.0 사용 흐름',
       body:`<div class="notice"><strong>핵심 원칙</strong><br>같은 공사정보는 한 번 입력하고 다시 입력하지 않습니다.</div>
       <div style="display:grid;gap:16px;margin-top:18px;font-size:14px">
         <div><strong>1. 공사를 여러 건 저장</strong><p class="muted">전기·건축·체육관 공사를 동시에 등록해도 각 공사는 독립적으로 자동저장됩니다.</p></div>
         <div><strong>2. 기존 공사이력 재사용</strong><p class="muted">학교 공사 이력 현황.xlsx를 불러오면 여러 공사를 한꺼번에 등록하고 기존 공사의 빈 정보를 보완합니다.</p></div><div><strong>3. 에듀파인으로 업데이트</strong><p class="muted">자료관리목록.xlsx를 다시 내려받아 올리면 계약·준공·지출 단계에서 새로 생긴 값만 기존 공사에 보완합니다. 다른 값은 자동 덮어쓰지 않습니다.</p></div>
         <div><strong>4. 업체 재사용</strong><p class="muted">업체명·대표자·사업자번호·주소·전화·면허를 업체 보관함에 저장해 다음 공사에서 다시 고를 수 있습니다.</p></div>
-        <div><strong>5. 인수인계</strong><p class="muted">전체 백업(JSON)은 앱 복원용이고, 공사이력 엑셀은 감사·업무용 결과물입니다.</p></div>
+        <div><strong>5. 공사서류 만들기</strong><p class="muted">공사 상세의 「서류」 탭에서 착공계·준공계·준공검사원을 만들 수 있습니다. 이미 있는 정보는 다시 묻지 않고, 빠진 값만 공사정보에 저장해 계속 재사용합니다.</p></div>
+        <div><strong>6. 인수인계</strong><p class="muted">전체 백업(JSON)은 앱 복원용이고, 공사이력 엑셀은 감사·업무용 결과물입니다.</p></div>
         <div><strong>보안</strong><p class="muted">공사정보와 엑셀 내용은 서버로 전송하지 않습니다. 브라우저 저장소에 남으므로 공용 Windows 계정에서는 PC 접근통제와 정기 백업이 필요합니다.</p></div>
       </div>`,
       actions:`<button class="button primary" type="button" data-modal-close>확인</button>`
