@@ -163,6 +163,8 @@
       contractSecurityType: seed.contractSecurityType || '',
       contractSecurityRate: seed.contractSecurityRate ?? '',
       contractSecurityAmount: seed.contractSecurityAmount ?? '',
+      delayPenaltyRate: seed.delayPenaltyRate || '',
+      priceAdjustmentMethod: seed.priceAdjustmentMethod || '',
       defectSecurityType: seed.defectSecurityType || '',
       defectSecurityRate: seed.defectSecurityRate ?? '',
       defectSecurityAmount: seed.defectSecurityAmount ?? '',

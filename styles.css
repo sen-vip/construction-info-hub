@@ -637,7 +637,7 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
     overflow: hidden !important;
   }
   body.print-only-document * { visibility: visible !important; }
-  body.print-only-document #documentPrintArea {
+  body.print-only-document .document-print-page {
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
@@ -676,9 +676,9 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 
   /* Same-window fallback for browsers that invoke the host page's print command. */
   body:not(.print-only-document) * { visibility: hidden !important; }
-  body:not(.print-only-document) #documentPrintArea,
-  body:not(.print-only-document) #documentPrintArea * { visibility: visible !important; }
-  body:not(.print-only-document) #documentPrintArea {
+  body:not(.print-only-document) .document-print-page,
+  body:not(.print-only-document) .document-print-page * { visibility: visible !important; }
+  body:not(.print-only-document) .document-print-page {
     position: fixed !important;
     left: 0 !important;
     top: 0 !important;
@@ -775,7 +775,7 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .payment-lines-table td.payment-words { overflow-wrap: anywhere; font-size: 11.2pt; }
 @media print { body.print-only-document .payment-lines-table { break-inside: avoid !important; page-break-inside: avoid !important; } }
 
-/* v0.3.2 묶음 선택 · 연속 미리보기 · 일괄 인쇄 */
+/* v0.3.2에서 도입된 묶음 선택 · 연속 미리보기 · 일괄 인쇄 기반 */
 .document-batch-toolbar {
   padding: 18px 24px;
   border-bottom: 1px solid var(--line);
@@ -882,7 +882,7 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
     break-after: auto !important;
     page-break-after: auto !important;
   }
-  body.print-batch-documents .batch-print-page #documentPrintArea {
+  body.print-batch-documents .batch-print-page .document-print-page {
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
@@ -933,3 +933,119 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
   body.print-batch-documents .payment-request .payment-vendor { margin-top: 8mm; }
   body.print-batch-documents .payment-request .payment-note { margin-top: 7mm; }
 }
+
+
+/* v0.4.0 — 계약서류 4종 / 서류 템플릿 분리 */
+.document-page-gap { height: 18px; }
+.standard-contract,
+.acceptance-terms,
+.use-seal-form,
+.private-contract-pledge { font-family: "Malgun Gothic", "맑은 고딕", Arial, sans-serif; }
+
+/* 공사도급표준계약서 */
+.standard-contract {
+  display: block;
+  padding: 9mm 10mm 8mm;
+  font-size: 8.9pt;
+  line-height: 1.28;
+}
+.standard-contract-title-row { display: grid; grid-template-columns: minmax(0,1fr) 49mm; align-items: stretch; border: .3mm solid #222; }
+.standard-contract-title-row h1 { display: grid; place-items: center; margin: 0; min-height: 18mm; font-size: 22pt; letter-spacing: .18em; text-indent: .18em; }
+.standard-contract-title-row table { width: 100%; border-collapse: collapse; border-left: .3mm solid #222; font-size: 8.2pt; }
+.standard-contract-title-row th, .standard-contract-title-row td { border-bottom: .3mm solid #222; padding: 1mm 1.2mm; font-weight: 400; text-align: center; }
+.standard-contract-title-row tr:last-child th, .standard-contract-title-row tr:last-child td { border-bottom: 0; }
+.standard-contract-title-row th { width: 28mm; text-align: left; white-space: nowrap; }
+.standard-contract-title-row td:last-child { width: 8mm; }
+.standard-contract-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.standard-contract-table th, .standard-contract-table td { border: .28mm solid #222; padding: 1.25mm 1.7mm; vertical-align: middle; font-weight: 400; }
+.standard-contract-table th { text-align: center; }
+.party-table { border-top: 0; }
+.party-table .vertical-head, .contract-detail-table .vertical-head { width: 10mm; padding-left: .6mm; padding-right: .6mm; line-height: 1.15; }
+.party-table th:nth-child(2) { width: 27mm; }
+.party-table td { overflow-wrap: anywhere; }
+.party-table td:nth-child(3), .party-table td:nth-child(5) { width: 30mm; white-space: nowrap; }
+.contract-detail-table th:nth-child(2) { width: 31mm; }
+.contract-detail-table .small-label { font-size: 6.8pt; letter-spacing: -.04em; }
+.contract-defect-caption { padding: 1.4mm 1mm; border-left: .28mm solid #222; border-right: .28mm solid #222; font-size: 8.4pt; }
+.contract-defect-table th { font-size: 7.7pt; }
+.contract-defect-table th:nth-child(1) { width: 28mm; }
+.contract-defect-table th:nth-child(2) { width: 40mm; }
+.contract-defect-table th:nth-child(4) { width: 44mm; }
+.contract-defect-table td { height: 8mm; text-align: center; }
+.contract-declaration { margin: 8mm 3mm 0; text-align: justify; font-size: 8.4pt; line-height: 1.55; }
+.contract-attachments { display: grid; grid-template-columns: 20mm minmax(0,1fr); margin: 5.5mm 3mm 0; }
+.contract-attachments strong { font-weight: 400; }
+.contract-attachments ol { margin: 0; padding-left: 5mm; line-height: 1.55; }
+.contract-date { margin: 5mm 0 0; text-align: center; font-size: 9pt; }
+.contract-signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 17mm; margin: 5mm 3mm 0; }
+.contract-signatures > div > strong { display: block; margin-bottom: 2mm; font-size: 9pt; }
+.contract-signatures p { display: grid; grid-template-columns: 17mm 4mm minmax(0,1fr); margin: 1.8mm 0; }
+.contract-signatures p span { white-space: nowrap; }
+.contract-signatures p b { font-weight: 400; }
+
+/* 승낙사항 */
+.acceptance-terms { padding: 14mm 15mm 12mm; font-size: 11.2pt; line-height: 1.6; }
+.acceptance-title { margin: 0 0 14mm; font-size: 27pt; }
+.acceptance-list { display: grid; gap: 8mm; margin: 0; padding-left: 10mm; }
+.acceptance-list li { padding-left: 3mm; }
+.acceptance-date { margin: 20mm 0 0; text-align: center; }
+.acceptance-vendor { display: grid; gap: 3.5mm; width: 132mm; margin: 14mm 0 0 13mm; }
+.acceptance-vendor p { display: grid; grid-template-columns: 40mm 5mm minmax(0,1fr); margin: 0; }
+.acceptance-vendor span { white-space: nowrap; }
+.acceptance-vendor b { font-weight: 400; }
+
+/* 사용인감계 */
+.use-seal-form { padding: 18mm 17mm 13mm; font-size: 12pt; line-height: 1.65; }
+.use-seal-title { margin: 4mm 0 18mm; font-size: 31pt; }
+.seal-boxes { display: grid; grid-template-columns: 52mm 52mm; justify-content: center; gap: 37mm; }
+.seal-boxes > div { border: .35mm solid #222; }
+.seal-boxes strong { display: block; padding: 3mm; border-bottom: .35mm solid #222; text-align: center; font-size: 14pt; letter-spacing: .18em; }
+.seal-boxes span { display: block; height: 42mm; }
+.seal-statement { margin: 27mm 0 0; text-align: justify; }
+.seal-project { margin: 24mm 0 0 34mm; font-size: 13pt; }
+.seal-date { margin: 16mm 0 0; text-align: center; }
+.seal-vendor { display: grid; gap: 4.5mm; width: 112mm; margin: 18mm 0 0 65mm; }
+.seal-vendor p { display: grid; grid-template-columns: 38mm minmax(0,1fr); margin: 0; }
+.seal-recipient { font-size: 17pt; }
+
+/* 수의계약 통합서약서 — 원본처럼 2쪽 */
+.private-contract-pledge { display: block; padding: 7mm 8mm 7mm; font-size: 7.25pt; line-height: 1.24; }
+.pledge-title { margin: 1mm 0 3.5mm; text-align: center; font-size: 18pt; }
+.pledge-summary, .pledge-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.pledge-summary th, .pledge-summary td, .pledge-table th, .pledge-table td { border: .24mm solid #222; padding: .85mm 1.15mm; vertical-align: middle; }
+.pledge-summary th { width: 25mm; text-align: center; font-weight: 500; }
+.pledge-summary td { overflow-wrap: anywhere; }
+.pledge-table { margin-top: 3mm; }
+.pledge-table thead th { text-align: center; font-weight: 600; background: #fafafa; }
+.pledge-table thead th:nth-child(1) { width: 8mm; }
+.pledge-table thead th:nth-child(2) { width: 27mm; }
+.pledge-table thead th:nth-child(4) { width: 30mm; }
+.pledge-table tbody > tr > td:first-child { text-align: center; }
+.pledge-table tbody > tr > th { text-align: center; font-weight: 500; }
+.pledge-table td:last-child { white-space: pre-line; text-align: center; font-size: 6.6pt; line-height: 1.2; }
+.pledge-table .pledge-conflict td:nth-last-child(2) { font-size: 6.8pt; }
+.pledge-mini { font-size: 6.2pt; }
+.pledge-sign { display: grid; gap: 2mm; margin-top: 3.5mm; text-align: center; }
+.pledge-sign p { margin: 0; }
+.pledge-sign p:last-child { display: grid; grid-template-columns: 22mm minmax(0,1fr) 22mm minmax(0,1fr); align-items: baseline; width: 118mm; margin: 0 auto; text-align: left; }
+.pledge-recipient { margin: 2.5mm 0 0; font-size: 8.6pt; font-weight: 700; }
+.pledge-page-two { padding: 16mm 14mm 13mm; font-size: 10.2pt; line-height: 1.6; }
+.pledge-reasons-title { margin: 4mm 0 12mm; text-align: center; font-size: 25pt; letter-spacing: .08em; }
+.pledge-reasons { display: grid; gap: 5.8mm; margin: 0; padding-left: 10mm; }
+.pledge-reasons li { padding-left: 2mm; text-align: justify; }
+.pledge-reasons-note { margin: 10mm 0 0; padding-top: 5mm; border-top: .25mm solid #777; font-size: 9pt; }
+
+@media print {
+  body.print-only-document .standard-contract,
+  body.print-batch-documents .standard-contract { padding-top: 8mm; padding-bottom: 7mm; }
+  body.print-only-document .acceptance-terms,
+  body.print-batch-documents .acceptance-terms { padding-top: 13mm; }
+  body.print-only-document .private-contract-pledge,
+  body.print-batch-documents .private-contract-pledge { break-inside: avoid !important; page-break-inside: avoid !important; }
+  body.print-batch-documents .batch-print-page .document-print-page { break-after: auto !important; page-break-after: auto !important; }
+}
+/* 계약당사자 표: 긴 업체명·주소에서도 항목 경계가 무너지지 않도록 열 폭 고정 */
+.party-table td:nth-child(3), .party-table td:nth-child(5) { width: auto; }
+.party-table td { min-width: 0; overflow-wrap: anywhere; word-break: keep-all; }
+.party-table td:nth-child(3), .party-table td:nth-child(5) { white-space: normal; }
+.party-table td:nth-child(4), .party-table td:nth-child(6), .party-table td:nth-child(7) { overflow-wrap: anywhere; }

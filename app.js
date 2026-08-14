@@ -3,6 +3,7 @@
 
   const DB = globalThis.ConstructionDB;
   const Excel = globalThis.ConstructionExcel;
+  const Documents = globalThis.ConstructionDocuments;
   const main = document.getElementById('appMain');
   const modal = document.getElementById('modal');
   const modalForm = document.getElementById('modalForm');
@@ -344,7 +345,7 @@
       <nav class="detail-tabs" aria-label="공사 상세 메뉴">
         <button type="button" class="detail-tab ${state.detailTab==='info'?'active':''}" data-detail-tab="info">공사정보</button>
         <button type="button" class="detail-tab ${state.detailTab==='changes'?'active':''}" data-detail-tab="changes">변경계약${p.contractChanges?.length ? ` <span>${p.contractChanges.length}</span>` : ''}</button>
-        <button type="button" class="detail-tab ${state.detailTab==='documents'?'active':''}" data-detail-tab="documents">서류 <span>6</span></button>
+        <button type="button" class="detail-tab ${state.detailTab==='documents'?'active':''}" data-detail-tab="documents">서류 <span>10</span></button>
       </nav>
 
       <section class="workflow-strip ${state.detailTab==='info'?'':'hidden'}" aria-label="공사 진행 단계">
@@ -377,8 +378,10 @@
             field('bidRate','낙찰율 (%)',p.bidRate,'number'),
             field('procurementMethod','G2B / S2B / 조달방식',p.procurementMethod),
             field('contractSecurityType','계약보증 방법',p.contractSecurityType),
-            field('contractSecurityRate','계약보증률',p.contractSecurityRate,'number'),
+            field('contractSecurityRate','계약보증률 (%)',p.contractSecurityRate,'number'),
             moneyField('contractSecurityAmount','계약보증금액',p.contractSecurityAmount),
+            field('delayPenaltyRate','지연배상금률',p.delayPenaltyRate),
+            field('priceAdjustmentMethod','물가변동 계약금액 조정방법',p.priceAdjustmentMethod,'text',true),
             `<div class="field full contract-change-block">
               <div class="subsection-head"><div><strong>변경계약 이력</strong><span>최초 계약을 덮어쓰지 않고 변경 내용을 남깁니다.</span></div><button class="button secondary small" id="addContractChangeBtn" type="button">+ 변경계약 추가</button></div>
               ${contractChangeHistoryHtml(p)}
@@ -418,7 +421,7 @@
             field('defectPeriodYears','하자담보기간(년)',p.defectPeriodYears,'number'),
             field('defectStartDate','하자 시작일',p.defectStartDate,'date'),
             field('defectEndDate','하자 종료일',p.defectEndDate,'date'),
-            field('defectSecurityRate','하자보증률',p.defectSecurityRate,'number'),
+            field('defectSecurityRate','하자보증률 (%)',p.defectSecurityRate,'number'),
             moneyField('defectSecurityAmount','하자보증금액',p.defectSecurityAmount),
             textareaField('notes','비고',p.notes)
           ], currentOpen.defect)}
@@ -439,11 +442,10 @@
             <h3>공사서류</h3>
             <p>저장된 공사정보로 행정기관 내부 양식을 바로 만듭니다.</p>
             <div class="doc-list">
+              ${documentQuickItemHtml('standardContract', p)}
+              ${documentQuickItemHtml('acceptanceTerms', p)}
               ${documentQuickItemHtml('startReport', p)}
               ${documentQuickItemHtml('completionReport', p)}
-              ${documentQuickItemHtml('completionInspectionRequest', p)}
-              ${documentQuickItemHtml('supervisionReport', p)}
-              ${documentQuickItemHtml('completionInspectionRecord', p)}
               ${documentQuickItemHtml('paymentRequest', p)}
             </div>
             <button class="button secondary small full-button" id="openDocumentsTab" type="button">서류 전체 보기</button>
@@ -496,45 +498,10 @@
   }
 
 
-  const DOCUMENT_DEFINITIONS = {
-    startReport: {
-      key:'startReport', label:'착공계', outputTitle:'착 공 신 고 서', stage:'착공', version:'2026.04',
-      description:'착공 신고 시 제출하는 기본 착공계',
-      required:['schoolName','projectName','currentContractAmount','contractDate','startDate','completionDueDate','vendorName','businessNumber','vendorAddress','representative']
-    },
-    completionReport: {
-      key:'completionReport', label:'준공계', outputTitle:'준 공 계', stage:'준공', version:'2026.04',
-      description:'공사 완료 후 제출하는 준공계',
-      required:['schoolName','projectName','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','vendorName','businessNumber','vendorAddress','representative']
-    },
-    completionInspectionRequest: {
-      key:'completionInspectionRequest', label:'준공검사원', outputTitle:'준 공 검 사 원', stage:'준공', version:'2026.04',
-      description:'준공 사실을 확인하고 검사를 요청하는 서류',
-      required:['schoolName','projectName','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','vendorName','businessNumber','vendorAddress','representative']
-    },
-    supervisionReport: {
-      key:'supervisionReport', label:'공사감독조서', outputTitle:'공 사 감 독 조 서', stage:'준공', version:'2026.04',
-      description:'공사감독자가 현장 감독 결과를 확인하는 기관용 조서',
-      required:['schoolName','projectName','vendorName','representative','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','supervisor']
-    },
-    completionInspectionRecord: {
-      key:'completionInspectionRecord', label:'준공검사조서', outputTitle:'준 공 검 사 조 서', stage:'준공', version:'2026.04',
-      description:'준공검사 결과와 검사자·입회자를 기록하는 기관용 조서',
-      required:['schoolName','projectName','vendorName','representative','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','completionInspectionDate','settlementAmount','inspector','witness']
-    },
-    paymentRequest: {
-      key:'paymentRequest', label:'대금청구서', outputTitle:'대 금 청 구 서', stage:'지출', version:'2026.04',
-      description:'준공 후 계약대금을 지정계좌로 청구하는 서류',
-      required:['schoolName','projectName','currentContractAmount','settlementAmount','priorPaymentAmount','deductionAmount','completionInspectionDate','vendorName','vendorAddress','representative','bankName','accountNumber','accountHolder']
-    }
-  };
-
-  const DOCUMENT_FIELD_LABELS = {
-    schoolName:'기관명', projectName:'공사명', currentContractAmount:'계약금액', contractDate:'계약일', startDate:'착공일', completionDueDate:'준공기한', actualCompletionDate:'실제 준공일',
-    completionInspectionDate:'준공검사일', settlementAmount:'준공정산금액', priorPaymentAmount:'기지급액', deductionAmount:'공제금액',
-    vendorName:'업체명', businessNumber:'사업자등록번호', vendorAddress:'사업장 주소', representative:'대표자',
-    supervisor:'공사감독', inspector:'검사자', witness:'준공검사 입회자', bankName:'은행명', accountNumber:'계좌번호', accountHolder:'예금주명'
-  };
+  const DOCUMENT_DEFINITIONS = Documents.definitions;
+  const DOCUMENT_FIELD_LABELS = Documents.fieldLabels;
+  const DOCUMENT_PRINT_ORDER = Documents.printOrder;
+  const DOCUMENT_SETS = Documents.sets;
 
   function vendorForProject(p) {
     if (!p) return null;
@@ -550,6 +517,8 @@
 
   function documentValue(field, p) {
     if (field === 'schoolName') return state.school?.name || '';
+    if (field === 'schoolAddress') return state.school?.address || '';
+    if (field === 'principal') return state.school?.principal || '';
     if (field === 'supervisor') return p?.supervisor || state.school?.supervisor || '';
     if (field === 'inspector') return p?.inspector || state.school?.inspector || '';
     if (field === 'witness') return p?.witness || state.school?.witness || '';
@@ -557,6 +526,16 @@
       const payout = payoutForProject(p);
       if (field === 'accountHolder') return payout?.accountHolder || p?.vendorName || '';
       return payout?.[field] || '';
+    }
+    if (field === 'contractSecurityAmount' && !meaningful(p?.contractSecurityAmount)) {
+      const amount = Number(p?.currentContractAmount), rateRaw = Number(p?.contractSecurityRate);
+      const rate = Number.isFinite(rateRaw) && Math.abs(rateRaw) > 1 ? rateRaw / 100 : rateRaw;
+      if (Number.isFinite(amount) && Number.isFinite(rate)) return Math.floor((amount * rate) / 10) * 10;
+    }
+    if (field === 'defectSecurityAmount' && !meaningful(p?.defectSecurityAmount)) {
+      const amount = Number(p?.currentContractAmount), rateRaw = Number(p?.defectSecurityRate);
+      const rate = Number.isFinite(rateRaw) && Math.abs(rateRaw) > 1 ? rateRaw / 100 : rateRaw;
+      if (Number.isFinite(amount) && Number.isFinite(rate)) return Math.floor((amount * rate) / 10) * 10;
     }
     return p?.[field] ?? '';
   }
@@ -566,14 +545,6 @@
     if (!def) return [];
     return def.required.filter(field => !meaningful(documentValue(field, p)));
   }
-
-  const DOCUMENT_PRINT_ORDER = ['startReport','completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord','paymentRequest'];
-  const DOCUMENT_SETS = {
-    start: { label:'착공서류', types:['startReport'] },
-    completion: { label:'준공서류', types:['completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord'] },
-    payment: { label:'지출서류', types:['paymentRequest'] },
-    all: { label:'전체 6종', types:[...DOCUMENT_PRINT_ORDER] }
-  };
 
   function selectionForProject(p) {
     if (!p) return new Set();
@@ -632,13 +603,14 @@
     const missing = batchMissingFields(selected, p);
     const readyCount = selected.filter(type => documentMissing(type,p).length === 0).length;
     return `<div class="documents-panel">
-      <div class="documents-head"><div><p class="eyebrow">행정기관 내부 양식 우선</p><h2>공사서류</h2><p>필요한 서류를 여러 개 고르고, 부족한 정보는 한 번만 채운 뒤 한 번에 인쇄할 수 있습니다.</p></div><div class="documents-head-note"><strong>v0.3.2</strong><span>묶음 선택 · 일괄 인쇄</span></div></div>
+      <div class="documents-head"><div><p class="eyebrow">행정기관 내부 양식 우선</p><h2>공사서류</h2><p>필요한 서류를 여러 개 고르고, 부족한 정보는 한 번만 채운 뒤 한 번에 인쇄할 수 있습니다.</p></div><div class="documents-head-note"><strong>v0.4.0</strong><span>계약서류 추가 · 템플릿 분리</span></div></div>
       <div class="document-batch-toolbar">
         <div class="document-set-buttons" aria-label="서류 세트 선택">
+          <button class="button secondary small" type="button" data-doc-set="contract">계약서류 4종</button>
           <button class="button secondary small" type="button" data-doc-set="start">착공서류</button>
           <button class="button secondary small" type="button" data-doc-set="completion">준공서류 4종</button>
           <button class="button secondary small" type="button" data-doc-set="payment">지출서류</button>
-          <button class="button ghost small" type="button" data-doc-set="all">전체 6종</button>
+          <button class="button ghost small" type="button" data-doc-set="all">전체 10종</button>
           <button class="button ghost small" type="button" data-doc-clear>선택 해제</button>
         </div>
         <div class="document-batch-summary" id="documentBatchSummary">
@@ -646,11 +618,12 @@
           <button class="button primary" type="button" id="openBatchPreviewBtn" ${selected.length?'':'disabled'}>${missing.length ? `부족정보 ${missing.length}개 확인` : `선택한 ${selected.length}종 미리보기`}</button>
         </div>
       </div>
+      <div class="document-group"><div class="document-group-title"><strong>계약</strong><span>계약을 체결하고 업체 서약을 받을 때</span></div><div class="document-grid">${documentCardHtml('standardContract',p)}${documentCardHtml('acceptanceTerms',p)}${documentCardHtml('useSealForm',p)}${documentCardHtml('privateContractPledge',p)}</div></div>
       <div class="document-group"><div class="document-group-title"><strong>착공</strong><span>공사를 시작할 때</span></div><div class="document-grid">${documentCardHtml('startReport',p)}</div></div>
       <div class="document-group"><div class="document-group-title"><strong>준공</strong><span>공사를 완료하고 검사할 때</span></div><div class="document-grid">${documentCardHtml('completionReport',p)}${documentCardHtml('completionInspectionRequest',p)}${documentCardHtml('supervisionReport',p)}${documentCardHtml('completionInspectionRecord',p)}</div></div>
       <div class="document-group"><div class="document-group-title"><strong>지출</strong><span>준공 후 대금을 청구할 때</span></div><div class="document-grid">${documentCardHtml('paymentRequest',p)}</div></div>
       ${recentPrintHistoryHtml(p)}
-      <div class="document-footnote">출력양식은 제공받은 「공사서류 원클릭 프로그램(2026.4.)」의 내부 서식을 기준으로 구현했습니다. 묶음 인쇄에서도 각 서류는 A4 한 장씩 독립 페이지로 출력됩니다.</div>
+      <div class="document-footnote">출력양식은 제공받은 「공사서류 원클릭 프로그램(2026.4.)」의 내부 서식을 기준으로 구현했습니다. 대부분 A4 1쪽이며 「수의계약 통합서약서」는 원 양식 구조에 맞춰 2쪽으로 출력됩니다.</div>
     </div>`;
   }
 
@@ -727,8 +700,9 @@
       let value = el?.value?.trim?.() ?? '';
       if (MONEY_FIELDS.has(field)) value = parseMoneyInput(value);
       if (!meaningful(value)) { showToast(`${DOCUMENT_FIELD_LABELS[field] || field}을(를) 입력해주세요.`, 'warn'); return false; }
-      if (field === 'schoolName') {
-        state.school = { ...(state.school||{}), name:value };
+      if (['schoolName','schoolAddress','principal'].includes(field)) {
+        const key = field === 'schoolName' ? 'name' : field === 'schoolAddress' ? 'address' : 'principal';
+        state.school = { ...(state.school||{}), [key]:value };
         schoolChanged = true;
       } else if (['supervisor','inspector','witness'].includes(field)) {
         p[field] = value;
@@ -788,11 +762,11 @@
     const label = DOCUMENT_FIELD_LABELS[field] || field;
     const value = documentValue(field, p);
     if (MONEY_FIELDS.has(field)) return `<div class="field"><label for="${e(id)}">${e(label)}</label>${moneyInputHtml(id, value)}</div>`;
-    if (['contractDate','startDate','completionDueDate','actualCompletionDate','completionInspectionDate'].includes(field)) return modalDateField(id, label, value);
+    if (['contractDate','plannedStartDate','startDate','completionDueDate','actualCompletionDate','completionInspectionDate'].includes(field)) return modalDateField(id, label, value);
     if (['bankName','accountNumber','accountHolder'].includes(field)) {
       return `<div class="field"><label for="${e(id)}">${e(label)}</label><input id="${e(id)}" value="${e(value || '')}" autocomplete="off"><span class="hint">업체 지급정보 보관함에 별도로 저장됩니다.</span></div>`;
     }
-    return modalField(id, label, value, field === 'vendorAddress' || field === 'projectName');
+    return modalField(id, label, value, ['vendorAddress','projectName','schoolAddress','priceAdjustmentMethod'].includes(field));
   }
 
   function openDocumentPreview(type) {
@@ -812,25 +786,21 @@
     modalActions.querySelector('#printDocumentBtn').addEventListener('click', () => printAdministrativeDocument(type, p));
   }
 
-  function printAdministrativeDocument(type, p) {
-    const def = DOCUMENT_DEFINITIONS[type];
-    if (!def || !p) return;
-
-    // Print only the A4 document in an isolated frame. Printing the preview modal
-    // directly leaves the dialog/scroll layout in the browser print flow and can
-    // push a single-page form onto two pages.
+  function printPagesInFrame(pages, title, onBeforePrint) {
+    if (!pages?.length) return;
+    const multi = pages.length > 1;
     const frame = document.createElement('iframe');
-    frame.className = 'document-print-frame';
-    frame.setAttribute('aria-hidden', 'true');
-    frame.setAttribute('tabindex', '-1');
-    // Give the print document a real A4 viewport. A 0×0 iframe can make some
-    // Chromium-based browsers calculate the print layout against a tiny viewport.
+    frame.className = `document-print-frame${multi?' document-batch-print-frame':''}`;
+    frame.setAttribute('aria-hidden','true');
+    frame.setAttribute('tabindex','-1');
     frame.style.width = '210mm';
     frame.style.height = '297mm';
     document.body.appendChild(frame);
 
-    const cssUrl = new URL('styles.css', window.location.href).href;
-    const title = `${def.label} - ${p.projectName || '공사서류'}`;
+    const cssUrl = new URL('styles.css',window.location.href).href;
+    const bodyMarkup = multi
+      ? pages.map((page,index)=>`<section class="batch-print-page" data-page="${index+1}">${page}</section>`).join('')
+      : pages[0];
     const html = `<!doctype html>
 <html lang="ko">
 <head>
@@ -839,12 +809,12 @@
   <title>${e(title)}</title>
   <link rel="stylesheet" href="${e(cssUrl)}">
   <style>
-    @page { size: A4 portrait; margin: 0; }
-    html, body { width: 210mm; height: 297mm; margin: 0; padding: 0; background: #fff; }
+    @page { size:A4 portrait; margin:0; }
+    html,body { width:210mm; ${multi?'':'height:297mm;'} margin:0; padding:0; background:#fff; }
   </style>
 </head>
-<body class="print-only-document">
-  ${documentMarkup(type, p)}
+<body class="${multi?'print-batch-documents':'print-only-document'}">
+  ${bodyMarkup}
 </body>
 </html>`;
 
@@ -852,35 +822,29 @@
     const startPrint = () => {
       if (printed || !frame.contentWindow) return;
       printed = true;
+      if (typeof onBeforePrint === 'function') onBeforePrint();
       const win = frame.contentWindow;
-      const cleanup = () => {
-        if (frame.isConnected) frame.remove();
-      };
-      win.addEventListener('afterprint', cleanup, { once:true });
-      // Fallback cleanup for browsers that do not reliably fire afterprint.
-      window.setTimeout(cleanup, 120000);
-      window.setTimeout(() => {
+      const cleanup = () => { if (frame.isConnected) frame.remove(); };
+      win.addEventListener('afterprint',cleanup,{once:true});
+      window.setTimeout(cleanup,120000);
+      window.setTimeout(()=>{
         try { win.focus(); win.print(); }
-        catch (err) { cleanup(); showToast('인쇄창을 열지 못했습니다. 다시 시도해주세요.', 'warn'); }
-      }, 120);
+        catch(err) { cleanup(); showToast('인쇄창을 열지 못했습니다. 다시 시도해주세요.','warn'); }
+      }, multi ? 150 : 120);
     };
-
     const printDoc = frame.contentDocument;
-    if (!printDoc) {
-      frame.remove();
-      showToast('인쇄영역을 만들지 못했습니다. 다시 시도해주세요.', 'warn');
-      return;
-    }
-    printDoc.open();
-    printDoc.write(html);
-    printDoc.close();
-
+    if (!printDoc) { frame.remove(); showToast('인쇄영역을 만들지 못했습니다. 다시 시도해주세요.','warn'); return; }
+    printDoc.open(); printDoc.write(html); printDoc.close();
     const stylesheet = printDoc.querySelector('link[rel="stylesheet"]');
-    if (stylesheet) stylesheet.addEventListener('load', startPrint, { once:true });
-    // Fallback for cached stylesheets / browsers that skip the link load event.
-    window.setTimeout(() => {
-      if (printDoc.readyState === 'complete') startPrint();
-    }, 500);
+    if (stylesheet) stylesheet.addEventListener('load',startPrint,{once:true});
+    window.setTimeout(()=>{ if (printDoc.readyState === 'complete') startPrint(); }, multi ? 600 : 500);
+  }
+
+  function printAdministrativeDocument(type, p) {
+    const def = DOCUMENT_DEFINITIONS[type];
+    if (!def || !p) return;
+    const pages = documentPages(type,p);
+    printPagesInFrame(pages, `${def.label} - ${p.projectName || '공사서류'}`);
   }
 
   async function recordPrintHistory(types, p) {
@@ -904,55 +868,10 @@
     const missing = batchMissingFields(ordered,p);
     if (missing.length) { openBatchMissingModal(ordered,missing); return; }
 
-    const frame = document.createElement('iframe');
-    frame.className = 'document-print-frame document-batch-print-frame';
-    frame.setAttribute('aria-hidden','true');
-    frame.setAttribute('tabindex','-1');
-    frame.style.width = '210mm';
-    frame.style.height = '297mm';
-    document.body.appendChild(frame);
-
-    const cssUrl = new URL('styles.css',window.location.href).href;
     const labels = ordered.map(type => DOCUMENT_DEFINITIONS[type].label);
+    const pages = ordered.flatMap(type => documentPages(type,p));
     const title = `${p.projectName || '공사서류'} - ${labels.join(', ')}`;
-    const pages = ordered.map((type,index) => `<section class="batch-print-page" data-page="${index+1}">${documentMarkup(type,p)}</section>`).join('');
-    const html = `<!doctype html>
-<html lang="ko">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>${e(title)}</title>
-  <link rel="stylesheet" href="${e(cssUrl)}">
-  <style>
-    @page { size:A4 portrait; margin:0; }
-    html,body { width:210mm; margin:0; padding:0; background:#fff; }
-  </style>
-</head>
-<body class="print-batch-documents">
-  ${pages}
-</body>
-</html>`;
-
-    let printed = false;
-    const startPrint = () => {
-      if (printed || !frame.contentWindow) return;
-      printed = true;
-      recordPrintHistory(ordered,p);
-      const win = frame.contentWindow;
-      const cleanup = () => { if (frame.isConnected) frame.remove(); };
-      win.addEventListener('afterprint',cleanup,{once:true});
-      window.setTimeout(cleanup,120000);
-      window.setTimeout(() => {
-        try { win.focus(); win.print(); }
-        catch (err) { cleanup(); showToast('인쇄창을 열지 못했습니다. 다시 시도해주세요.','warn'); }
-      },150);
-    };
-    const printDoc = frame.contentDocument;
-    if (!printDoc) { frame.remove(); showToast('인쇄영역을 만들지 못했습니다. 다시 시도해주세요.','warn'); return; }
-    printDoc.open(); printDoc.write(html); printDoc.close();
-    const stylesheet = printDoc.querySelector('link[rel="stylesheet"]');
-    if (stylesheet) stylesheet.addEventListener('load',startPrint,{once:true});
-    window.setTimeout(()=>{ if (printDoc.readyState === 'complete') startPrint(); },600);
+    printPagesInFrame(pages,title,()=>recordPrintHistory(ordered,p));
   }
 
   function openDocumentMissingModal(type, missing) {
@@ -1054,137 +973,51 @@
     return Math.max(0, contract - prior - deduction);
   }
 
-  function documentMarkup(type, p) {
-    const schoolName = state.school?.name || '';
-    const recipient = recipientFor(schoolName);
-    const supervisor = documentValue('supervisor', p);
-    const inspector = documentValue('inspector', p);
-    const witness = documentValue('witness', p);
-    const payout = payoutForProject(p) || {};
+  function percentText(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return String(value ?? '');
+    const pct = Math.abs(n) <= 1 ? n * 100 : n;
+    return Number.isInteger(pct) ? String(pct) : String(Number(pct.toFixed(4)));
+  }
 
-    if (type === 'startReport') {
-      return `<article id="documentPrintArea" class="paper-a4 admin-document start-report">
-        <h1 class="doc-title wide-spacing">착 공 신 고 서</h1>
-        ${documentFacts([
-          ['1. 공 사 명 :',e(p.projectName)],
-          ['2. 계 약 금 액 :',e(documentMoney(p.currentContractAmount))],
-          ['3. 계약연월일 :',e(formatKoreanDate(p.contractDate))],
-          ['4. 착공연월일 :',e(formatKoreanDate(p.startDate))],
-          ['5. 준 공 기 한 :',e(formatKoreanDate(p.completionDueDate))]
-        ])}
-        <div class="doc-attachments"><span>붙&nbsp;&nbsp;&nbsp;&nbsp;임 :</span><ol><li>현장대리인계(재직증명서, 건설기술경력증수첩 사본)</li><li>공사예정공정표</li><li>공사도급내역서</li></ol></div>
-        <p class="doc-statement start-statement">상기와 같이 공사를 착공하였기에 착공계를 제출합니다.</p>
-        <p class="doc-date-center">${e(formatKoreanDate(p.startDate))}</p>
-        ${documentVendorBlock(p)}
-        <p class="doc-recipient">${e(recipient)}</p>
-      </article>`;
-    }
-    if (type === 'completionReport') {
-      return `<article id="documentPrintArea" class="paper-a4 admin-document completion-report">
-        <h1 class="doc-title wide-spacing">준 공 계</h1>
-        ${documentFacts([
-          ['1. 공 사 명 :',e(p.projectName)],
-          ['2. 계약금액 :',e(documentMoney(p.currentContractAmount))],
-          ['3. 계약일자 :',e(formatKoreanDate(p.contractDate))],
-          ['4. 착공일자 :',e(formatKoreanDate(p.startDate))],
-          ['5. 준공기한 :',e(formatKoreanDate(p.completionDueDate))],
-          ['6. 준공일자 :',e(formatKoreanDate(p.actualCompletionDate))]
-        ])}
-        <p class="doc-statement completion-statement">상기공사를 준공하였기에 준공계를 제출합니다.</p>
-        <p class="doc-date-center">${e(formatKoreanDate(p.actualCompletionDate))}</p>
-        ${documentVendorBlock(p)}
-        <p class="doc-recipient">${e(recipient)}</p>
-      </article>`;
-    }
-    if (type === 'completionInspectionRequest') {
-      return `<article id="documentPrintArea" class="paper-a4 admin-document inspection-request">
-        <h1 class="doc-title wide-spacing">준 공 검 사 원</h1>
-        ${documentFacts([
-          ['1. 공 사 명 :',e(p.projectName)],
-          ['2. 계약금액 :',e(documentMoney(p.currentContractAmount))],
-          ['3. 계약일자 :',e(formatKoreanDate(p.contractDate))],
-          ['4. 착공일자 :',e(formatKoreanDate(p.startDate))],
-          ['5. 준공기한 :',e(formatKoreanDate(p.completionDueDate))],
-          ['6. 준공일자 :',e(formatKoreanDate(p.actualCompletionDate))]
-        ])}
-        <div class="doc-pledge"><p>위 공사의 도급시행에 있어서 공사전반에 걸쳐 공사설계도서, 품질관리기준 및 기타</p><p>약정대로 어김없이 준공되었음을 확인하오며, 만약 공사시공, 감독 및 검사에 관하여</p><p>하자가 발견될 시는 하자담보기간 전후를 막론하고 실액변상 또는 재시공할 것을</p><p>서약하고 이에 준공검사원을 제출합니다.</p></div>
-        <p class="doc-date-center">${e(formatKoreanDate(p.actualCompletionDate))}</p>
-        ${documentVendorBlock(p,true)}
-        <p class="doc-recipient">${e(recipient)}</p>
-      </article>`;
-    }
-    if (type === 'supervisionReport') {
-      return `<article id="documentPrintArea" class="paper-a4 admin-document official-record supervision-record">
-        <h1 class="doc-title wide-spacing">공 사 감 독 조 서</h1>
-        <table class="official-table"><tbody>
-          <tr><th>공 사 명</th><td colspan="3">${e(p.projectName)}</td></tr>
-          <tr><th>도 급 자</th><td>${e(p.vendorName)}</td><th class="mini-head">대표</th><td>${e(p.representative)}</td></tr>
-          <tr><th>계 약 금 액</th><td colspan="3">${e(documentMoney(p.currentContractAmount))}</td></tr>
-          <tr><th>계 약 일</th><td colspan="3">${e(formatKoreanDate(p.contractDate))}</td></tr>
-          <tr><th>착 공 일</th><td colspan="3">${e(formatKoreanDate(p.startDate))}</td></tr>
-          <tr><th>준 공 기 한</th><td colspan="3">${e(formatKoreanDate(p.completionDueDate))}</td></tr>
-          <tr><th>실제준공일</th><td colspan="3">${e(formatKoreanDate(p.actualCompletionDate))}</td></tr>
-          <tr class="memo-row"><th>비 고</th><td colspan="3"></td></tr>
-        </tbody></table>
-        <div class="record-statement supervision-copy">
-          <p>위 공사의 감독자로&nbsp;&nbsp;&nbsp; ${e(formatKoreanDate(p.startDate))}&nbsp;&nbsp;&nbsp; ~ &nbsp;&nbsp;&nbsp;${e(formatKoreanDate(p.actualCompletionDate))}&nbsp;&nbsp;&nbsp;까지</p>
-          <p>실지 현장 감독한 결과 공사 전반에 걸쳐 공사설계도서, 제시방서 및 품질</p>
-          <p>관리 기준 및 기타 약정대로 어김없이 준공되었음을 인정함.</p>
-        </div>
-        <p class="record-date">${e(formatKoreanDate(p.actualCompletionDate))}</p>
-        <div class="record-signature-row"><span>공사감독원</span><span>${e(schoolName)}</span><span>${e(representativeWithSeal(supervisor))}</span></div>
-      </article>`;
-    }
-    if (type === 'completionInspectionRecord') {
-      return `<article id="documentPrintArea" class="paper-a4 admin-document official-record completion-inspection-record">
-        <h1 class="doc-title wide-spacing">준 공 검 사 조 서</h1>
-        <table class="official-table inspection-table"><tbody>
-          <tr><th>공 사 명</th><td colspan="3">${e(p.projectName)}</td></tr>
-          <tr><th>도 급 자</th><td>${e(p.vendorName)}</td><th class="mini-head">대표</th><td>${e(p.representative)}</td></tr>
-          <tr><th>계약금액</th><td colspan="3">${e(documentMoney(p.currentContractAmount))}</td></tr>
-          <tr><th>계 약 일</th><td>${e(formatKoreanDate(p.contractDate))}</td><th>준 공 기 한</th><td>${e(formatKoreanDate(p.completionDueDate))}</td></tr>
-          <tr><th>착 공 일</th><td>${e(formatKoreanDate(p.startDate))}</td><th>준 공 일</th><td>${e(formatKoreanDate(p.actualCompletionDate))}</td></tr>
-          <tr><th>준공검사일</th><td>${e(formatKoreanDate(p.completionInspectionDate))}</td><td colspan="2"></td></tr>
-          <tr><th>참 고</th><td colspan="3">준공정산금액 :&nbsp;&nbsp; ${e(moneyNumberText(p.settlementAmount))}</td></tr>
-          <tr class="attachment-row"><th>별 첨</th><td>준공정산서 1부</td><td colspan="2">※공사위치, 재료, 물량 표시된 배치도,<br>평면도 및 공사개요 첨부</td></tr>
-        </tbody></table>
-        <p class="inspection-finished">위와 같이 준공검사를 필하였음</p>
-        <p class="record-date inspection-date">${e(formatKoreanDate(p.completionInspectionDate))}</p>
-        <div class="inspection-signatures">
-          <div><span>검사자</span><span>${e(schoolName)}</span><span>${e(representativeWithSeal(inspector))}</span></div>
-          <div><span>입회자</span><span></span><span>${e(representativeWithSeal(witness))}</span></div>
-          <div><span>입회자</span><span></span><span>(인)</span></div>
-        </div>
-      </article>`;
-    }
-    if (type === 'paymentRequest') {
-      const claimAmount = claimAmountFor(p);
-      const accountHolder = payout.accountHolder || p.vendorName || '';
-      const rows = [
-        ['1. 계 약 건 명 :', p.projectName, ''],
-        ['2. 계 약 금 액 :', moneyNumberText(p.currentContractAmount), moneyWordsText(p.currentContractAmount)],
-        ['3. 준 공 금 액 :', moneyNumberText(p.settlementAmount), moneyWordsText(p.settlementAmount)],
-        ['4. 기 지 급 액 :', moneyNumberText(p.priorPaymentAmount), moneyWordsText(p.priorPaymentAmount)],
-        ['5. 청 구 금 액 :', moneyNumberText(claimAmount), moneyWordsText(claimAmount)],
-        ['6. 공 제 금 액 :', moneyNumberText(p.deductionAmount), moneyWordsText(p.deductionAmount)]
-      ];
-      return `<article id="documentPrintArea" class="paper-a4 admin-document payment-request">
-        <h1 class="doc-title wide-spacing">대 금 청 구 서</h1>
-        <table class="payment-lines-table"><tbody>${rows.map(([label,value,words]) => `<tr><th>${e(label)}</th><td class="payment-value">${e(value)}</td><td class="payment-words">${e(words)}</td></tr>`).join('')}</tbody></table>
-        <p class="payment-statement">위와 같이 청구하오니 아래 계좌에 입금하여 주시기 바랍니다.</p>
-        <p class="payment-account-title">□ 지정계좌현황</p>
-        <table class="payment-account-table"><tbody>
-          <tr><th>은 행 명</th><td>${e(payout.bankName || '')}</td></tr>
-          <tr><th>계 좌 번 호</th><td>${e(payout.accountNumber || '')}</td></tr>
-          <tr><th>예 금 주 명</th><td>${e(accountHolder)}</td></tr>
-        </tbody></table>
-        <p class="record-date payment-date">${e(formatKoreanDate(p.completionInspectionDate))}</p>
-        <div class="payment-vendor"><div><span>회 사 명 :</span><strong>${e(p.vendorName)}</strong></div><div><span>주&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;소 :</span><strong>${e(p.vendorAddress)}</strong></div><div><span>대 표 자 :</span><strong>${e(representativeWithSeal(p.representative))}</strong></div></div>
-        <p class="payment-note">※ 계약도장과 청구서의 도장이 다를 경우 인감증명 및 사용인감신고서 제출</p>
-        <p class="doc-recipient">${e(recipient)}</p>
-      </article>`;
-    }
-    return '';
+  function schoolLeaderLabel(name) {
+    const n = String(name || '').trim();
+    if (n.endsWith('교육지원청')) return '교육장';
+    if (n.endsWith('교육청')) return '교육감';
+    if (n.endsWith('학교')) return '교장';
+    return '대표';
+  }
+
+  function documentContext(p) {
+    return {
+      project: p,
+      school: state.school || {},
+      payout: payoutForProject(p) || {},
+      value: field => documentValue(field, p),
+      helpers: {
+        e,
+        formatKoreanDate,
+        documentMoney,
+        representativeWithSeal,
+        recipientFor,
+        documentFacts,
+        documentVendorBlock,
+        moneyNumberText,
+        moneyWordsText,
+        claimAmountFor,
+        businessNumber: value => Excel.normalizeBusinessNumber(value || ''),
+        percentText,
+        schoolLeaderLabel
+      }
+    };
+  }
+
+  function documentPages(type, p) {
+    return Documents.renderPages(type, documentContext(p));
+  }
+
+  function documentMarkup(type, p) {
+    return documentPages(type, p).join('<div class="document-page-gap" aria-hidden="true"></div>');
   }
 
   function sectionForStatus(statusKey) {
@@ -1850,6 +1683,7 @@
         ${modalField('schoolName','기관명',s.name)}
         ${modalSelect('schoolType','공·사립',s.type,['','공립','사립'])}
         ${modalField('schoolAddress','기관 주소',s.address,true)}
+        ${modalField('schoolPrincipal','기관 대표자(학교장 등)',s.principal)}
         ${modalField('schoolPhone','대표전화',s.phone)}
         ${modalField('schoolSupervisor','공사감독 기본값',s.supervisor)}
         ${modalField('schoolInspector','검사자 기본값',s.inspector)}
@@ -1859,7 +1693,7 @@
     });
     modalActions.querySelector('[data-modal-close]').addEventListener('click', closeModal);
     modalActions.querySelector('#schoolSave').addEventListener('click', async()=>{
-      const value = { name:v('#schoolName'), type:v('#schoolType'), address:v('#schoolAddress'), phone:v('#schoolPhone'), supervisor:v('#schoolSupervisor'), inspector:v('#schoolInspector'), witness:v('#schoolWitness') };
+      const value = { name:v('#schoolName'), type:v('#schoolType'), address:v('#schoolAddress'), principal:v('#schoolPrincipal'), phone:v('#schoolPhone'), supervisor:v('#schoolSupervisor'), inspector:v('#schoolInspector'), witness:v('#schoolWitness') };
       await DB.put('settings',{key:'school',value}); state.school=value; closeModal(); render(); showToast('학교 기본정보를 저장했습니다.');
     });
   }
@@ -1918,15 +1752,17 @@
 
   function openHelp() {
     openModal({
-      eyebrow:'도움말', title:'v0.3.2 사용 흐름',
+      eyebrow:'도움말', title:'v0.4.0 사용 흐름',
       body:`<div class="notice"><strong>핵심 원칙</strong><br>같은 공사정보는 한 번 입력하고 다시 입력하지 않습니다.</div>
       <div style="display:grid;gap:16px;margin-top:18px;font-size:14px">
         <div><strong>1. 공사를 여러 건 저장</strong><p class="muted">전기·건축·체육관 공사를 동시에 등록해도 각 공사는 독립적으로 자동저장됩니다.</p></div>
         <div><strong>2. 기존 공사이력 재사용</strong><p class="muted">학교 공사 이력 현황.xlsx를 불러오면 여러 공사를 한꺼번에 등록하고 기존 공사의 빈 정보를 보완합니다.</p></div><div><strong>3. 에듀파인으로 업데이트</strong><p class="muted">자료관리목록.xlsx를 다시 내려받아 올리면 계약·준공·지출 단계에서 새로 생긴 값만 기존 공사에 보완합니다. 다른 값은 자동 덮어쓰지 않습니다.</p></div>
         <div><strong>4. 업체 재사용</strong><p class="muted">업체명·대표자·사업자번호·주소·전화·면허를 업체 보관함에 저장해 다음 공사에서 다시 고를 수 있습니다.</p></div>
-        <div><strong>5. 공사서류 만들기</strong><p class="muted">공사 상세의 「서류」 탭에서 착공계·준공계·준공검사원·공사감독조서·준공검사조서·대금청구서를 개별 또는 묶음으로 만들 수 있습니다. 단계별 세트를 고르면 부족정보를 한 번만 채운 뒤 선택한 서류를 한 번에 인쇄합니다.</p></div>
-        <div><strong>6. 지급정보 재사용</strong><p class="muted">은행·계좌·예금주는 업체 지급정보로 분리 저장되며 대금청구서에서만 사용합니다. 업체 목록에는 계좌번호를 노출하지 않습니다.</p></div>
-        <div><strong>7. 인수인계</strong><p class="muted">전체 백업(JSON)은 앱 복원용이고, 공사이력 엑셀은 감사·업무용 결과물입니다.</p></div>
+        <div><strong>5. 공사서류 만들기</strong><p class="muted">공사 상세의 「서류」 탭에서 계약서류 4종과 착공·준공·지출서류 6종, 총 10종을 개별 또는 묶음으로 만들 수 있습니다. 단계별 세트를 고르면 부족정보를 한 번만 채운 뒤 선택한 서류를 한 번에 인쇄합니다.</p></div>
+        <div><strong>6. 계약서류 세트</strong><p class="muted">공사도급표준계약서·승낙사항·사용인감계·수의계약 통합서약서를 한 번에 선택할 수 있습니다. 수의계약 통합서약서는 원본 양식 구조에 맞춰 2페이지로 출력됩니다.</p></div>
+        <div><strong>7. 서류 템플릿 분리</strong><p class="muted">서류별 필수정보·출력순서·양식 버전을 별도 정의로 관리해 이후 양식 변경 시 공사 데이터와 다른 서류에 미치는 영향을 줄였습니다.</p></div>
+        <div><strong>8. 지급정보 재사용</strong><p class="muted">은행·계좌·예금주는 업체 지급정보로 분리 저장되며 대금청구서에서만 사용합니다. 업체 목록에는 계좌번호를 노출하지 않습니다.</p></div>
+        <div><strong>9. 인수인계</strong><p class="muted">전체 백업(JSON)은 앱 복원용이고, 공사이력 엑셀은 감사·업무용 결과물입니다.</p></div>
         <div><strong>보안</strong><p class="muted">공사정보와 엑셀 내용은 서버로 전송하지 않습니다. 브라우저 저장소에 남으므로 공용 Windows 계정에서는 PC 접근통제와 정기 백업이 필요합니다.</p></div>
       </div>`,
       actions:`<button class="button primary" type="button" data-modal-close>확인</button>`
