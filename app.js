@@ -28,7 +28,8 @@
     importMode: 'auto',
     detailTab: 'info',
     selectedDocuments: new Set(),
-    selectionProjectId: null
+    selectionProjectId: null,
+    activeWarrantyInspectionId: null
   };
 
   const FIELDS_FOR_IMPORT = [
@@ -84,6 +85,41 @@
     if (!value) return '';
     try { return new Intl.DateTimeFormat('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }).format(new Date(value)); }
     catch { return ''; }
+  }
+
+
+  function parseIsoDate(value) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ''));
+    if (!m) return null;
+    return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
+  }
+
+  function isoFromDate(date) {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+    const y = date.getFullYear();
+    const m = String(date.getMonth()+1).padStart(2,'0');
+    const d = String(date.getDate()).padStart(2,'0');
+    return `${y}-${m}-${d}`;
+  }
+
+  function addYearsMinusDay(startIso, years) {
+    const start = parseIsoDate(startIso);
+    const y = Number(years);
+    if (!start || !Number.isFinite(y) || y <= 0) return '';
+    const result = new Date(start.getFullYear()+y, start.getMonth(), start.getDate());
+    result.setDate(result.getDate()-1);
+    return isoFromDate(result);
+  }
+
+  function warrantyStatusText(p) {
+    if (!p?.defectEndDate) return '';
+    const end = parseIsoDate(p.defectEndDate);
+    if (!end) return `하자종료 ${formatDate(p.defectEndDate)}`;
+    const today = new Date(); today.setHours(0,0,0,0); end.setHours(0,0,0,0);
+    const days = Math.ceil((end-today)/86400000);
+    if (days >= 0 && days <= 30) return `하자종료 D-${days}`;
+    if (days < 0) return `하자기간 종료 ${formatDate(p.defectEndDate)}`;
+    return `하자종료 ${formatDate(p.defectEndDate)}`;
   }
 
   function statusOf(p) {
@@ -289,6 +325,7 @@
           <span class="cell-label">상태</span>
           <span class="status-chip ${status.cls}">${e(status.label)}</span>
           ${missing.length ? `<div class="missing">⚠ ${e(missing.slice(0,2).join(', '))}${missing.length>2?' 외':''}</div>` : ''}
+          ${status.key==='done' && p.defectEndDate ? `<div class="warranty-row-note">${e(warrantyStatusText(p))}</div>` : ''}
         </div>
         <div class="row-arrow">›</div>
       </div>`;
@@ -345,7 +382,7 @@
       <nav class="detail-tabs" aria-label="공사 상세 메뉴">
         <button type="button" class="detail-tab ${state.detailTab==='info'?'active':''}" data-detail-tab="info">공사정보</button>
         <button type="button" class="detail-tab ${state.detailTab==='changes'?'active':''}" data-detail-tab="changes">변경계약${p.contractChanges?.length ? ` <span>${p.contractChanges.length}</span>` : ''}</button>
-        <button type="button" class="detail-tab ${state.detailTab==='documents'?'active':''}" data-detail-tab="documents">서류 <span>10</span></button>
+        <button type="button" class="detail-tab ${state.detailTab==='documents'?'active':''}" data-detail-tab="documents">서류 <span>13</span></button>
       </nav>
 
       <section class="workflow-strip ${state.detailTab==='info'?'':'hidden'}" aria-label="공사 진행 단계">
@@ -413,7 +450,14 @@
             field('paymentDate','지출일',p.paymentDate,'date'),
             moneyField('paymentAmount','지출금액',p.paymentAmount),
             field('fundingSource','재원구분',p.fundingSource),
-            field('ledgerPrint','공사대장 출력',p.ledgerPrint)
+            `<div class="field full ledger-extra-wrap"><details class="ledger-extra-details"><summary>공사대장 추가정보 <span>선택 입력</span></summary><div class="form-grid nested-form-grid">
+              ${field('designer','설계자 / 설계사무소',p.designer)}
+              ${field('budgetPolicyProject','정책사업',p.budgetPolicyProject)}
+              ${field('budgetUnitProject','단위사업',p.budgetUnitProject)}
+              ${field('budgetDetailProject','세부사업',p.budgetDetailProject)}
+              ${field('budgetDetailItem','세부항목',p.budgetDetailItem)}
+              ${field('costStatisticsItem','원가통계목',p.costStatisticsItem)}
+            </div></details></div>`
           ], currentOpen.payment)}
 
           ${workflowSectionHtml('defect','하자','지출 이후 하자관리 정보가 필요한 경우에만 입력합니다.',step.defect,[
@@ -423,6 +467,10 @@
             field('defectEndDate','하자 종료일',p.defectEndDate,'date'),
             field('defectSecurityRate','하자보증률 (%)',p.defectSecurityRate,'number'),
             moneyField('defectSecurityAmount','하자보증금액',p.defectSecurityAmount),
+            `<div class="field full warranty-management-block">
+              <div class="subsection-head"><div><strong>하자검사 이력</strong><span>검사할 때마다 새 기록을 추가합니다. 이전 기록은 덮어쓰지 않습니다.</span></div><button class="button secondary small" id="addWarrantyInspectionBtn" type="button">+ 하자검사 추가</button></div>
+              ${warrantyInspectionHistoryHtml(p)}
+            </div>`,
             textareaField('notes','비고',p.notes)
           ], currentOpen.defect)}
         </section>
@@ -442,11 +490,11 @@
             <h3>공사서류</h3>
             <p>저장된 공사정보로 행정기관 내부 양식을 바로 만듭니다.</p>
             <div class="doc-list">
-              ${documentQuickItemHtml('standardContract', p)}
-              ${documentQuickItemHtml('acceptanceTerms', p)}
-              ${documentQuickItemHtml('startReport', p)}
-              ${documentQuickItemHtml('completionReport', p)}
-              ${documentQuickItemHtml('paymentRequest', p)}
+              ${documentQuickItemHtml('constructionLedger', p)}
+              ${documentQuickItemHtml('supervisionReport', p)}
+              ${documentQuickItemHtml('completionInspectionRecord', p)}
+              ${documentQuickItemHtml('warrantyInspectionReport', p)}
+              ${documentQuickItemHtml('warrantyLedger', p)}
             </div>
             <button class="button secondary small full-button" id="openDocumentsTab" type="button">서류 전체 보기</button>
           </section>
@@ -482,6 +530,7 @@
     document.getElementById('addContractChangeBtn')?.addEventListener('click', openContractChangeModal);
     document.getElementById('sideAddContractChangeBtn')?.addEventListener('click', openContractChangeModal);
     document.getElementById('tabAddContractChangeBtn')?.addEventListener('click', openContractChangeModal);
+    document.getElementById('addWarrantyInspectionBtn')?.addEventListener('click', () => openWarrantyInspectionModal());
     document.getElementById('openDocumentsTab')?.addEventListener('click', () => { state.detailTab='documents'; renderProjectDetail(); });
     document.getElementById('jumpCurrentStage')?.addEventListener('click', () => jumpToSection(sectionForStatus(status.key)));
     main.querySelectorAll('[data-detail-tab]').forEach(btn => btn.addEventListener('click', () => { state.detailTab = btn.dataset.detailTab; renderProjectDetail(); }));
@@ -489,6 +538,8 @@
     bindDocumentBatchControls(p);
     main.querySelectorAll('[data-jump-section]').forEach(btn => btn.addEventListener('click', () => jumpToSection(btn.dataset.jumpSection)));
     main.querySelectorAll('[data-change-delete]').forEach(btn => btn.addEventListener('click', () => confirmDeleteContractChange(btn.dataset.changeDelete)));
+    main.querySelectorAll('[data-warranty-preview]').forEach(btn => btn.addEventListener('click', () => { state.activeWarrantyInspectionId = btn.dataset.warrantyPreview; openDocumentPreview('warrantyInspectionReport'); }));
+    main.querySelectorAll('[data-warranty-delete]').forEach(btn => btn.addEventListener('click', () => deleteWarrantyInspection(btn.dataset.warrantyDelete)));
     main.querySelectorAll('[data-field]').forEach(input => {
       input.addEventListener('input', onProjectInput);
       input.addEventListener('change', onProjectInput);
@@ -515,6 +566,12 @@
     return vendor ? (state.payouts.find(x => x.vendorId === vendor.id) || null) : null;
   }
 
+  function activeWarrantyInspection(p) {
+    const list = Array.isArray(p?.warrantyInspections) ? p.warrantyInspections : [];
+    if (!list.length) return null;
+    return list.find(x => x.id === state.activeWarrantyInspectionId) || list[list.length-1] || null;
+  }
+
   function documentValue(field, p) {
     if (field === 'schoolName') return state.school?.name || '';
     if (field === 'schoolAddress') return state.school?.address || '';
@@ -526,6 +583,14 @@
       const payout = payoutForProject(p);
       if (field === 'accountHolder') return payout?.accountHolder || p?.vendorName || '';
       return payout?.[field] || '';
+    }
+    if (field.startsWith('warranty')) {
+      const wi = activeWarrantyInspection(p);
+      const map = {
+        warrantyInspectionDate:'date', warrantyInspector:'inspector', warrantyWitness:'witness',
+        warrantyInspectionResult:'result', warrantyIssueDetails:'issueDetails', warrantyActions:'actions', warrantyNotes:'notes'
+      };
+      return wi?.[map[field]] ?? '';
     }
     if (field === 'contractSecurityAmount' && !meaningful(p?.contractSecurityAmount)) {
       const amount = Number(p?.currentContractAmount), rateRaw = Number(p?.contractSecurityRate);
@@ -598,32 +663,45 @@
     return `<div class="print-history"><strong>최근 묶음 출력</strong>${history.map(item => `<span>${e(formatDateTime(item.at))} · ${e(item.labels?.join(' · ') || `${item.count || 0}종`)}</span>`).join('')}</div>`;
   }
 
+  function utilityToolCardHtml(p) {
+    const u = p.utilityCost || {};
+    const total = Number(u.total || 0);
+    return `<article class="document-card utility-tool-card ${total?'ready':''}">
+      <div class="document-card-top"><div><span class="document-stage">계산도구</span><span class="document-version">원가통계 기준</span></div></div>
+      <h3>수도·전기료 계산</h3><p>원클릭 프로그램의 「수도전기료계산식」 기준으로 전력비·수도광열비를 계산하고 대금청구 공제금액에 바로 연결합니다.</p>
+      <div class="document-requirement ${total?'ready':''}">${total?`<strong>계산값 ${e(formatMoney(total))}</strong><span>공제금액에 바로 반영할 수 있습니다.</span>`:`<strong>계산 필요</strong><span>직접재료비·직접노무비만 추가 입력하면 됩니다.</span>`}</div>
+      <button class="button ${total?'secondary':'primary'}" type="button" data-open-utility-calculator>${total?'계산 다시 보기':'계산하기'}</button>
+    </article>`;
+  }
+
   function documentsTabHtml(p) {
     const selected = orderedSelectedTypes(p);
     const missing = batchMissingFields(selected, p);
     const readyCount = selected.filter(type => documentMissing(type,p).length === 0).length;
     return `<div class="documents-panel">
-      <div class="documents-head"><div><p class="eyebrow">행정기관 내부 양식 우선</p><h2>공사서류</h2><p>필요한 서류를 여러 개 고르고, 부족한 정보는 한 번만 채운 뒤 한 번에 인쇄할 수 있습니다.</p></div><div class="documents-head-note"><strong>v0.4.0</strong><span>계약서류 추가 · 템플릿 분리</span></div></div>
+      <div class="documents-head"><div><p class="eyebrow">행정기관 작성·관리 우선</p><h2>공사서류</h2><p>행정실에서 직접 작성·관리하는 서류를 먼저 보여주고, 업체 제출·징구 서류는 아래에서 이어서 관리합니다.</p></div><div class="documents-head-note"><strong>v0.4.1</strong><span>공사대장 · 하자관리 · 수도전기료</span></div></div>
       <div class="document-batch-toolbar">
         <div class="document-set-buttons" aria-label="서류 세트 선택">
+          <button class="button secondary small" type="button" data-doc-set="agencyManagement">행정기관 관리서류</button>
           <button class="button secondary small" type="button" data-doc-set="contract">계약서류 4종</button>
-          <button class="button secondary small" type="button" data-doc-set="start">착공서류</button>
           <button class="button secondary small" type="button" data-doc-set="completion">준공서류 4종</button>
-          <button class="button secondary small" type="button" data-doc-set="payment">지출서류</button>
-          <button class="button ghost small" type="button" data-doc-set="all">전체 10종</button>
+          <button class="button ghost small" type="button" data-doc-set="all">전체 13종</button>
           <button class="button ghost small" type="button" data-doc-clear>선택 해제</button>
         </div>
         <div class="document-batch-summary" id="documentBatchSummary">
-          <div><strong>${selected.length ? `${selected.length}종 선택` : '서류를 선택하세요'}</strong><span>${selected.length ? (missing.length ? `공통 부족정보 ${missing.length}개 · 바로 출력 ${readyCount}종` : '모든 서류가 바로 출력 가능합니다.') : '개별 선택 또는 단계별 세트를 사용할 수 있습니다.'}</span></div>
+          <div><strong>${selected.length ? `${selected.length}종 선택` : '서류를 선택하세요'}</strong><span>${selected.length ? (missing.length ? `공통 부족정보 ${missing.length}개 · 바로 출력 ${readyCount}종` : '모든 서류가 바로 출력 가능합니다.') : '개별 선택 또는 서류 세트를 사용할 수 있습니다.'}</span></div>
           <button class="button primary" type="button" id="openBatchPreviewBtn" ${selected.length?'':'disabled'}>${missing.length ? `부족정보 ${missing.length}개 확인` : `선택한 ${selected.length}종 미리보기`}</button>
         </div>
       </div>
-      <div class="document-group"><div class="document-group-title"><strong>계약</strong><span>계약을 체결하고 업체 서약을 받을 때</span></div><div class="document-grid">${documentCardHtml('standardContract',p)}${documentCardHtml('acceptanceTerms',p)}${documentCardHtml('useSealForm',p)}${documentCardHtml('privateContractPledge',p)}</div></div>
-      <div class="document-group"><div class="document-group-title"><strong>착공</strong><span>공사를 시작할 때</span></div><div class="document-grid">${documentCardHtml('startReport',p)}</div></div>
-      <div class="document-group"><div class="document-group-title"><strong>준공</strong><span>공사를 완료하고 검사할 때</span></div><div class="document-grid">${documentCardHtml('completionReport',p)}${documentCardHtml('completionInspectionRequest',p)}${documentCardHtml('supervisionReport',p)}${documentCardHtml('completionInspectionRecord',p)}</div></div>
-      <div class="document-group"><div class="document-group-title"><strong>지출</strong><span>준공 후 대금을 청구할 때</span></div><div class="document-grid">${documentCardHtml('paymentRequest',p)}</div></div>
+      <div class="document-group agency-document-group"><div class="document-group-title"><strong>행정기관 작성·관리</strong><span>공사 등록부터 감사·하자관리까지 같은 공사정보를 계속 재사용합니다.</span></div><div class="document-grid">${documentCardHtml('constructionLedger',p)}${documentCardHtml('supervisionReport',p)}${documentCardHtml('completionInspectionRecord',p)}${documentCardHtml('warrantyInspectionReport',p)}${documentCardHtml('warrantyLedger',p)}${utilityToolCardHtml(p)}</div></div>
+      <div class="document-group vendor-document-group"><div class="document-group-title"><strong>업체 제출·징구</strong><span>계약·착공·준공·지출 단계에서 업체와 주고받는 서류</span></div>
+        <div class="document-subgroup"><h4>계약</h4><div class="document-grid">${documentCardHtml('standardContract',p)}${documentCardHtml('acceptanceTerms',p)}${documentCardHtml('useSealForm',p)}${documentCardHtml('privateContractPledge',p)}</div></div>
+        <div class="document-subgroup"><h4>착공</h4><div class="document-grid">${documentCardHtml('startReport',p)}</div></div>
+        <div class="document-subgroup"><h4>준공</h4><div class="document-grid">${documentCardHtml('completionReport',p)}${documentCardHtml('completionInspectionRequest',p)}</div></div>
+        <div class="document-subgroup"><h4>지출</h4><div class="document-grid">${documentCardHtml('paymentRequest',p)}</div></div>
+      </div>
       ${recentPrintHistoryHtml(p)}
-      <div class="document-footnote">출력양식은 제공받은 「공사서류 원클릭 프로그램(2026.4.)」의 내부 서식을 기준으로 구현했습니다. 대부분 A4 1쪽이며 「수의계약 통합서약서」는 원 양식 구조에 맞춰 2쪽으로 출력됩니다.</div>
+      <div class="document-footnote">출력양식은 제공받은 「공사서류 원클릭 프로그램(2026.4.)」의 내부 서식을 기준으로 구현했습니다. 공사대장·하자검사조서·하자대장도 같은 공사 마스터 데이터를 사용합니다.</div>
     </div>`;
   }
 
@@ -658,6 +736,7 @@
       renderProjectDetail();
     });
     main.querySelector('#openBatchPreviewBtn')?.addEventListener('click', () => openSelectedDocumentsFlow());
+    main.querySelector('[data-open-utility-calculator]')?.addEventListener('click', openUtilityCalculator);
   }
 
   function openSelectedDocumentsFlow() {
@@ -695,6 +774,7 @@
     if (!p) return false;
     let schoolChanged = false;
     const payoutValues = {};
+    const warrantyValues = {};
     for (const field of fields) {
       const el = modalBody.querySelector(`#docMissing_${CSS.escape(field)}`);
       let value = el?.value?.trim?.() ?? '';
@@ -712,6 +792,8 @@
         }
       } else if (['bankName','accountNumber','accountHolder'].includes(field)) {
         payoutValues[field] = value;
+      } else if (field.startsWith('warranty')) {
+        warrantyValues[field] = value;
       } else p[field] = value;
     }
     p.updatedAt = new Date().toISOString();
@@ -719,6 +801,17 @@
     await DB.put('projects',p);
     if (schoolChanged) await DB.put('settings',{key:'school',value:state.school});
     if (Object.keys(payoutValues).length) await savePayoutForProject(p, payoutValues);
+    if (Object.keys(warrantyValues).length) {
+      const list = Array.isArray(p.warrantyInspections) ? [...p.warrantyInspections] : [];
+      let idx = state.activeWarrantyInspectionId ? list.findIndex(x=>x.id===state.activeWarrantyInspectionId) : -1;
+      const base = idx >= 0 ? list[idx] : {};
+      const map = {warrantyInspectionDate:'date',warrantyInspector:'inspector',warrantyWitness:'witness',warrantyInspectionResult:'result',warrantyIssueDetails:'issueDetails',warrantyActions:'actions',warrantyNotes:'notes'};
+      const next = {...base,id:base.id||DB.uuid(),createdAt:base.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
+      Object.entries(warrantyValues).forEach(([k,v])=>{ if(map[k]) next[map[k]]=v; });
+      if (idx >= 0) list[idx]=next; else { list.push(next); idx=list.length-1; }
+      p.warrantyInspections=list; state.activeWarrantyInspectionId=next.id;
+      await DB.put('projects',p);
+    }
     await loadState();
     state.currentProjectId = p.id;
     return true;
@@ -762,7 +855,8 @@
     const label = DOCUMENT_FIELD_LABELS[field] || field;
     const value = documentValue(field, p);
     if (MONEY_FIELDS.has(field)) return `<div class="field"><label for="${e(id)}">${e(label)}</label>${moneyInputHtml(id, value)}</div>`;
-    if (['contractDate','plannedStartDate','startDate','completionDueDate','actualCompletionDate','completionInspectionDate'].includes(field)) return modalDateField(id, label, value);
+    if (['contractDate','plannedStartDate','startDate','completionDueDate','actualCompletionDate','completionInspectionDate','warrantyInspectionDate'].includes(field)) return modalDateField(id, label, value);
+    if (['warrantyInspectionResult','warrantyIssueDetails','warrantyActions','warrantyNotes'].includes(field)) return `<div class="field full"><label for="${e(id)}">${e(label)}</label><textarea id="${e(id)}">${e(value || '')}</textarea></div>`;
     if (['bankName','accountNumber','accountHolder'].includes(field)) {
       return `<div class="field"><label for="${e(id)}">${e(label)}</label><input id="${e(id)}" value="${e(value || '')}" autocomplete="off"><span class="hint">업체 지급정보 보관함에 별도로 저장됩니다.</span></div>`;
     }
@@ -773,6 +867,8 @@
     const p = currentProject();
     const def = DOCUMENT_DEFINITIONS[type];
     if (!p || !def) return;
+    if (type === 'warrantyInspectionReport' && !(p.warrantyInspections || []).length) { openWarrantyInspectionModal(null,true); return; }
+    if (type === 'warrantyInspectionReport' && !state.activeWarrantyInspectionId) state.activeWarrantyInspectionId = p.warrantyInspections[p.warrantyInspections.length-1]?.id || null;
     const missing = documentMissing(type, p);
     if (missing.length) { openDocumentMissingModal(type, missing); return; }
     openModal({
@@ -913,6 +1009,112 @@
     const idx = state.payouts.findIndex(x => x.vendorId === vendor.id);
     if (idx >= 0) state.payouts[idx] = next; else state.payouts.push(next);
     return next;
+  }
+
+
+  const UTILITY_RATES_2024 = {
+    work: {
+      '건축': {electric:0.515,water:0.479}, '토목': {electric:0.346,water:0.597},
+      '산업설비': {electric:0.163,water:0.422}, '조경': {electric:0.370,water:0.360}
+    },
+    duration: {
+      '6이하': {electric:0.175,water:0.232}, '6초과12이하': {electric:0.212,water:0.410},
+      '12초과36이하': {electric:0.505,water:0.509}, '36초과': {electric:0.715,water:0.596}
+    },
+    size: [
+      {max:500000000,electric:0.132,water:0.154,label:'5억 미만'},
+      {max:3000000000,electric:0.176,water:0.199,label:'5억~30억 미만'},
+      {max:5000000000,electric:0.269,water:0.331,label:'30억~50억 미만'},
+      {max:30000000000,electric:0.448,water:0.611,label:'50억~300억 미만'},
+      {max:100000000000,electric:0.506,water:0.726,label:'300억~1,000억 미만'}
+    ]
+  };
+
+  function utilityWorkCategory(workType) {
+    const t=String(workType||'');
+    if (t.includes('토목')) return '토목';
+    if (t.includes('산업설비')) return '산업설비';
+    if (t.includes('조경')) return '조경';
+    return '건축'; // 전기·통신·소방·전문공사는 원본 안내대로 건축요율 적용
+  }
+
+  function utilityDurationCategory(p) {
+    const a=parseIsoDate(p?.startDate || p?.plannedStartDate), b=parseIsoDate(p?.completionDueDate);
+    if (!a || !b) return '6이하';
+    const months=Math.max(0,(b-a)/86400000/30.4375);
+    if (months<=6) return '6이하'; if (months<=12) return '6초과12이하'; if (months<=36) return '12초과36이하'; return '36초과';
+  }
+
+  function utilitySizeRate(contractAmount) {
+    const base=Number(contractAmount||0)/1.1; // 원본 계산식: 부가세 제외 계약금액 기준
+    return UTILITY_RATES_2024.size.find(x=>base<x.max) || UTILITY_RATES_2024.size[UTILITY_RATES_2024.size.length-1];
+  }
+
+  function roundDown10(value) { return Math.floor(Math.max(0,Number(value)||0)/10)*10; }
+
+  function calculateUtilityCost({directMaterialCost,directLaborCost,facilityUse,workCategory,durationCategory,contractAmount}) {
+    const base=Number(directMaterialCost||0)+Number(directLaborCost||0);
+    const work=UTILITY_RATES_2024.work[workCategory] || UTILITY_RATES_2024.work['건축'];
+    const duration=UTILITY_RATES_2024.duration[durationCategory] || UTILITY_RATES_2024.duration['6이하'];
+    const size=utilitySizeRate(contractAmount);
+    const average=(kind)=>(Number(work[kind])+Number(duration[kind])+Number(size[kind]))/3/100;
+    const allowElectric=facilityUse!=='수도광열비';
+    const allowWater=facilityUse!=='전력비';
+    const electric=allowElectric?roundDown10(base*average('electric')):0;
+    const water=allowWater?roundDown10(base*average('water')):0;
+    return {electricCost:electric,waterHeatCost:water,total:electric+water,sizeLabel:size.label};
+  }
+
+  function utilityResultHtml(result) {
+    if (!result) return '<div class="utility-result-empty">금액을 입력하고 계산해주세요.</div>';
+    return `<div class="utility-result-grid"><div><span>전력비</span><strong>${e(formatMoney(result.electricCost))}</strong></div><div><span>수도광열비</span><strong>${e(formatMoney(result.waterHeatCost))}</strong></div><div class="utility-total"><span>공제금액 합계</span><strong>${e(formatMoney(result.total))}</strong></div></div><p class="utility-rate-note">공사규모 구간 · ${e(result.sizeLabel)}</p>`;
+  }
+
+  function utilityInputsFromModal(p) {
+    return {
+      directMaterialCost:parseMoneyInput(modalBody.querySelector('#utilityMaterial')?.value || ''),
+      directLaborCost:parseMoneyInput(modalBody.querySelector('#utilityLabor')?.value || ''),
+      facilityUse:modalBody.querySelector('#utilityFacilityUse')?.value || '수도광열비·전력비',
+      workCategory:modalBody.querySelector('#utilityWorkCategory')?.value || utilityWorkCategory(p.workType),
+      durationCategory:modalBody.querySelector('#utilityDurationCategory')?.value || utilityDurationCategory(p),
+      contractAmount:Number(p.currentContractAmount||0)
+    };
+  }
+
+  function openUtilityCalculator() {
+    const p=currentProject(); if(!p)return;
+    const u=p.utilityCost||{};
+    const workCategory=u.workCategory||utilityWorkCategory(p.workType);
+    const durationCategory=u.durationCategory||utilityDurationCategory(p);
+    const existing=meaningful(u.total)?{electricCost:Number(u.electricCost||0),waterHeatCost:Number(u.waterHeatCost||0),total:Number(u.total||0),sizeLabel:utilitySizeRate(p.currentContractAmount).label}:null;
+    openModal({eyebrow:'행정기관 계산도구 · 2024 완성공사 원가통계',title:'수도·전기료 계산',wide:true,
+      body:`<div class="notice"><strong>원본 「수도전기료계산식」의 산식을 웹으로 옮겼습니다.</strong><br>전기·통신·소방·전문공사는 건축요율을 적용하고, 공사기간과 계약금액 구간은 현재 공사정보에서 자동 판단합니다.</div><div class="modal-grid utility-input-grid" style="margin-top:16px">
+        <div class="field"><label>공사종류 요율</label><select id="utilityWorkCategory">${['건축','토목','산업설비','조경'].map(x=>`<option ${x===workCategory?'selected':''}>${x}</option>`).join('')}</select></div>
+        <div class="field"><label>공사기간 요율</label><select id="utilityDurationCategory">${['6이하','6초과12이하','12초과36이하','36초과'].map(x=>`<option ${x===durationCategory?'selected':''}>${x}</option>`).join('')}</select></div>
+        <div class="field"><label>적용 항목</label><select id="utilityFacilityUse"><option ${u.facilityUse==='수도광열비'?'selected':''}>수도광열비</option><option ${u.facilityUse==='전력비'?'selected':''}>전력비</option><option ${!u.facilityUse||u.facilityUse==='수도광열비·전력비'?'selected':''}>수도광열비·전력비</option></select></div>
+        <div class="field"><label>현재 계약금액</label><input value="${e(formatMoneyInput(p.currentContractAmount))}" disabled><span class="hint">부가세 제외 금액으로 공사규모 요율을 자동 판단합니다.</span></div>
+        <div class="field"><label for="utilityMaterial">직접재료비</label>${moneyInputHtml('utilityMaterial',u.directMaterialCost||'')}</div>
+        <div class="field"><label for="utilityLabor">직접노무비</label>${moneyInputHtml('utilityLabor',u.directLaborCost||'')}</div>
+      </div><div id="utilityResult" class="utility-result-panel">${utilityResultHtml(existing)}</div>`,
+      actions:`<button class="button secondary" type="button" data-modal-close>닫기</button><button class="button secondary" type="button" id="calculateUtilityBtn">계산·저장</button><button class="button primary" type="button" id="applyUtilityDeductionBtn">공제금액에 반영</button>`});
+    initMoneyInputs(modalBody);
+    modalActions.querySelector('[data-modal-close]').addEventListener('click',closeModal);
+    modalActions.querySelector('#calculateUtilityBtn').addEventListener('click',()=>saveUtilityCalculation(false));
+    modalActions.querySelector('#applyUtilityDeductionBtn').addEventListener('click',()=>saveUtilityCalculation(true));
+  }
+
+  async function saveUtilityCalculation(applyDeduction=false) {
+    const p=currentProject(); if(!p)return;
+    const inputs=utilityInputsFromModal(p);
+    if (!meaningful(inputs.directMaterialCost) && !meaningful(inputs.directLaborCost)) { showToast('직접재료비 또는 직접노무비를 입력해주세요.','warn'); return; }
+    const result=calculateUtilityCost(inputs);
+    p.utilityCost={...inputs,...result,calculatedAt:new Date().toISOString()};
+    if (applyDeduction) p.deductionAmount=result.total;
+    p.updatedAt=new Date().toISOString();
+    await DB.put('projects',p); await loadState(); state.currentProjectId=p.id;
+    const resultEl=modalBody.querySelector('#utilityResult'); if(resultEl) resultEl.innerHTML=utilityResultHtml(result);
+    showToast(applyDeduction ? `공제금액 ${formatMoney(result.total)}에 반영했습니다.` : '수도·전기료 계산값을 저장했습니다.');
+    if (applyDeduction) { closeModal(); renderProjectDetail(); }
   }
 
   function formatKoreanDate(value) {
@@ -1060,6 +1262,86 @@
       const dueText = c.afterCompletionDueDate ? `${formatDate(c.beforeCompletionDueDate)} → ${formatDate(c.afterCompletionDueDate)}` : '준공기한 변경 없음';
       return `<div class="contract-change-item"><div class="change-index">${index+1}차</div><div class="change-copy"><strong>${e(formatDate(c.changeDate) || '변경일 미입력')}</strong><span>${e(amountText)}</span><span>${e(dueText)}</span>${c.reason ? `<small>${e(c.reason)}</small>` : ''}</div><button class="button ghost small" type="button" data-change-delete="${e(c.id)}">삭제</button></div>`;
     }).join('')}</div>`;
+  }
+
+
+  function warrantyInspectionHistoryHtml(p) {
+    const list = Array.isArray(p?.warrantyInspections) ? [...p.warrantyInspections].reverse() : [];
+    if (!list.length) return `<div class="contract-change-empty">아직 하자검사 기록이 없습니다. 검사할 때마다 새 기록을 추가하세요.</div>`;
+    return `<div class="warranty-history-list">${list.map((x,idx)=>`<div class="warranty-history-item"><div class="warranty-history-copy"><strong>${e(formatDate(x.date) || '검사일 미입력')}</strong><span>${e(x.hasDefect === 'yes' ? '하자 있음' : x.hasDefect === 'no' ? '이상 없음' : (x.result || '검사결과 미입력'))}</span>${x.result ? `<small>${e(x.result)}</small>` : ''}</div><div class="warranty-history-actions"><button class="button ghost small" type="button" data-warranty-preview="${e(x.id)}">조서 보기</button><button class="button ghost small" type="button" data-warranty-delete="${e(x.id)}">삭제</button></div></div>`).join('')}</div>`;
+  }
+
+  function openWarrantyInspectionModal(record = null, previewAfterSave = false) {
+    const p = currentProject();
+    if (!p) return;
+    const current = record || {};
+    const inspector = current.inspector || p.inspector || state.school?.inspector || '';
+    const witness = current.witness || p.witness || state.school?.witness || '';
+    openModal({
+      eyebrow:'행정기관 하자관리', title:record ? '하자검사 기록 수정' : '하자검사 기록 추가',
+      body:`<div class="notice"><strong>검사기록은 누적됩니다.</strong><br>새 검사를 추가해도 이전 검사기록은 사라지지 않습니다.</div><div class="modal-grid" style="margin-top:16px">
+        ${modalDateField('warrantyDate','검사일',current.date || '')}
+        ${modalField('warrantyInspectorInput','검사자',inspector)}
+        ${modalField('warrantyWitnessInput','입회자',witness)}
+        <div class="field"><label for="warrantyHasDefect">하자 유무</label><select id="warrantyHasDefect"><option value="">선택</option><option value="no" ${current.hasDefect==='no'?'selected':''}>이상 없음</option><option value="yes" ${current.hasDefect==='yes'?'selected':''}>하자 있음</option></select></div>
+        <div class="field full"><label for="warrantyResult">검사결과</label><textarea id="warrantyResult">${e(current.result || '')}</textarea></div>
+        <div class="field full"><label for="warrantyIssueDetails">하자발생내용</label><textarea id="warrantyIssueDetails">${e(current.issueDetails || '')}</textarea></div>
+        <div class="field full"><label for="warrantyActions">처리사항</label><textarea id="warrantyActions">${e(current.actions || '')}</textarea></div>
+        <div class="field full"><label for="warrantyNotes">기타참고사항</label><textarea id="warrantyNotes">${e(current.notes || '')}</textarea></div>
+      </div>`,
+      actions:`<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="saveWarrantyInspectionBtn">저장</button>`
+    });
+    initDateInputs(modalBody);
+    modalActions.querySelector('[data-modal-close]').addEventListener('click',closeModal);
+    modalActions.querySelector('#saveWarrantyInspectionBtn').addEventListener('click',()=>saveWarrantyInspection(record?.id || '',previewAfterSave));
+  }
+
+  async function saveWarrantyInspection(recordId = '', previewAfterSave = false) {
+    const p = currentProject();
+    if (!p) return;
+    const date = modalBody.querySelector('#warrantyDate')?.value || '';
+    const inspector = modalBody.querySelector('#warrantyInspectorInput')?.value?.trim() || '';
+    if (!date || !inspector) { showToast('검사일과 검사자를 입력해주세요.','warn'); return; }
+    const list = Array.isArray(p.warrantyInspections) ? [...p.warrantyInspections] : [];
+    const existingIndex = recordId ? list.findIndex(x=>x.id===recordId) : -1;
+    const base = existingIndex >= 0 ? list[existingIndex] : {};
+    const next = {
+      ...base,
+      id: base.id || DB.uuid(),
+      date,
+      inspector,
+      witness: modalBody.querySelector('#warrantyWitnessInput')?.value?.trim() || '',
+      hasDefect: modalBody.querySelector('#warrantyHasDefect')?.value || '',
+      result: modalBody.querySelector('#warrantyResult')?.value?.trim() || '',
+      issueDetails: modalBody.querySelector('#warrantyIssueDetails')?.value?.trim() || '',
+      actions: modalBody.querySelector('#warrantyActions')?.value?.trim() || '',
+      notes: modalBody.querySelector('#warrantyNotes')?.value?.trim() || '',
+      createdAt: base.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    if (existingIndex >= 0) list[existingIndex] = next; else list.push(next);
+    p.warrantyInspections = list;
+    p.updatedAt = new Date().toISOString();
+    await DB.put('projects',p);
+    state.activeWarrantyInspectionId = next.id;
+    if (!meaningful(state.school?.inspector) && inspector) {
+      state.school = {...(state.school||{}),inspector};
+      await DB.put('settings',{key:'school',value:state.school});
+    }
+    await loadState(); state.currentProjectId=p.id;
+    closeModal(); renderProjectDetail();
+    showToast('하자검사 기록을 저장했습니다.');
+    if (previewAfterSave) openDocumentPreview('warrantyInspectionReport');
+  }
+
+  async function deleteWarrantyInspection(id) {
+    const p = currentProject();
+    if (!p || !id) return;
+    if (!confirm('이 하자검사 기록을 삭제할까요?')) return;
+    p.warrantyInspections = (p.warrantyInspections || []).filter(x=>x.id!==id);
+    p.updatedAt = new Date().toISOString();
+    if (state.activeWarrantyInspectionId === id) state.activeWarrantyInspectionId = null;
+    await DB.put('projects',p); await loadState(); state.currentProjectId=p.id; renderProjectDetail();
   }
 
   function sectionHtml(title, description, fields) {
@@ -1259,6 +1541,18 @@
     return `<div class="progress-item"><span>${done?'✓':'○'} ${e(label)}</span><span>${done?'확인':'대기'}</span></div>`;
   }
 
+
+  function syncDefectDates(p, changedField = '') {
+    const years=Number(p.defectPeriodYears);
+    if ((!p.defectStartDate || changedField==='actualCompletionDate') && p.actualCompletionDate && Number.isFinite(years) && years>0) {
+      const start=parseIsoDate(p.actualCompletionDate);
+      if (start) { start.setDate(start.getDate()+1); p.defectStartDate=isoFromDate(start); }
+    }
+    if (p.defectStartDate && Number.isFinite(years) && years>0 && ['defectStartDate','defectPeriodYears','actualCompletionDate'].includes(changedField)) {
+      p.defectEndDate=addYearsMinusDay(p.defectStartDate,years);
+    }
+  }
+
   function onProjectInput(ev) {
     const p = currentProject();
     if (!p) return;
@@ -1269,6 +1563,17 @@
     p[fieldName] = value;
     if (fieldName === 'contractDate' && value && !p.fiscalYear) p.fiscalYear = value.slice(0,4);
     if (fieldName === 'currentContractAmount' && ev.type === 'change' && !(p.contractChanges?.length)) p.originalContractAmount = value;
+    if (['defectStartDate','defectPeriodYears','actualCompletionDate'].includes(fieldName)) {
+      syncDefectDates(p,fieldName);
+      const endHidden=document.getElementById('f_defectEndDate');
+      const endText=document.getElementById('f_defectEndDate_text');
+      const startHidden=document.getElementById('f_defectStartDate');
+      const startText=document.getElementById('f_defectStartDate_text');
+      if (startHidden && p.defectStartDate) startHidden.value=p.defectStartDate;
+      if (startText && p.defectStartDate) startText.value=p.defectStartDate;
+      if (endHidden && p.defectEndDate) endHidden.value=p.defectEndDate;
+      if (endText && p.defectEndDate) endText.value=p.defectEndDate;
+    }
     p.updatedAt = new Date().toISOString();
     scheduleSave(p);
   }
@@ -1752,13 +2057,13 @@
 
   function openHelp() {
     openModal({
-      eyebrow:'도움말', title:'v0.4.0 사용 흐름',
+      eyebrow:'도움말', title:'v0.4.1 사용 흐름',
       body:`<div class="notice"><strong>핵심 원칙</strong><br>같은 공사정보는 한 번 입력하고 다시 입력하지 않습니다.</div>
       <div style="display:grid;gap:16px;margin-top:18px;font-size:14px">
         <div><strong>1. 공사를 여러 건 저장</strong><p class="muted">전기·건축·체육관 공사를 동시에 등록해도 각 공사는 독립적으로 자동저장됩니다.</p></div>
         <div><strong>2. 기존 공사이력 재사용</strong><p class="muted">학교 공사 이력 현황.xlsx를 불러오면 여러 공사를 한꺼번에 등록하고 기존 공사의 빈 정보를 보완합니다.</p></div><div><strong>3. 에듀파인으로 업데이트</strong><p class="muted">자료관리목록.xlsx를 다시 내려받아 올리면 계약·준공·지출 단계에서 새로 생긴 값만 기존 공사에 보완합니다. 다른 값은 자동 덮어쓰지 않습니다.</p></div>
         <div><strong>4. 업체 재사용</strong><p class="muted">업체명·대표자·사업자번호·주소·전화·면허를 업체 보관함에 저장해 다음 공사에서 다시 고를 수 있습니다.</p></div>
-        <div><strong>5. 공사서류 만들기</strong><p class="muted">공사 상세의 「서류」 탭에서 계약서류 4종과 착공·준공·지출서류 6종, 총 10종을 개별 또는 묶음으로 만들 수 있습니다. 단계별 세트를 고르면 부족정보를 한 번만 채운 뒤 선택한 서류를 한 번에 인쇄합니다.</p></div>
+        <div><strong>5. 공사서류 만들기</strong><p class="muted">공사 상세의 「서류」 탭에서 행정기관 작성·관리 서류를 먼저 확인할 수 있습니다. 공사대장·하자검사조서·하자대장과 기존 계약·착공·준공·지출서류를 같은 공사정보로 만들고 묶음 인쇄할 수 있습니다.</p></div>
         <div><strong>6. 계약서류 세트</strong><p class="muted">공사도급표준계약서·승낙사항·사용인감계·수의계약 통합서약서를 한 번에 선택할 수 있습니다. 수의계약 통합서약서는 원본 양식 구조에 맞춰 2페이지로 출력됩니다.</p></div>
         <div><strong>7. 서류 템플릿 분리</strong><p class="muted">서류별 필수정보·출력순서·양식 버전을 별도 정의로 관리해 이후 양식 변경 시 공사 데이터와 다른 서류에 미치는 영향을 줄였습니다.</p></div>
         <div><strong>8. 지급정보 재사용</strong><p class="muted">은행·계좌·예금주는 업체 지급정보로 분리 저장되며 대금청구서에서만 사용합니다. 업체 목록에는 계좌번호를 노출하지 않습니다.</p></div>

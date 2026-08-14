@@ -9,54 +9,69 @@
 
   const DEFINITIONS = {
     standardContract: {
-      key:'standardContract', label:'공사도급표준계약서', outputTitle:'공 사 도 급 표 준 계 약 서', stage:'계약', version:'2026.04', pages:1,
+      key:'standardContract', label:'공사도급표준계약서', outputTitle:'공 사 도 급 표 준 계 약 서', stage:'계약', version:'2026.04', pages:1, owner:'vendor',
       description:'발주기관과 계약상대자가 체결하는 공사도급 표준계약서',
       required:['schoolName','schoolAddress','principal','projectName','contractNumber','currentContractAmount','contractSecurityAmount','contractDate','plannedStartDate','completionDueDate','vendorName','businessNumber','vendorAddress','vendorPhone','representative','workType','delayPenaltyRate','priceAdjustmentMethod','defectSecurityRate','defectSecurityAmount','defectPeriodYears']
     },
     acceptanceTerms: {
-      key:'acceptanceTerms', label:'승낙사항', outputTitle:'승 낙 사 항 (공 사 집 행)', stage:'계약', version:'2026.04', pages:1,
+      key:'acceptanceTerms', label:'승낙사항', outputTitle:'승 낙 사 항 (공 사 집 행)', stage:'계약', version:'2026.04', pages:1, owner:'vendor',
       description:'공사 집행 시 계약상대자가 확인하는 승낙사항',
       required:['projectName','contractDate','plannedStartDate','completionDueDate','vendorName','businessNumber','vendorAddress','representative','delayPenaltyRate','defectPeriodYears']
     },
     useSealForm: {
-      key:'useSealForm', label:'사용인감계', outputTitle:'사 용 인 감 계', stage:'계약', version:'2026.04', pages:1,
+      key:'useSealForm', label:'사용인감계', outputTitle:'사 용 인 감 계', stage:'계약', version:'2026.04', pages:1, owner:'vendor',
       description:'계약 관련 업무에 사용할 사용인감을 신고하는 서류',
       required:['schoolName','projectName','contractDate','vendorName','vendorAddress','representative']
     },
     privateContractPledge: {
-      key:'privateContractPledge', label:'수의계약 통합서약서', outputTitle:'수 의 계 약 통 합 서 약 서', stage:'계약', version:'2026.04', pages:2,
+      key:'privateContractPledge', label:'수의계약 통합서약서', outputTitle:'수 의 계 약 통 합 서 약 서', stage:'계약', version:'2026.04', pages:2, owner:'vendor',
       description:'수의계약 관련 각서·청렴·안전·개인정보 동의를 통합한 서약서',
       required:['schoolName','projectName','contractDate','vendorName','businessNumber','vendorAddress','vendorPhone','representative']
     },
     startReport: {
-      key:'startReport', label:'착공계', outputTitle:'착 공 신 고 서', stage:'착공', version:'2026.04', pages:1,
+      key:'startReport', label:'착공계', outputTitle:'착 공 신 고 서', stage:'착공', version:'2026.04', pages:1, owner:'vendor',
       description:'착공 신고 시 제출하는 기본 착공계',
       required:['schoolName','projectName','currentContractAmount','contractDate','startDate','completionDueDate','vendorName','businessNumber','vendorAddress','representative']
     },
     completionReport: {
-      key:'completionReport', label:'준공계', outputTitle:'준 공 계', stage:'준공', version:'2026.04', pages:1,
+      key:'completionReport', label:'준공계', outputTitle:'준 공 계', stage:'준공', version:'2026.04', pages:1, owner:'vendor',
       description:'공사 완료 후 제출하는 준공계',
       required:['schoolName','projectName','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','vendorName','businessNumber','vendorAddress','representative']
     },
     completionInspectionRequest: {
-      key:'completionInspectionRequest', label:'준공검사원', outputTitle:'준 공 검 사 원', stage:'준공', version:'2026.04', pages:1,
+      key:'completionInspectionRequest', label:'준공검사원', outputTitle:'준 공 검 사 원', stage:'준공', version:'2026.04', pages:1, owner:'vendor',
       description:'준공 사실을 확인하고 검사를 요청하는 서류',
       required:['schoolName','projectName','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','vendorName','businessNumber','vendorAddress','representative']
     },
     supervisionReport: {
-      key:'supervisionReport', label:'공사감독조서', outputTitle:'공 사 감 독 조 서', stage:'준공', version:'2026.04', pages:1,
+      key:'supervisionReport', label:'공사감독조서', outputTitle:'공 사 감 독 조 서', stage:'준공', version:'2026.04', pages:1, owner:'agency',
       description:'공사감독자가 현장 감독 결과를 확인하는 기관용 조서',
       required:['schoolName','projectName','vendorName','representative','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','supervisor']
     },
     completionInspectionRecord: {
-      key:'completionInspectionRecord', label:'준공검사조서', outputTitle:'준 공 검 사 조 서', stage:'준공', version:'2026.04', pages:1,
+      key:'completionInspectionRecord', label:'준공검사조서', outputTitle:'준 공 검 사 조 서', stage:'준공', version:'2026.04', pages:1, owner:'agency',
       description:'준공검사 결과와 검사자·입회자를 기록하는 기관용 조서',
       required:['schoolName','projectName','vendorName','representative','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','completionInspectionDate','settlementAmount','inspector','witness']
     },
     paymentRequest: {
-      key:'paymentRequest', label:'대금청구서', outputTitle:'대 금 청 구 서', stage:'지출', version:'2026.04', pages:1,
+      key:'paymentRequest', label:'대금청구서', outputTitle:'대 금 청 구 서', stage:'지출', version:'2026.04', pages:1, owner:'vendor',
       description:'준공 후 계약대금을 지정계좌로 청구하는 서류',
       required:['schoolName','projectName','currentContractAmount','settlementAmount','priorPaymentAmount','deductionAmount','completionInspectionDate','vendorName','vendorAddress','representative','bankName','accountNumber','accountHolder']
+    },
+    constructionLedger: {
+      key:'constructionLedger', label:'공사대장', outputTitle:'공  사  대  장', stage:'관리', version:'2026.04', pages:1, owner:'agency',
+      description:'개별 공사의 계약·공정·지급·검사·하자 내용을 한 장에 관리하는 기관용 대장',
+      required:['projectName','vendorName','currentContractAmount','contractMethod','contractDate','startDate','completionDueDate']
+    },
+    warrantyInspectionReport: {
+      key:'warrantyInspectionReport', label:'하자검사조서', outputTitle:'하  자  검  사  조  서', stage:'하자', version:'2026.04', pages:1, owner:'agency',
+      description:'완료공사의 하자(만료)검사 결과를 기록하는 기관용 조서',
+      required:['projectName','vendorName','representative','workType','currentContractAmount','startDate','actualCompletionDate','defectEndDate','warrantyInspectionDate','warrantyInspector']
+    },
+    warrantyLedger: {
+      key:'warrantyLedger', label:'하자대장', outputTitle:'하 자 검 사 대 장', stage:'하자', version:'2026.04', pages:1, owner:'agency',
+      description:'공사별 하자보증기간과 정기 하자검사 이력을 누적 관리하는 기관용 대장',
+      required:['projectName','vendorName','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','defectStartDate','defectEndDate']
     }
   };
 
@@ -67,12 +82,15 @@
     vendorName:'업체명', businessNumber:'사업자등록번호', vendorAddress:'사업장 주소', vendorPhone:'업체 전화번호', representative:'대표자',
     contractSecurityAmount:'계약보증금액', delayPenaltyRate:'지연배상금률', priceAdjustmentMethod:'물가변동 계약금액 조정방법',
     defectSecurityRate:'하자보증률', defectSecurityAmount:'하자보증금액', defectPeriodYears:'하자담보기간(년)',
-    supervisor:'공사감독', inspector:'검사자', witness:'준공검사 입회자', bankName:'은행명', accountNumber:'계좌번호', accountHolder:'예금주명'
+    supervisor:'공사감독', inspector:'검사자', witness:'준공검사 입회자', bankName:'은행명', accountNumber:'계좌번호', accountHolder:'예금주명',
+    warrantyInspectionDate:'하자검사일', warrantyInspector:'하자검사자', warrantyWitness:'하자검사 입회자', warrantyInspectionResult:'검사결과', warrantyIssueDetails:'하자발생내용', warrantyActions:'처리사항', warrantyNotes:'기타참고사항'
+  
   };
 
   const PRINT_ORDER = [
     'standardContract','acceptanceTerms','useSealForm','privateContractPledge',
-    'startReport','completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord','paymentRequest'
+    'startReport','completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord','paymentRequest',
+    'constructionLedger','warrantyInspectionReport','warrantyLedger'
   ];
 
   const SETS = {
@@ -80,7 +98,8 @@
     start: { label:'착공서류', types:['startReport'] },
     completion: { label:'준공서류', types:['completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord'] },
     payment: { label:'지출서류', types:['paymentRequest'] },
-    all: { label:'전체 10종', types:[...PRINT_ORDER] }
+    agencyManagement: { label:'행정기관 관리서류', types:['constructionLedger','supervisionReport','completionInspectionRecord','warrantyInspectionReport','warrantyLedger'] },
+    all: { label:'전체 13종', types:[...PRINT_ORDER] }
   };
 
   function common(ctx) {
@@ -346,6 +365,81 @@
     </article>`];
   }
 
+
+  function renderConstructionLedger(ctx) {
+    const { p, school, h } = common(ctx);
+    const changes = Array.isArray(p.contractChanges) ? p.contractChanges : [];
+    const changeRows = changes.length ? changes.slice(0,3).map(c => `<tr><td>${h.e(h.formatKoreanDate(c.changeDate))}</td><td>${h.e(h.moneyNumberText(Number(c.afterAmount||0)-Number(c.beforeAmount||0)))}</td><td>${h.e(h.moneyNumberText(c.afterAmount))}</td></tr>`).join('') : `<tr><td></td><td></td><td></td></tr>`;
+    return [`<article class="paper-a4 admin-document construction-ledger document-print-page">
+      <div class="ledger-title-row"><h1>공  사  대  장</h1><div>계약번호 : <strong>${h.e(p.contractNumber || '')}</strong></div></div>
+      <table class="ledger-table"><tbody>
+        <tr><th>공사명</th><td colspan="5">${h.e(p.projectName)}</td><th>도급자</th><td colspan="3">${h.e(p.vendorName)}</td><th>공사감독<br>성명</th><td colspan="2">${h.e(ctx.value('supervisor') || '')}</td></tr>
+        <tr><th rowspan="2">계약금액</th><td colspan="5" rowspan="2">${h.e(h.moneyNumberText(p.currentContractAmount))}</td><th>계약방법</th><td colspan="3">${h.e(p.contractMethod || '')}</td><th>전화번호</th><td colspan="2">${h.e(p.vendorPhone || '')}</td></tr>
+        <tr><th>계약일</th><td colspan="3">${h.e(h.formatKoreanDate(p.contractDate))}</td><th>대표자</th><td colspan="2">${h.e(p.representative || '')}</td></tr>
+        <tr><th rowspan="4">설계변경<br>증감</th><th colspan="2">년 월 일</th><th colspan="2">증감액</th><th colspan="2">변경금액</th><th rowspan="4">지출과목</th><th colspan="2">정책사업</th><td colspan="3">${h.e(p.budgetPolicyProject || '')}</td></tr>
+        ${changeRows.replaceAll('<tr>','<tr class="ledger-change-row">').replaceAll('<td>','<td colspan="2">')}
+        <tr><th colspan="2">단위사업</th><td colspan="3">${h.e(p.budgetUnitProject || '')}</td><th colspan="2">세부사업</th><td colspan="3">${h.e(p.budgetDetailProject || '')}</td></tr>
+        <tr><th colspan="2">세부항목</th><td colspan="3">${h.e(p.budgetDetailItem || '')}</td><th colspan="2">원가통계목</th><td colspan="3">${h.e(p.costStatisticsItem || '')}</td></tr>
+        <tr><th>계약내용</th><th colspan="2">계약보증금</th><td colspan="3">${h.e(h.moneyNumberText(ctx.value('contractSecurityAmount')))}</td><td colspan="2">${h.e(p.contractSecurityType || '')}</td><th>재원</th><td colspan="3">${h.e(p.fundingSource || '')}</td></tr>
+        <tr><th rowspan="4">공정</th><th>구분</th><th colspan="2">계약상 년월일</th><th colspan="2">실제 년월일</th><th rowspan="4">지급내역</th><th>구분</th><th colspan="2">년월일</th><th colspan="3">지급금액</th></tr>
+        <tr><th>착공</th><td colspan="2">${h.e(h.formatKoreanDate(p.plannedStartDate || p.startDate))}</td><td colspan="2">${h.e(h.formatKoreanDate(p.startDate))}</td><th>선급금</th><td colspan="2"></td><td colspan="3">${h.e(h.moneyNumberText(p.priorPaymentAmount))}</td></tr>
+        <tr><th>준공</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionDueDate))}</td><td colspan="2">${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td><th>준공금</th><td colspan="2">${h.e(h.formatKoreanDate(p.paymentDate))}</td><td colspan="3">${h.e(h.moneyNumberText(p.paymentAmount || p.settlementAmount))}</td></tr>
+        <tr><th>준공정산금</th><td colspan="4">${h.e(h.moneyNumberText(p.settlementAmount))}</td><th>잔액</th><td colspan="5">${h.e(h.moneyNumberText(Math.max(0, Number(p.currentContractAmount||0)-Number(p.paymentAmount||0))))}</td></tr>
+        <tr><th rowspan="3">하자담보</th><th>시작일</th><td colspan="4">${h.e(h.formatKoreanDate(p.defectStartDate))}</td><th rowspan="3">검사내역</th><th>준공검사일</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionInspectionDate))}</td><th>검사자</th><td colspan="2">${h.e(ctx.value('inspector') || '')}</td></tr>
+        <tr><th>종료일</th><td colspan="4">${h.e(h.formatKoreanDate(p.defectEndDate))}</td><th>공정</th><td colspan="2">1</td><th>입회자</th><td colspan="2">${h.e(ctx.value('witness') || '')}</td></tr>
+        <tr><th>보증금</th><td colspan="2">${h.e(h.moneyNumberText(ctx.value('defectSecurityAmount')))}</td><td colspan="2">${h.e(p.defectSecurityType || '')}</td><th>설계자</th><td colspan="5">${h.e(p.designer || '')}</td></tr>
+      </tbody></table>
+      <div class="ledger-note">※ 공사정보 허브에 저장된 공사정보를 기준으로 자동 작성</div>
+    </article>`];
+  }
+
+  function renderWarrantyInspection(ctx) {
+    const { p, school, h } = common(ctx);
+    const inspector = ctx.value('warrantyInspector');
+    const witness = ctx.value('warrantyWitness');
+    const date = ctx.value('warrantyInspectionDate');
+    const issue = ctx.value('warrantyIssueDetails');
+    const actions = ctx.value('warrantyActions');
+    const notes = ctx.value('warrantyNotes');
+    return [`<article class="paper-a4 admin-document warranty-inspection-report document-print-page">
+      <h1 class="doc-title wide-spacing">하 자 검 사 조 서</h1>
+      <table class="official-table warranty-inspection-table"><colgroup><col style="width:27mm"><col style="width:24mm"><col style="width:25mm"><col style="width:25mm"><col style="width:25mm"><col style="width:24mm"><col style="width:26mm"></colgroup><tbody>
+        <tr><th>공 사 명</th><td colspan="5">${h.e(p.projectName)}</td></tr>
+        <tr><th rowspan="2">도 급 자</th><th>회 사 명</th><td colspan="3">${h.e(p.vendorName)}</td><th>공 종</th><td>${h.e(p.workType || '')}</td></tr>
+        <tr><th>대 표</th><td colspan="3">${h.e(p.representative)}</td><th></th><td></td></tr>
+        <tr><th>도 급 금 액</th><td colspan="3">${h.e(h.moneyNumberText(p.currentContractAmount))}</td><th>준 공 일</th><td colspan="2">${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td></tr>
+        <tr><th>공 사 기 간</th><td colspan="2">${h.e(h.formatKoreanDate(p.startDate))}</td><td>~</td><td>${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td><th>하자만료일</th><td>${h.e(h.formatKoreanDate(p.defectEndDate))}</td></tr>
+        <tr class="warranty-large-row"><th>하자발생내용</th><td colspan="6">${h.e(issue || '')}</td></tr>
+        <tr class="warranty-large-row"><th>처 리 사 항</th><td colspan="6">${h.e(actions || '')}</td></tr>
+        <tr class="warranty-large-row"><th>기타참고사항</th><td colspan="6">${h.e(notes || '')}</td></tr>
+      </tbody></table>
+      <p class="warranty-statement">위와 같이 하자(만료)검사를 필하였음.</p>
+      <p class="record-date">${h.e(h.formatKoreanDate(date))}</p>
+      <div class="warranty-signatures"><div><span>검 사 자 :</span><span>${h.e(school.name || '')}</span><strong>${h.e(h.representativeWithSeal(inspector))}</strong></div><div><span>입 회 자 :</span><span></span><strong>${h.e(h.representativeWithSeal(witness))}</strong></div></div>
+    </article>`];
+  }
+
+  function renderWarrantyLedger(ctx) {
+    const { p, h } = common(ctx);
+    const inspections = Array.isArray(p.warrantyInspections) ? p.warrantyInspections : [];
+    const chunks = inspections.length ? Array.from({length:Math.ceil(inspections.length/5)},(_,i)=>inspections.slice(i*5,i*5+5)) : [[]];
+    return chunks.map((items,pageIndex)=>`<article class="paper-a4 admin-document warranty-ledger document-print-page">
+      <h1>하 자 검 사 대 장</h1>
+      <h2>1. 공사내역</h2>
+      <table class="warranty-ledger-info"><tbody>
+        <tr><th>공사명</th><td colspan="3">${h.e(p.projectName)}</td><th>계약금액</th><td colspan="2">${h.e(h.moneyNumberText(p.currentContractAmount))}</td><th>하자보증금</th><td colspan="2">${h.e(h.moneyNumberText(ctx.value('defectSecurityAmount')))}</td></tr>
+        <tr><th>설계자</th><td colspan="3">${h.e(p.designer || '')}</td><th>계약년월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.contractDate))}</td><th>준공기한</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionDueDate))}</td></tr>
+        <tr><th>도급자</th><td colspan="3">${h.e(p.vendorName)}</td><th>착공년월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.startDate))}</td><th>준공년월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td></tr>
+        <tr><th>감독관</th><td colspan="3">${h.e(ctx.value('supervisor') || '')}</td><th>준공검사일</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionInspectionDate))}</td><th>하자보증기간</th><td colspan="2">${h.e(h.formatKoreanDate(p.defectStartDate))} ~ ${h.e(h.formatKoreanDate(p.defectEndDate))}</td></tr>
+      </tbody></table>
+      <h2>2. 정기 하자검사 내역${chunks.length>1?` (${pageIndex+1}/${chunks.length})`:''}</h2>
+      <table class="warranty-ledger-list"><thead><tr><th>하자검사<br>년 월 일</th><th>하자검사 내용 및 조치사항</th><th>하자검사자</th><th>결재</th></tr></thead><tbody>
+        ${(items.length?items:[null]).map(x=>`<tr><td>${x?h.e(h.formatKoreanDate(x.date)):''}</td><td>${x?h.e([x.result,x.issueDetails,x.actions].filter(Boolean).join(' / ')):''}</td><td>${x?h.e(x.inspector||''):''}</td><td></td></tr>`).join('')}
+        ${Array.from({length:Math.max(0,5-items.length)},()=>`<tr><td></td><td></td><td></td><td></td></tr>`).join('')}
+      </tbody></table>
+    </article>`);
+  }
+
   const RENDERERS = {
     standardContract: renderStandardContract,
     acceptanceTerms: renderAcceptanceTerms,
@@ -356,7 +450,10 @@
     completionInspectionRequest: renderInspectionRequest,
     supervisionReport: renderSupervision,
     completionInspectionRecord: renderInspectionRecord,
-    paymentRequest: renderPayment
+    paymentRequest: renderPayment,
+    constructionLedger: renderConstructionLedger,
+    warrantyInspectionReport: renderWarrantyInspection,
+    warrantyLedger: renderWarrantyLedger
   };
 
   function renderPages(type, ctx) {

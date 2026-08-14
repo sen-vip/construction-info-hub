@@ -1049,3 +1049,94 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .party-table td { min-width: 0; overflow-wrap: anywhere; word-break: keep-all; }
 .party-table td:nth-child(3), .party-table td:nth-child(5) { white-space: normal; }
 .party-table td:nth-child(4), .party-table td:nth-child(6), .party-table td:nth-child(7) { overflow-wrap: anywhere; }
+
+/* v0.4.1 — 행정기관 공사관리 / 하자관리 / 수도전기료 */
+.warranty-row-note { margin-top: 5px; color: #6b7280; font-size: 11px; font-weight: 600; }
+.warranty-management-block { padding-top: 5px; }
+.warranty-history-list { display: grid; gap: 8px; margin-top: 12px; }
+.warranty-history-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: #fbfcfe; }
+.warranty-history-copy { display: grid; gap: 2px; min-width: 0; }
+.warranty-history-copy strong { font-size: 13px; }
+.warranty-history-copy span { color: var(--text); font-size: 12px; }
+.warranty-history-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+.warranty-history-actions { display: flex; gap: 6px; flex: 0 0 auto; }
+.ledger-extra-wrap { padding-top: 2px; }
+.ledger-extra-details { border: 1px solid var(--line); border-radius: 12px; background: #fafbfd; }
+.ledger-extra-details > summary { display: flex; justify-content: space-between; gap: 10px; padding: 13px 15px; cursor: pointer; font-weight: 700; }
+.ledger-extra-details > summary span { color: var(--muted); font-size: 11px; font-weight: 500; }
+.ledger-extra-details[open] > summary { border-bottom: 1px solid var(--line); }
+.nested-form-grid { padding: 14px; }
+.agency-document-group { border: 1px solid #d9e5f4; border-radius: 16px; padding: 18px; background: #fbfdff; }
+.vendor-document-group { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line); }
+.document-subgroup { margin-top: 18px; }
+.document-subgroup h4 { margin: 0 0 10px; color: #516174; font-size: 12px; letter-spacing: .03em; }
+.utility-tool-card { background: linear-gradient(180deg,#fff 0%,#f8fbff 100%); }
+.utility-input-grid { align-items: start; }
+.utility-result-panel { margin-top: 18px; padding: 16px; border: 1px solid #dce5ef; border-radius: 14px; background: #f8fafc; }
+.utility-result-empty { padding: 8px; color: var(--muted); text-align: center; }
+.utility-result-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+.utility-result-grid > div { display: grid; gap: 4px; padding: 12px; border-radius: 10px; background: #fff; border: 1px solid #e4eaf1; }
+.utility-result-grid span { color: var(--muted); font-size: 11px; }
+.utility-result-grid strong { font-size: 17px; }
+.utility-result-grid .utility-total { border-color: #bfd3ed; background: #f3f8ff; }
+.utility-rate-note { margin: 9px 2px 0; color: var(--muted); font-size: 11px; }
+
+/* 공사대장 */
+.construction-ledger { display: block; padding: 9mm 8mm 8mm; font-family: "Malgun Gothic","맑은 고딕",Arial,sans-serif; font-size: 7.6pt; line-height: 1.2; }
+.ledger-title-row { position: relative; display: flex; align-items: end; justify-content: center; min-height: 17mm; margin-bottom: 2mm; }
+.ledger-title-row h1 { margin: 0; font-size: 24pt; letter-spacing: .23em; text-indent: .23em; }
+.ledger-title-row > div { position: absolute; right: 0; bottom: 1mm; font-size: 8pt; }
+.ledger-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.ledger-table th,.ledger-table td { border: .25mm solid #333; padding: 1.35mm 1.2mm; vertical-align: middle; overflow-wrap: anywhere; }
+.ledger-table th { background: #fafafa; text-align: center; font-weight: 500; }
+.ledger-table td { min-height: 6mm; }
+.ledger-change-row td { height: 6mm; }
+.ledger-note { margin-top: 2mm; color: #555; font-size: 6.8pt; text-align: right; }
+
+/* 하자검사조서 */
+.warranty-inspection-report { display: block; padding: 13mm 15mm 10mm; font-family: "Malgun Gothic","맑은 고딕",Arial,sans-serif; }
+.warranty-inspection-report .doc-title { margin: 3mm 0 12mm; font-size: 27pt; }
+.warranty-inspection-table { font-size: 10.8pt; }
+.warranty-inspection-table th { width: 28mm; }
+.warranty-inspection-table th,.warranty-inspection-table td { padding: 2.1mm 2.5mm; }
+.warranty-inspection-table .warranty-large-row th,.warranty-inspection-table .warranty-large-row td { height: 23mm; vertical-align: top; white-space: pre-wrap; }
+.warranty-statement { margin: 12mm 0 0 5mm; font-size: 12pt; }
+.warranty-inspection-report .record-date { margin-top: 11mm; text-align: center; font-size: 12pt; }
+.warranty-signatures { display: grid; gap: 8mm; margin: 15mm 0 0 28mm; width: 142mm; font-size: 11.5pt; }
+.warranty-signatures > div { display: grid; grid-template-columns: 26mm 55mm minmax(0,1fr); gap: 4mm; align-items: center; }
+.warranty-signatures strong { font-weight: 400; }
+
+/* 하자검사대장 */
+.warranty-ledger { display: block; padding: 10mm 9mm 9mm; font-family: "Malgun Gothic","맑은 고딕",Arial,sans-serif; font-size: 8.7pt; line-height: 1.25; }
+.warranty-ledger > h1 { margin: 0 0 8mm; text-align: center; font-size: 25pt; letter-spacing: .18em; text-indent: .18em; }
+.warranty-ledger > h2 { margin: 4mm 0 2mm; font-size: 11pt; font-weight: 600; }
+.warranty-ledger-info,.warranty-ledger-list { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.warranty-ledger-info th,.warranty-ledger-info td,.warranty-ledger-list th,.warranty-ledger-list td { border: .26mm solid #333; padding: 1.7mm 1.5mm; vertical-align: middle; overflow-wrap: anywhere; }
+.warranty-ledger-info th { width: 17mm; background: #fafafa; text-align: center; font-weight: 500; }
+.warranty-ledger-list thead th { background: #fafafa; text-align: center; font-weight: 500; }
+.warranty-ledger-list th:nth-child(1) { width: 27mm; }
+.warranty-ledger-list th:nth-child(3) { width: 34mm; }
+.warranty-ledger-list th:nth-child(4) { width: 38mm; }
+.warranty-ledger-list tbody td { height: 22mm; }
+
+@media (max-width: 720px) {
+  .utility-result-grid { grid-template-columns: 1fr; }
+  .warranty-history-item { align-items: flex-start; flex-direction: column; }
+}
+
+@media print {
+  body.print-only-document .construction-ledger,
+  body.print-batch-documents .construction-ledger { padding-top: 8mm; padding-bottom: 7mm; }
+  body.print-only-document .warranty-inspection-report,
+  body.print-batch-documents .warranty-inspection-report,
+  body.print-only-document .warranty-ledger,
+  body.print-batch-documents .warranty-ledger { break-inside: avoid !important; page-break-inside: avoid !important; }
+  body.print-batch-documents .ledger-table,
+  body.print-batch-documents .warranty-inspection-table,
+  body.print-batch-documents .warranty-ledger-info,
+  body.print-batch-documents .warranty-ledger-list,
+  body.print-only-document .ledger-table,
+  body.print-only-document .warranty-inspection-table,
+  body.print-only-document .warranty-ledger-info,
+  body.print-only-document .warranty-ledger-list { break-inside: avoid !important; page-break-inside: avoid !important; }
+}

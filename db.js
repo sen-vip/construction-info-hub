@@ -172,7 +172,17 @@
       defectStartDate: seed.defectStartDate || '',
       defectEndDate: seed.defectEndDate || '',
       fundingSource: seed.fundingSource || '',
+      designer: seed.designer || '',
+      budgetPolicyProject: seed.budgetPolicyProject || '',
+      budgetUnitProject: seed.budgetUnitProject || '',
+      budgetDetailProject: seed.budgetDetailProject || '',
+      budgetDetailItem: seed.budgetDetailItem || '',
+      costStatisticsItem: seed.costStatisticsItem || '',
       ledgerPrint: seed.ledgerPrint || '',
+      warrantyInspections: Array.isArray(seed.warrantyInspections) ? seed.warrantyInspections : [],
+      utilityCost: seed.utilityCost && typeof seed.utilityCost === 'object' ? { ...seed.utilityCost } : {
+        directMaterialCost: '', directLaborCost: '', facilityUse: '수도광열비·전력비', electricCost: '', waterHeatCost: '', total: '', calculatedAt: ''
+      },
       notes: seed.notes || '',
       source: seed.source || 'manual',
       sourceUpdatedAt: seed.sourceUpdatedAt || '',
