@@ -1140,3 +1140,52 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
   body.print-only-document .warranty-ledger-info,
   body.print-only-document .warranty-ledger-list { break-inside: avoid !important; page-break-inside: avoid !important; }
 }
+
+
+/* v0.4.1.1 — 공사대장 셀 정렬 / 수도광열비 계산식 출력 */
+.ledger-composite-cell { padding: 0 !important; }
+.ledger-composite-grid { display: grid; grid-template-columns: 1fr 1fr; }
+.ledger-inner { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.ledger-inner + .ledger-inner { border-left: .25mm solid #333; }
+.ledger-inner th,.ledger-inner td { border: 0; border-right: .25mm solid #333; border-bottom: .25mm solid #333; padding: 1.25mm 1.1mm; height: 6.4mm; vertical-align: middle; overflow-wrap: anywhere; }
+.ledger-inner tr:last-child th,.ledger-inner tr:last-child td { border-bottom: 0; }
+.ledger-inner th:last-child,.ledger-inner td:last-child { border-right: 0; }
+.ledger-inner th { background:#fafafa; text-align:center; font-weight:500; }
+.ledger-change-table .ledger-vertical-label { width: 13mm; }
+.ledger-change-table th:not(.ledger-vertical-label) { width: 28%; }
+.ledger-budget-table .ledger-vertical-label { width: 12mm; }
+.ledger-budget-table th:not(.ledger-vertical-label) { width: 22mm; }
+
+.paper-a4-landscape {
+  box-sizing: border-box; width: 297mm; min-height: 210mm; margin: 0 auto; padding: 11mm 12mm 9mm;
+  background:#fff; color:#111; box-shadow:0 6px 28px rgba(20,30,44,.17);
+  font-family:"Malgun Gothic","맑은 고딕",Arial,sans-serif;
+}
+.utility-cost-sheet { font-size: 8.4pt; line-height: 1.25; }
+.utility-print-project { display:grid; grid-template-columns:24mm 1fr; gap:3mm; align-items:center; margin-bottom:5mm; font-size:10pt; }
+.utility-cost-sheet > h1 { margin: 3mm 0 2.5mm; font-size: 12pt; font-weight:700; }
+.utility-print-rate-table,.utility-print-inputs { width:100%; border-collapse:collapse; table-layout:fixed; }
+.utility-print-rate-table th,.utility-print-rate-table td,.utility-print-inputs th,.utility-print-inputs td { border:.25mm solid #333; padding:1.3mm .8mm; text-align:center; vertical-align:middle; }
+.utility-print-rate-table th,.utility-print-inputs th { background:#fafafa; font-weight:600; }
+.utility-print-rate-table { font-size:7.5pt; }
+.utility-print-rate-table thead tr:first-child th { height:7mm; }
+.utility-print-rate-table thead tr:nth-child(2) th { height:10mm; }
+.utility-print-notes { margin:2.5mm 0 4mm; font-size:7.4pt; }
+.utility-print-notes p { margin:.8mm 0; }
+.utility-print-inputs { font-size:8pt; margin-bottom:5mm; }
+.utility-print-inputs th { width:18mm; }
+.utility-print-formulas { display:grid; gap:4mm; margin-top:3mm; }
+.utility-print-formula { display:grid; grid-template-columns:28mm 1fr 38mm; gap:3mm; align-items:center; padding:3.2mm 4mm; border:.25mm solid #777; }
+.utility-print-formula strong { font-size:10pt; }
+.utility-print-formula span { text-align:center; font-size:9pt; }
+.utility-print-formula b { text-align:right; font-size:10pt; }
+.utility-print-formula.disabled { color:#777; background:#fafafa; }
+.utility-print-total { display:flex; justify-content:flex-end; gap:12mm; margin-top:5mm; padding-right:8mm; font-size:12pt; }
+.utility-print-total strong { min-width:42mm; text-align:right; }
+.utility-print-footnote { margin-top:5mm; text-align:right; color:#555; font-size:7pt; }
+.print-only-document.print-landscape-document .paper-a4-landscape { margin:0; box-shadow:none; }
+
+@media print {
+  body.print-only-document.print-landscape-document { width:297mm !important; height:210mm !important; min-width:297mm !important; min-height:210mm !important; max-width:297mm !important; max-height:210mm !important; margin:0 !important; overflow:hidden !important; }
+  body.print-only-document.print-landscape-document .paper-a4-landscape { width:297mm !important; height:210mm !important; min-height:210mm !important; margin:0 !important; box-shadow:none !important; overflow:hidden !important; }
+}

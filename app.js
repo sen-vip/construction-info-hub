@@ -668,7 +668,7 @@
     const total = Number(u.total || 0);
     return `<article class="document-card utility-tool-card ${total?'ready':''}">
       <div class="document-card-top"><div><span class="document-stage">계산도구</span><span class="document-version">원가통계 기준</span></div></div>
-      <h3>수도·전기료 계산</h3><p>원클릭 프로그램의 「수도전기료계산식」 기준으로 전력비·수도광열비를 계산하고 대금청구 공제금액에 바로 연결합니다.</p>
+      <h3>전력비·수도광열비 계산</h3><p>원클릭 프로그램의 「수도전기료계산식」 기준으로 전력비·수도광열비를 계산하고 대금청구 공제금액에 바로 연결합니다.</p>
       <div class="document-requirement ${total?'ready':''}">${total?`<strong>계산값 ${e(formatMoney(total))}</strong><span>공제금액에 바로 반영할 수 있습니다.</span>`:`<strong>계산 필요</strong><span>직접재료비·직접노무비만 추가 입력하면 됩니다.</span>`}</div>
       <button class="button ${total?'secondary':'primary'}" type="button" data-open-utility-calculator>${total?'계산 다시 보기':'계산하기'}</button>
     </article>`;
@@ -679,7 +679,7 @@
     const missing = batchMissingFields(selected, p);
     const readyCount = selected.filter(type => documentMissing(type,p).length === 0).length;
     return `<div class="documents-panel">
-      <div class="documents-head"><div><p class="eyebrow">행정기관 작성·관리 우선</p><h2>공사서류</h2><p>행정실에서 직접 작성·관리하는 서류를 먼저 보여주고, 업체 제출·징구 서류는 아래에서 이어서 관리합니다.</p></div><div class="documents-head-note"><strong>v0.4.1</strong><span>공사대장 · 하자관리 · 수도전기료</span></div></div>
+      <div class="documents-head"><div><p class="eyebrow">행정기관 작성·관리 우선</p><h2>공사서류</h2><p>행정실에서 직접 작성·관리하는 서류를 먼저 보여주고, 업체 제출·징구 서류는 아래에서 이어서 관리합니다.</p></div><div class="documents-head-note"><strong>v0.4.1.1</strong><span>공사대장 · 하자관리 · 수도광열비 출력 보강</span></div></div>
       <div class="document-batch-toolbar">
         <div class="document-set-buttons" aria-label="서류 세트 선택">
           <button class="button secondary small" type="button" data-doc-set="agencyManagement">행정기관 관리서류</button>
@@ -855,7 +855,7 @@
     const label = DOCUMENT_FIELD_LABELS[field] || field;
     const value = documentValue(field, p);
     if (MONEY_FIELDS.has(field)) return `<div class="field"><label for="${e(id)}">${e(label)}</label>${moneyInputHtml(id, value)}</div>`;
-    if (['contractDate','plannedStartDate','startDate','completionDueDate','actualCompletionDate','completionInspectionDate','warrantyInspectionDate'].includes(field)) return modalDateField(id, label, value);
+    if (['contractDate','plannedStartDate','startDate','completionDueDate','actualCompletionDate','completionInspectionDate','warrantyInspectionDate','defectStartDate','defectEndDate'].includes(field)) return modalDateField(id, label, value);
     if (['warrantyInspectionResult','warrantyIssueDetails','warrantyActions','warrantyNotes'].includes(field)) return `<div class="field full"><label for="${e(id)}">${e(label)}</label><textarea id="${e(id)}">${e(value || '')}</textarea></div>`;
     if (['bankName','accountNumber','accountHolder'].includes(field)) {
       return `<div class="field"><label for="${e(id)}">${e(label)}</label><input id="${e(id)}" value="${e(value || '')}" autocomplete="off"><span class="hint">업체 지급정보 보관함에 별도로 저장됩니다.</span></div>`;
@@ -882,15 +882,18 @@
     modalActions.querySelector('#printDocumentBtn').addEventListener('click', () => printAdministrativeDocument(type, p));
   }
 
-  function printPagesInFrame(pages, title, onBeforePrint) {
+  function printPagesInFrame(pages, title, onBeforePrint, options = {}) {
     if (!pages?.length) return;
     const multi = pages.length > 1;
+    const landscape = options.orientation === 'landscape';
+    const pageWidth = landscape ? '297mm' : '210mm';
+    const pageHeight = landscape ? '210mm' : '297mm';
     const frame = document.createElement('iframe');
     frame.className = `document-print-frame${multi?' document-batch-print-frame':''}`;
     frame.setAttribute('aria-hidden','true');
     frame.setAttribute('tabindex','-1');
-    frame.style.width = '210mm';
-    frame.style.height = '297mm';
+    frame.style.width = pageWidth;
+    frame.style.height = pageHeight;
     document.body.appendChild(frame);
 
     const cssUrl = new URL('styles.css',window.location.href).href;
@@ -905,11 +908,11 @@
   <title>${e(title)}</title>
   <link rel="stylesheet" href="${e(cssUrl)}">
   <style>
-    @page { size:A4 portrait; margin:0; }
-    html,body { width:210mm; ${multi?'':'height:297mm;'} margin:0; padding:0; background:#fff; }
+    @page { size:A4 ${landscape?'landscape':'portrait'}; margin:0; }
+    html,body { width:${pageWidth}; ${multi?'':`height:${pageHeight};`} margin:0; padding:0; background:#fff; }
   </style>
 </head>
-<body class="${multi?'print-batch-documents':'print-only-document'}">
+<body class="${multi?'print-batch-documents':'print-only-document'}${landscape?' print-landscape-document':''}">
   ${bodyMarkup}
 </body>
 </html>`;
@@ -1062,7 +1065,13 @@
     const allowWater=facilityUse!=='전력비';
     const electric=allowElectric?roundDown10(base*average('electric')):0;
     const water=allowWater?roundDown10(base*average('water')):0;
-    return {electricCost:electric,waterHeatCost:water,total:electric+water,sizeLabel:size.label};
+    return {
+      electricCost:electric, waterHeatCost:water, total:electric+water, sizeLabel:size.label,
+      baseCost:base, contractAmountExVat:Number(contractAmount||0)/1.1,
+      workElectricRate:Number(work.electric), durationElectricRate:Number(duration.electric), sizeElectricRate:Number(size.electric),
+      workWaterRate:Number(work.water), durationWaterRate:Number(duration.water), sizeWaterRate:Number(size.water),
+      allowElectric, allowWater
+    };
   }
 
   function utilityResultHtml(result) {
@@ -1087,7 +1096,7 @@
     const workCategory=u.workCategory||utilityWorkCategory(p.workType);
     const durationCategory=u.durationCategory||utilityDurationCategory(p);
     const existing=meaningful(u.total)?{electricCost:Number(u.electricCost||0),waterHeatCost:Number(u.waterHeatCost||0),total:Number(u.total||0),sizeLabel:utilitySizeRate(p.currentContractAmount).label}:null;
-    openModal({eyebrow:'행정기관 계산도구 · 2024 완성공사 원가통계',title:'수도·전기료 계산',wide:true,
+    openModal({eyebrow:'행정기관 계산도구 · 2024 완성공사 원가통계',title:'전력비·수도광열비 계산',wide:true,
       body:`<div class="notice"><strong>원본 「수도전기료계산식」의 산식을 웹으로 옮겼습니다.</strong><br>전기·통신·소방·전문공사는 건축요율을 적용하고, 공사기간과 계약금액 구간은 현재 공사정보에서 자동 판단합니다.</div><div class="modal-grid utility-input-grid" style="margin-top:16px">
         <div class="field"><label>공사종류 요율</label><select id="utilityWorkCategory">${['건축','토목','산업설비','조경'].map(x=>`<option ${x===workCategory?'selected':''}>${x}</option>`).join('')}</select></div>
         <div class="field"><label>공사기간 요율</label><select id="utilityDurationCategory">${['6이하','6초과12이하','12초과36이하','36초과'].map(x=>`<option ${x===durationCategory?'selected':''}>${x}</option>`).join('')}</select></div>
@@ -1096,10 +1105,11 @@
         <div class="field"><label for="utilityMaterial">직접재료비</label>${moneyInputHtml('utilityMaterial',u.directMaterialCost||'')}</div>
         <div class="field"><label for="utilityLabor">직접노무비</label>${moneyInputHtml('utilityLabor',u.directLaborCost||'')}</div>
       </div><div id="utilityResult" class="utility-result-panel">${utilityResultHtml(existing)}</div>`,
-      actions:`<button class="button secondary" type="button" data-modal-close>닫기</button><button class="button secondary" type="button" id="calculateUtilityBtn">계산·저장</button><button class="button primary" type="button" id="applyUtilityDeductionBtn">공제금액에 반영</button>`});
+      actions:`<button class="button secondary" type="button" data-modal-close>닫기</button><button class="button secondary" type="button" id="calculateUtilityBtn">계산·저장</button><button class="button secondary" type="button" id="printUtilityBtn">계산식 인쇄 / PDF</button><button class="button primary" type="button" id="applyUtilityDeductionBtn">공제금액에 반영</button>`});
     initMoneyInputs(modalBody);
     modalActions.querySelector('[data-modal-close]').addEventListener('click',closeModal);
     modalActions.querySelector('#calculateUtilityBtn').addEventListener('click',()=>saveUtilityCalculation(false));
+    modalActions.querySelector('#printUtilityBtn').addEventListener('click',printUtilityCalculationFromModal);
     modalActions.querySelector('#applyUtilityDeductionBtn').addEventListener('click',()=>saveUtilityCalculation(true));
   }
 
@@ -1113,8 +1123,64 @@
     p.updatedAt=new Date().toISOString();
     await DB.put('projects',p); await loadState(); state.currentProjectId=p.id;
     const resultEl=modalBody.querySelector('#utilityResult'); if(resultEl) resultEl.innerHTML=utilityResultHtml(result);
-    showToast(applyDeduction ? `공제금액 ${formatMoney(result.total)}에 반영했습니다.` : '수도·전기료 계산값을 저장했습니다.');
+    showToast(applyDeduction ? `공제금액 ${formatMoney(result.total)}에 반영했습니다.` : '전력비·수도광열비 계산값을 저장했습니다.');
     if (applyDeduction) { closeModal(); renderProjectDetail(); }
+  }
+
+  function utilityRateTableHtml() {
+    const work = UTILITY_RATES_2024.work;
+    const duration = UTILITY_RATES_2024.duration;
+    const size = UTILITY_RATES_2024.size;
+    const pct = value => Number(value || 0).toFixed(3).replace(/0+$/,'').replace(/\.$/,'');
+    return `<table class="utility-print-rate-table"><thead>
+      <tr><th rowspan="2">구분</th><th colspan="4">공사종류별</th><th colspan="4">공사기간별</th><th colspan="5">공사규모별</th></tr>
+      <tr><th>건축</th><th>토목</th><th>산업설비</th><th>조경</th><th>6개월이하</th><th>6~12개월</th><th>12~36개월</th><th>36개월초과</th><th>5억미만</th><th>5~30억</th><th>30~50억</th><th>50~300억</th><th>300~1,000억</th></tr>
+    </thead><tbody>
+      <tr><th>전력비</th><td>${pct(work['건축'].electric)}</td><td>${pct(work['토목'].electric)}</td><td>${pct(work['산업설비'].electric)}</td><td>${pct(work['조경'].electric)}</td><td>${pct(duration['6이하'].electric)}</td><td>${pct(duration['6초과12이하'].electric)}</td><td>${pct(duration['12초과36이하'].electric)}</td><td>${pct(duration['36초과'].electric)}</td>${size.map(x=>`<td>${pct(x.electric)}</td>`).join('')}</tr>
+      <tr><th>수도광열비</th><td>${pct(work['건축'].water)}</td><td>${pct(work['토목'].water)}</td><td>${pct(work['산업설비'].water)}</td><td>${pct(work['조경'].water)}</td><td>${pct(duration['6이하'].water)}</td><td>${pct(duration['6초과12이하'].water)}</td><td>${pct(duration['12초과36이하'].water)}</td><td>${pct(duration['36초과'].water)}</td>${size.map(x=>`<td>${pct(x.water)}</td>`).join('')}</tr>
+    </tbody></table>`;
+  }
+
+  function utilityCalculationPrintMarkup(p, inputs, result) {
+    const won = value => Number(value || 0).toLocaleString('ko-KR');
+    const pct = value => `${Number(value || 0).toFixed(3).replace(/0+$/,'').replace(/\.$/,'')}%`;
+    const formula = (label, enabled, workRate, durationRate, sizeRate, amount) => enabled
+      ? `<div class="utility-print-formula"><strong>${label}</strong><span>= (${won(inputs.directMaterialCost)} + ${won(inputs.directLaborCost)}) × ((${pct(workRate)} + ${pct(durationRate)} + ${pct(sizeRate)}) / 3)</span><b>= ${won(amount)} 원</b></div>`
+      : `<div class="utility-print-formula disabled"><strong>${label}</strong><span>적용 제외</span><b>= 0 원</b></div>`;
+    return `<article class="paper-a4-landscape utility-cost-sheet document-print-page">
+      <div class="utility-print-project"><strong>[공사명]</strong><span>${e(p.projectName || '')}</span></div>
+      <h1>□ 2024년도 기준 완성공사 원가통계(경비율)</h1>
+      ${utilityRateTableHtml()}
+      <div class="utility-print-notes">
+        <p>※ 공사종류에서 전기·통신·소방·전문공사는 건축요율 적용</p>
+        <p>※ 공사규모 금액은 공사 계약금액 기준(부가세 제외)</p>
+        <p>※ 출처: 대한건설협회 「2024년 완성공사원가분석」 기준</p>
+      </div>
+      <h1>□ 전력비·수도광열비 계산식</h1>
+      <table class="utility-print-inputs"><tbody>
+        <tr><th>공사종류</th><td>${e(inputs.workCategory)}</td><th>공사기간</th><td>${e(inputs.durationCategory)}</td><th>공사규모</th><td>${e(result.sizeLabel)}</td><th>시설사용</th><td>${e(inputs.facilityUse)}</td></tr>
+        <tr><th>계약금액</th><td>${won(inputs.contractAmount)} 원</td><th>직접재료비</th><td>${won(inputs.directMaterialCost)} 원</td><th>직접노무비</th><td>${won(inputs.directLaborCost)} 원</td><th>부가세 제외 계약금액</th><td>${won(result.contractAmountExVat)} 원</td></tr>
+      </tbody></table>
+      <div class="utility-print-formulas">
+        ${formula('1. 전력비', result.allowElectric, result.workElectricRate, result.durationElectricRate, result.sizeElectricRate, result.electricCost)}
+        ${formula('2. 수도광열비', result.allowWater, result.workWaterRate, result.durationWaterRate, result.sizeWaterRate, result.waterHeatCost)}
+      </div>
+      <div class="utility-print-total"><span>합 계 :</span><strong>${won(result.total)} 원</strong></div>
+      <p class="utility-print-footnote">공사정보 허브에 저장된 공사정보와 입력한 직접재료비·직접노무비를 기준으로 계산</p>
+    </article>`;
+  }
+
+  async function printUtilityCalculationFromModal() {
+    const p=currentProject(); if(!p)return;
+    const inputs=utilityInputsFromModal(p);
+    if (!meaningful(inputs.directMaterialCost) && !meaningful(inputs.directLaborCost)) { showToast('직접재료비 또는 직접노무비를 입력해주세요.','warn'); return; }
+    const result=calculateUtilityCost(inputs);
+    p.utilityCost={...inputs,...result,calculatedAt:new Date().toISOString()};
+    p.updatedAt=new Date().toISOString();
+    await DB.put('projects',p);
+    const resultEl=modalBody.querySelector('#utilityResult'); if(resultEl) resultEl.innerHTML=utilityResultHtml(result);
+    const page=utilityCalculationPrintMarkup(p,inputs,result);
+    printPagesInFrame([page], `수도광열비 계산식 - ${p.projectName || '공사'}`, null, {orientation:'landscape'});
   }
 
   function formatKoreanDate(value) {
@@ -2057,7 +2123,7 @@
 
   function openHelp() {
     openModal({
-      eyebrow:'도움말', title:'v0.4.1 사용 흐름',
+      eyebrow:'도움말', title:'v0.4.1.1 사용 흐름',
       body:`<div class="notice"><strong>핵심 원칙</strong><br>같은 공사정보는 한 번 입력하고 다시 입력하지 않습니다.</div>
       <div style="display:grid;gap:16px;margin-top:18px;font-size:14px">
         <div><strong>1. 공사를 여러 건 저장</strong><p class="muted">전기·건축·체육관 공사를 동시에 등록해도 각 공사는 독립적으로 자동저장됩니다.</p></div>

@@ -81,7 +81,7 @@
     completionInspectionDate:'준공검사일', settlementAmount:'준공정산금액', priorPaymentAmount:'기지급액', deductionAmount:'공제금액',
     vendorName:'업체명', businessNumber:'사업자등록번호', vendorAddress:'사업장 주소', vendorPhone:'업체 전화번호', representative:'대표자',
     contractSecurityAmount:'계약보증금액', delayPenaltyRate:'지연배상금률', priceAdjustmentMethod:'물가변동 계약금액 조정방법',
-    defectSecurityRate:'하자보증률', defectSecurityAmount:'하자보증금액', defectPeriodYears:'하자담보기간(년)',
+    defectSecurityRate:'하자보증률', defectSecurityAmount:'하자보증금액', defectPeriodYears:'하자담보기간(년)', defectStartDate:'하자 시작일', defectEndDate:'하자 종료일',
     supervisor:'공사감독', inspector:'검사자', witness:'준공검사 입회자', bankName:'은행명', accountNumber:'계좌번호', accountHolder:'예금주명',
     warrantyInspectionDate:'하자검사일', warrantyInspector:'하자검사자', warrantyWitness:'하자검사 입회자', warrantyInspectionResult:'검사결과', warrantyIssueDetails:'하자발생내용', warrantyActions:'처리사항', warrantyNotes:'기타참고사항'
   
@@ -369,17 +369,26 @@
   function renderConstructionLedger(ctx) {
     const { p, school, h } = common(ctx);
     const changes = Array.isArray(p.contractChanges) ? p.contractChanges : [];
-    const changeRows = changes.length ? changes.slice(0,3).map(c => `<tr><td>${h.e(h.formatKoreanDate(c.changeDate))}</td><td>${h.e(h.moneyNumberText(Number(c.afterAmount||0)-Number(c.beforeAmount||0)))}</td><td>${h.e(h.moneyNumberText(c.afterAmount))}</td></tr>`).join('') : `<tr><td></td><td></td><td></td></tr>`;
     return [`<article class="paper-a4 admin-document construction-ledger document-print-page">
       <div class="ledger-title-row"><h1>공  사  대  장</h1><div>계약번호 : <strong>${h.e(p.contractNumber || '')}</strong></div></div>
       <table class="ledger-table"><tbody>
         <tr><th>공사명</th><td colspan="5">${h.e(p.projectName)}</td><th>도급자</th><td colspan="3">${h.e(p.vendorName)}</td><th>공사감독<br>성명</th><td colspan="2">${h.e(ctx.value('supervisor') || '')}</td></tr>
         <tr><th rowspan="2">계약금액</th><td colspan="5" rowspan="2">${h.e(h.moneyNumberText(p.currentContractAmount))}</td><th>계약방법</th><td colspan="3">${h.e(p.contractMethod || '')}</td><th>전화번호</th><td colspan="2">${h.e(p.vendorPhone || '')}</td></tr>
         <tr><th>계약일</th><td colspan="3">${h.e(h.formatKoreanDate(p.contractDate))}</td><th>대표자</th><td colspan="2">${h.e(p.representative || '')}</td></tr>
-        <tr><th rowspan="4">설계변경<br>증감</th><th colspan="2">년 월 일</th><th colspan="2">증감액</th><th colspan="2">변경금액</th><th rowspan="4">지출과목</th><th colspan="2">정책사업</th><td colspan="3">${h.e(p.budgetPolicyProject || '')}</td></tr>
-        ${changeRows.replaceAll('<tr>','<tr class="ledger-change-row">').replaceAll('<td>','<td colspan="2">')}
-        <tr><th colspan="2">단위사업</th><td colspan="3">${h.e(p.budgetUnitProject || '')}</td><th colspan="2">세부사업</th><td colspan="3">${h.e(p.budgetDetailProject || '')}</td></tr>
-        <tr><th colspan="2">세부항목</th><td colspan="3">${h.e(p.budgetDetailItem || '')}</td><th colspan="2">원가통계목</th><td colspan="3">${h.e(p.costStatisticsItem || '')}</td></tr>
+        <tr class="ledger-composite-row"><td colspan="13" class="ledger-composite-cell"><div class="ledger-composite-grid">
+          <table class="ledger-inner ledger-change-table"><tbody>
+            <tr><th rowspan="5" class="ledger-vertical-label">설계변경<br>증감</th><th>년 월 일</th><th>증감액</th><th>변경금액</th></tr>
+            ${(() => { const rows = changes.slice(0,4); return Array.from({length:4},(_,i)=>{ const c=rows[i]; return `<tr><td>${c?h.e(h.formatKoreanDate(c.changeDate)):''}</td><td>${c?h.e(h.moneyNumberText(Number(c.afterAmount||0)-Number(c.beforeAmount||0))):''}</td><td>${c?h.e(h.moneyNumberText(c.afterAmount)):''}</td></tr>`; }).join(''); })()}
+          </tbody></table>
+          <table class="ledger-inner ledger-budget-table"><tbody>
+            <tr><th rowspan="6" class="ledger-vertical-label">지출과목</th><th>정책사업</th><td>${h.e(p.budgetPolicyProject || '')}</td></tr>
+            <tr><th>단위사업</th><td>${h.e(p.budgetUnitProject || '')}</td></tr>
+            <tr><th>세부사업</th><td>${h.e(p.budgetDetailProject || '')}</td></tr>
+            <tr><th>세부항목</th><td>${h.e(p.budgetDetailItem || '')}</td></tr>
+            <tr><th>원가통계목</th><td>${h.e(p.costStatisticsItem || '')}</td></tr>
+            <tr><th>산출내역</th><td>${h.e(p.budgetCalculationDetails || '')}</td></tr>
+          </tbody></table>
+        </div></td></tr>
         <tr><th>계약내용</th><th colspan="2">계약보증금</th><td colspan="3">${h.e(h.moneyNumberText(ctx.value('contractSecurityAmount')))}</td><td colspan="2">${h.e(p.contractSecurityType || '')}</td><th>재원</th><td colspan="3">${h.e(p.fundingSource || '')}</td></tr>
         <tr><th rowspan="4">공정</th><th>구분</th><th colspan="2">계약상 년월일</th><th colspan="2">실제 년월일</th><th rowspan="4">지급내역</th><th>구분</th><th colspan="2">년월일</th><th colspan="3">지급금액</th></tr>
         <tr><th>착공</th><td colspan="2">${h.e(h.formatKoreanDate(p.plannedStartDate || p.startDate))}</td><td colspan="2">${h.e(h.formatKoreanDate(p.startDate))}</td><th>선급금</th><td colspan="2"></td><td colspan="3">${h.e(h.moneyNumberText(p.priorPaymentAmount))}</td></tr>
