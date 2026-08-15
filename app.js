@@ -15,7 +15,7 @@
   const moreMenu = document.getElementById('moreMenu');
   const excelFileInput = document.getElementById('excelFileInput');
   const backupFileInput = document.getElementById('backupFileInput');
-  const APP_VERSION = '0.4.3.1';
+  const APP_VERSION = '0.4.3.2';
   const REFERENCE_PROGRAM = '서울시교육청 교육시설안전과 「공사서류 원클릭(간소화)프로그램」(2026.5.수정)';
 
   const state = {
@@ -734,7 +734,8 @@
     const source=vendorForm?'업체 작성·제출 / 기관 확인':'기관 점검·자체 보관';
     const statusTitle=complete?'✓ 작성 완료':(vendorForm?'빈 양식 출력 가능':'점검결과 입력 필요');
     const statusDesc=saved?.date?`최근 점검 ${e(formatDate(saved.date))}`:(vendorForm?'업체가 직접 점검·작성할 수 있도록 체크하지 않은 원본 양식도 출력할 수 있습니다.':'원본 체크리스트 항목을 웹에서 입력합니다.');
-    return `<article class="document-card safety-document-card ${complete||vendorForm?'ready':'needs-info'} ${batchSelected?'selected':''}" data-document-card="${e(type)}"><div class="document-card-top"><label class="document-select"><input type="checkbox" data-doc-select="${e(type)}" ${batchSelected?'checked':''}><span>선택</span></label><div><span class="document-stage">${e(source)}</span><span class="document-version">양식 ${e(def.version)}</span></div></div><h3>${e(def.label)}</h3><p>${e(def.description)}</p><div class="document-requirement ${complete||vendorForm?'ready':''}"><strong>${e(statusTitle)}</strong><span>${statusDesc}</span></div><div class="document-card-actions"><button class="button ${complete?'secondary':'primary'}" type="button" data-safety-edit="${e(type)}">${complete?'작성내용 수정':'체크리스트 작성'}</button>${(complete||vendorForm)?`<button class="button ghost" type="button" data-doc-open="${e(type)}">${complete?'미리보기':'빈 양식 미리보기'}</button>`:''}</div><button class="my-doc-toggle ${selected?'active':''}" type="button" data-my-doc-toggle="${e(type)}">${selected?'✓ 내 서류':'＋ 내 서류'}</button></article>`;
+    const signatureHint = mustComplete ? `<div class="safety-signature-hint"><strong>점검자 서명 안내</strong><span>인쇄할 때 마우스·터치·펜으로 점검자 서명을 직접 넣을 수 있습니다. 서명은 현재 출력에만 사용되며 저장되지 않습니다.</span></div>` : '';
+    return `<article class="document-card safety-document-card ${complete||vendorForm?'ready':'needs-info'} ${batchSelected?'selected':''}" data-document-card="${e(type)}"><div class="document-card-top"><label class="document-select"><input type="checkbox" data-doc-select="${e(type)}" ${batchSelected?'checked':''}><span>선택</span></label><div><span class="document-stage">${e(source)}</span><span class="document-version">양식 ${e(def.version)}</span></div></div><h3>${e(def.label)}</h3><p>${e(def.description)}</p><div class="document-requirement ${complete||vendorForm?'ready':''}"><strong>${e(statusTitle)}</strong><span>${statusDesc}</span></div>${signatureHint}<div class="document-card-actions"><button class="button ${complete?'secondary':'primary'}" type="button" data-safety-edit="${e(type)}">${complete?'작성내용 수정':'체크리스트 작성'}</button>${(complete||vendorForm)?`<button class="button ghost" type="button" data-doc-open="${e(type)}">${complete?'미리보기':'빈 양식 미리보기'}</button>`:''}</div><button class="my-doc-toggle ${selected?'active':''}" type="button" data-my-doc-toggle="${e(type)}">${selected?'✓ 내 서류':'＋ 내 서류'}</button></article>`;
   }
 
   function openSafetyChecklistModal(type, afterSave=null) {
@@ -742,7 +743,8 @@
     const saved=safetyChecklistFor(p,type)||{}; const results=saved.results||{}; const agency=def.owner==='agency';
     const defaultInspector=saved.inspector || (agency?(p.supervisor||state.school?.supervisor||''):'');
     const rows=def.items.map((item,i)=>{const key=String(i+1),v=results[key]||'';return `<div class="safety-edit-row"><div class="safety-edit-number">${i+1}</div><div class="safety-edit-question">${e(item)}</div><div class="safety-edit-options"><label><input type="radio" name="safety_${i}" value="yes" ${v==='yes'?'checked':''}> 예</label><label><input type="radio" name="safety_${i}" value="no" ${v==='no'?'checked':''}> 아니요</label><label><input type="radio" name="safety_${i}" value="na" ${v==='na'?'checked':''}> 해당없음</label></div></div>`;}).join('');
-    openModal({eyebrow:`안전·보건 · ${agency?'기관 점검':'업체 작성·기관 확인'}`,title:def.label,wide:true,body:`<div class="notice"><strong>${e(def.subtitle)}</strong><br>${e(REFERENCE_PROGRAM)}의 점검항목을 기준으로 작성합니다.</div><div class="modal-grid safety-meta-edit" style="margin-top:16px">${modalDateField('safetyChecklistDate','점검일',saved.date||p.startDate||p.contractDate||'')}${modalField('safetyChecklistInspector',agency?'점검자':'점검자 직접 입력',defaultInspector)}${agency?'':'<div class="field full"><span class="hint">회사 대표자가 아니라 실제 점검한 사람의 이름을 입력합니다.</span></div>'}<div class="field full"><label for="safetyChecklistNotes">비고</label><input id="safetyChecklistNotes" value="${e(saved.notes||'')}"></div></div><div class="safety-edit-list">${rows}</div>${def.footer?`<p class="safety-edit-footer">※ ${e(def.footer)}</p>`:''}`,actions:`<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="saveSafetyChecklistBtn">저장${afterSave?'하고 계속':''}</button>`});
+    const signatureNotice = agency ? '<div class="safety-signature-edit-note"><strong>출력 시 점검자 서명을 넣을 수 있습니다.</strong><span>저장된 점검자 이름 옆에 인쇄 직전 마우스·터치·펜으로 서명하며, 서명 이미지는 저장하지 않습니다.</span></div>' : '';
+    openModal({eyebrow:`안전·보건 · ${agency?'기관 점검':'업체 작성·기관 확인'}`,title:def.label,wide:true,body:`<div class="notice"><strong>${e(def.subtitle)}</strong><br>${e(REFERENCE_PROGRAM)}의 점검항목을 기준으로 작성합니다.</div>${signatureNotice}<div class="modal-grid safety-meta-edit" style="margin-top:16px">${modalDateField('safetyChecklistDate','점검일',saved.date||p.startDate||p.contractDate||'')}${modalField('safetyChecklistInspector',agency?'점검자':'점검자 직접 입력',defaultInspector)}${agency?'':'<div class="field full"><span class="hint">회사 대표자가 아니라 실제 점검한 사람의 이름을 입력합니다.</span></div>'}<div class="field full"><label for="safetyChecklistNotes">비고</label><input id="safetyChecklistNotes" value="${e(saved.notes||'')}"></div></div><div class="safety-edit-list">${rows}</div>${def.footer?`<p class="safety-edit-footer">※ ${e(def.footer)}</p>`:''}`,actions:`<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="saveSafetyChecklistBtn">저장${afterSave?'하고 계속':''}</button>`});
     initDateInputs(modalBody); modalActions.querySelector('[data-modal-close]').addEventListener('click',closeModal); modalActions.querySelector('#saveSafetyChecklistBtn').addEventListener('click',()=>saveSafetyChecklist(type,afterSave));
   }
 
@@ -819,7 +821,7 @@
     const readyCount = selected.filter(type => documentMissing(type,p).length === 0 && (!isSafetyDocument(type) || safetyChecklistComplete(p,type) || !safetyRequiresCompletion(type))).length;
     return `<div class="documents-panel">
       <div class="documents-head"><div><p class="eyebrow">행정기관 작성·관리 우선</p><h2>공사서류</h2><p>공종과 작업특성에 따라 필요한 서류를 추천하고, 실제 사용하는 문서만 ‘내 서류’에 모아 관리합니다.</p></div><div class="documents-head-note"><strong>공사정보 허브 v${e(APP_VERSION)}</strong><span>원클릭 2026.5.수정 기반</span></div></div>
-      <div class="reference-program-banner"><strong>기준 자료</strong><span>${e(REFERENCE_PROGRAM)} 버전을 기준으로 서식과 점검항목을 구성했습니다.</span></div>
+      <div class="reference-program-banner"><span class="reference-program-label">기준 자료</span><div class="reference-program-copy"><strong>${e(REFERENCE_PROGRAM)}</strong><span>이 버전을 기준으로 서식과 점검항목을 구성했습니다.</span></div></div>
       ${myDocumentsHtml(p)}
       ${safetyRecommendationsHtml(p)}
       <div class="document-batch-toolbar">
@@ -1065,8 +1067,13 @@
   <title>${e(title)}</title>
   <link rel="stylesheet" href="${e(cssUrl)}">
   <style>
-    @page { size:A4 ${landscape?'landscape':'portrait'}; margin:0; }
+    @page { size:${pageWidth} ${pageHeight}; margin:0; }
     html,body { width:${pageWidth}; ${multi?'':`height:${pageHeight};`} margin:0; padding:0; background:#fff; }
+    @media print {
+      @page { size:${pageWidth} ${pageHeight}; margin:0; }
+      html,body { width:${pageWidth} !important; ${multi?'':`height:${pageHeight} !important;`} margin:0 !important; padding:0 !important; }
+      ${landscape?'body.print-only-document.print-landscape-document .document-print-page { width:297mm !important; height:210mm !important; min-width:297mm !important; min-height:210mm !important; max-width:297mm !important; max-height:210mm !important; }':''}
+    }
   </style>
 </head>
 <body class="${multi?'print-batch-documents':'print-only-document'}${landscape?' print-landscape-document':''}">
@@ -1080,6 +1087,13 @@
       printed = true;
       if (typeof onBeforePrint === 'function') onBeforePrint();
       const win = frame.contentWindow;
+      const doc = frame.contentDocument;
+      if (doc && !doc.getElementById('final-print-orientation')) {
+        const finalStyle = doc.createElement('style');
+        finalStyle.id = 'final-print-orientation';
+        finalStyle.textContent = `@media print { @page { size: ${pageWidth} ${pageHeight}; margin: 0; } html, body { width: ${pageWidth} !important; ${multi?'':`height: ${pageHeight} !important;`} margin: 0 !important; padding: 0 !important; } ${landscape?'body.print-only-document.print-landscape-document, body.print-only-document.print-landscape-document .document-print-page { width: 297mm !important; height: 210mm !important; min-width: 297mm !important; min-height: 210mm !important; max-width: 297mm !important; max-height: 210mm !important; }':''} }`;
+        doc.head.appendChild(finalStyle);
+      }
       const cleanup = () => { if (frame.isConnected) frame.remove(); };
       win.addEventListener('afterprint',cleanup,{once:true});
       window.setTimeout(cleanup,120000);

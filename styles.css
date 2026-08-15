@@ -520,8 +520,11 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .documents-head-note strong, .documents-head-note span { display: block; }
 .documents-head-note strong { color: var(--primary-strong); font-size: 12px; }
 .documents-head-note span { margin-top: 2px; color: var(--muted); font-size: 10px; }
-.reference-program-banner { display: flex; align-items: center; gap: 10px; margin: 18px 24px 0; padding: 12px 14px; border: 1px solid #cfdced; border-radius: 12px; background: #f4f8fd; color: #40556e; font-size: 12px; }
-.reference-program-banner strong { flex: none; color: var(--primary-strong); }
+.reference-program-banner { display: flex; align-items: center; gap: 14px; margin: 18px 24px 24px; padding: 15px 16px; border: 1px solid #b8cce6; border-radius: 13px; background: linear-gradient(135deg,#eef5ff 0%,#f7faff 100%); color: #304a68; box-shadow: 0 5px 16px rgba(54,91,135,.07); }
+.reference-program-label { flex: none; display: inline-flex; align-items: center; min-height: 28px; padding: 5px 10px; border-radius: 999px; background: #315f9b; color: #fff; font-size: 11px; font-weight: 850; letter-spacing: .01em; }
+.reference-program-copy { display: grid; gap: 3px; min-width: 0; }
+.reference-program-copy strong { color: #173f70; font-size: 13px; line-height: 1.4; }
+.reference-program-copy span { color: #4f6680; font-size: 11.5px; line-height: 1.4; }
 .document-group { padding: 22px 24px 4px; }
 .document-group + .document-group { border-top: 1px solid #edf0f4; }
 .document-group-title { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
@@ -565,7 +568,7 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .signature-target-list li span { color: var(--muted); font-size: 12px; }
 .signature-pad-wrap { position: relative; overflow: hidden; border: 2px dashed #9dafc4; border-radius: 14px; background: #fff; }
 .signature-pad-wrap > span { position: absolute; left: 50%; top: 50%; z-index: 0; transform: translate(-50%,-50%); color: #a0acb9; font-size: 14px; pointer-events: none; }
-.signature-pad { position: relative; z-index: 1; display: block; width: 100%; height: 190px; cursor: crosshair; touch-action: none; }
+.signature-pad { position: relative; z-index: 1; display: block; width: 100%; height: 190px; cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMyAyMWw0LjItMSAxMi0xMmEyLjIgMi4yIDAgMCAwIDAtMy4xbC0uMS0uMWEyLjIgMi4yIDAgMCAwLTMuMSAwbC0xMiAxMkwzIDIxeiIgZmlsbD0id2hpdGUiIHN0cm9rZT0iIzE3MjAzMyIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTQuNSA2LjNsMy4yIDMuMk00LjcgMTYuM2wzIDMiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzE3MjAzMyIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==") 3 20, crosshair; touch-action: none; }
 
 .modal.wide-modal { width: min(1120px, calc(100vw - 28px)); }
 .doc-preview-note { margin-bottom: 12px; color: var(--muted); font-size: 12px; }
@@ -637,7 +640,7 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
   .contract-tab-history { padding: 16px 18px 20px; }
   .document-group { padding-left: 18px; padding-right: 18px; }
   .document-grid { grid-template-columns: 1fr; }
-  .reference-program-banner { align-items: flex-start; flex-direction: column; margin-left: 18px; margin-right: 18px; }
+  .reference-program-banner { align-items: flex-start; flex-direction: column; margin-left: 18px; margin-right: 18px; margin-bottom: 20px; }
   .oneclick-gap-panel { margin-left: 18px; margin-right: 18px; }
   .oneclick-gap-panel summary { align-items: flex-start; }
   .oneclick-gap-body { grid-template-columns: 1fr; }
@@ -647,7 +650,9 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 }
 
 @media print {
-  @page { size: A4 portrait; margin: 0; }
+  /* 페이지 방향은 printPagesInFrame()의 문서별 @page 규칙에서 결정한다.
+     공통 스타일에서 portrait를 강제하면 가로 계산식까지 세로로 덮어쓸 수 있다. */
+  @page { margin: 0; }
   html, body { background: #fff !important; }
 
   /* Dedicated print frame: only one A4 document exists in this browsing context. */
@@ -796,6 +801,10 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .vendor-form-signatures span { white-space: nowrap; }
 .vendor-form-signatures strong { min-width: 0; font-weight: 400; overflow-wrap: anywhere; }
 .utility-payment-pledge .vendor-form-signatures { margin-top: 14mm; }
+.utility-payment-pledge .utility-signature-line { display: grid; grid-template-columns: 42mm 42mm 12mm; gap: 4mm; align-items: baseline; width: max-content; }
+.utility-payment-pledge .utility-company-line { grid-template-columns: 42mm 58mm; }
+.utility-payment-pledge .utility-signature-name { display: block; min-width: 42mm; min-height: 1.55em; white-space: nowrap; }
+.utility-payment-pledge .utility-signature-seal { font-style: normal; font-weight: 400; white-space: nowrap; text-align: left; }
 .vendor-form-table th,.vendor-form-table td { border: .3mm solid #222; padding: 2.7mm 3mm; vertical-align: middle; overflow-wrap: anywhere; }
 .vendor-form-table th { width: 38mm; text-align: center; font-weight: 500; background: #fafafa; }
 .vendor-form-table th.range-mark { width: 10mm; padding-left: 0; padding-right: 0; }
@@ -1224,23 +1233,23 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
   background:#fff; color:#111; box-shadow:0 6px 28px rgba(20,30,44,.17);
   font-family:"Malgun Gothic","맑은 고딕",Arial,sans-serif;
 }
-.utility-cost-sheet { font-size: 8.4pt; line-height: 1.25; }
+.utility-cost-sheet { font-size: 9pt; line-height: 1.28; }
 .utility-print-project { display:grid; grid-template-columns:24mm 1fr; gap:3mm; align-items:center; margin-bottom:5mm; font-size:10pt; }
-.utility-cost-sheet > h1 { margin: 3mm 0 2.5mm; font-size: 12pt; font-weight:700; }
+.utility-cost-sheet > h1 { margin: 3mm 0 2.8mm; font-size: 13pt; font-weight:700; }
 .utility-print-rate-table,.utility-print-inputs { width:100%; border-collapse:collapse; table-layout:fixed; }
 .utility-print-rate-table th,.utility-print-rate-table td,.utility-print-inputs th,.utility-print-inputs td { border:.25mm solid #333; padding:1.3mm .8mm; text-align:center; vertical-align:middle; }
 .utility-print-rate-table th,.utility-print-inputs th { background:#fafafa; font-weight:600; }
-.utility-print-rate-table { font-size:7.5pt; }
+.utility-print-rate-table { font-size:8pt; }
 .utility-print-rate-table thead tr:first-child th { height:7mm; }
 .utility-print-rate-table thead tr:nth-child(2) th { height:10mm; }
-.utility-print-notes { margin:2.5mm 0 4mm; font-size:7.4pt; }
+.utility-print-notes { margin:2.7mm 0 4.2mm; font-size:7.8pt; }
 .utility-print-notes p { margin:.8mm 0; }
-.utility-print-inputs { font-size:8pt; margin-bottom:5mm; }
+.utility-print-inputs { font-size:8.5pt; margin-bottom:5mm; }
 .utility-print-inputs th { width:18mm; }
 .utility-print-formulas { display:grid; gap:4mm; margin-top:3mm; }
 .utility-print-formula { display:grid; grid-template-columns:28mm 1fr 38mm; gap:3mm; align-items:center; padding:3.2mm 4mm; border:.25mm solid #777; }
 .utility-print-formula strong { font-size:10pt; }
-.utility-print-formula span { text-align:center; font-size:9pt; }
+.utility-print-formula span { text-align:center; font-size:9.4pt; }
 .utility-print-formula b { text-align:right; font-size:10pt; }
 .utility-print-formula.disabled { color:#777; background:#fafafa; }
 .utility-print-total { display:flex; justify-content:flex-end; gap:12mm; margin-top:5mm; padding-right:8mm; font-size:12pt; }
@@ -1249,8 +1258,9 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .print-only-document.print-landscape-document .paper-a4-landscape { margin:0; box-shadow:none; }
 
 @media print {
-  body.print-only-document.print-landscape-document { width:297mm !important; height:210mm !important; min-width:297mm !important; min-height:210mm !important; max-width:297mm !important; max-height:210mm !important; margin:0 !important; overflow:hidden !important; }
-  body.print-only-document.print-landscape-document .paper-a4-landscape { width:297mm !important; height:210mm !important; min-height:210mm !important; margin:0 !important; box-shadow:none !important; overflow:hidden !important; }
+  body.print-only-document.print-landscape-document { width:297mm !important; height:210mm !important; min-width:297mm !important; min-height:210mm !important; max-width:297mm !important; max-height:210mm !important; margin:0 !important; padding:0 !important; overflow:hidden !important; }
+  body.print-only-document.print-landscape-document .document-print-page,
+  body.print-only-document.print-landscape-document .paper-a4-landscape { position:absolute !important; left:0 !important; top:0 !important; width:297mm !important; height:210mm !important; min-width:297mm !important; min-height:210mm !important; max-width:297mm !important; max-height:210mm !important; margin:0 !important; box-shadow:none !important; overflow:hidden !important; }
 }
 
 /* v0.4.2 — 하자담보 추천 / 공종별 안전서류 / 내 서류 */
@@ -1263,6 +1273,7 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .my-documents-panel,.safety-recommend-panel{border:1px solid #d9e3ef;border-radius:16px;background:#fff;padding:18px;margin-bottom:18px}.my-documents-panel{background:#fbfcfe}.my-document-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.my-document-chips button{border:1px solid #d3deeb;background:#fff;border-radius:999px;padding:8px 12px;display:flex;gap:8px;align-items:center;cursor:pointer}.my-document-chips span{font-weight:700}.my-document-chips em{font-style:normal;font-size:11px;color:#61748a}
 .safety-recommend-head h3{margin:2px 0 4px}.safety-recommend-head p{margin:0;color:#5b6b7e}.work-characteristics{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:16px 0 12px;padding:12px 14px;border-radius:12px;background:#f5f8fc}.work-characteristics strong{width:100%;font-size:13px}.work-characteristics label{display:flex;gap:6px;align-items:center;font-size:13px}.recommended-document-list{display:grid;gap:8px}.recommended-document{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-top:1px solid #edf1f5}.recommended-document:first-child{border-top:0}.recommended-document>div{display:grid;gap:2px}.recommended-document span{font-size:12px;color:#6d7d8f}
 .my-doc-toggle{margin-top:10px;border:0;background:transparent;color:#6b7a8b;font-weight:700;font-size:12px;cursor:pointer}.my-doc-toggle.active{color:#315f9b}.document-card-actions{display:flex;gap:8px;flex-wrap:wrap}.safety-document-group{border-color:#d7e6df}.safety-document-card .document-stage{max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.safety-signature-hint{display:grid;gap:2px;margin:0 0 12px;padding:9px 11px;border:1px solid #cbdced;border-radius:10px;background:#f3f8fe}.safety-signature-hint strong{font-size:12px;color:#244f83}.safety-signature-hint span{font-size:11px;line-height:1.45;color:#526b87}.safety-signature-edit-note{display:grid;gap:3px;margin-top:12px;padding:11px 13px;border:1px solid #cbdced;border-radius:11px;background:#f3f8fe}.safety-signature-edit-note strong{color:#244f83;font-size:13px}.safety-signature-edit-note span{color:#526b87;font-size:12px;line-height:1.45}
 .safety-meta-edit{grid-template-columns:1fr}.safety-edit-list{display:grid;gap:0;border:1px solid #d8e1ec;border-radius:14px;overflow:hidden;margin-top:16px}.safety-edit-row{display:grid;grid-template-columns:44px minmax(0,1fr) 240px;border-top:1px solid #e4e9f0;background:#fff}.safety-edit-row:first-child{border-top:0}.safety-edit-number{display:grid;place-items:center;background:#f6f8fb;font-weight:800}.safety-edit-question{padding:12px 14px;line-height:1.45}.safety-edit-options{padding:10px 12px;display:flex;align-items:center;gap:12px;background:#fbfcfe}.safety-edit-options label{display:flex;align-items:center;gap:4px;font-size:12px;white-space:nowrap}.safety-edit-footer{font-size:12px;color:#66788a;margin:10px 2px 0}
 
 /* 인쇄 — 안전·보건 체크리스트 */

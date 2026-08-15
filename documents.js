@@ -315,9 +315,9 @@
       <p class="vendor-form-date">${h.e(h.formatKoreanDate(p.contractDate))}</p>
       <div class="vendor-form-signatures utility-signatures">
         <div class="signature-heading">계약자</div>
-        <div><span>업&nbsp;&nbsp;체&nbsp;&nbsp;명 :</span><strong>${h.e(p.vendorName)}</strong></div>
-        <div><span>대&nbsp;&nbsp;표&nbsp;&nbsp;자 :</span><strong>${h.e(h.representativeWithSeal(p.representative))}</strong></div>
-        <div><span>현장대리인 :</span><strong>${p.siteManager?h.e(h.representativeWithSeal(p.siteManager)):'(인)'}</strong></div>
+        <div class="utility-signature-line utility-company-line"><span>업&nbsp;&nbsp;체&nbsp;&nbsp;명 :</span><strong>${h.e(p.vendorName)}</strong></div>
+        <div class="utility-signature-line"><span>대&nbsp;&nbsp;표&nbsp;&nbsp;자 :</span><strong class="utility-signature-name">${h.e(p.representative || '')}</strong><em class="utility-signature-seal">(인)</em></div>
+        <div class="utility-signature-line"><span>현장대리인 :</span><strong class="utility-signature-name">${h.e(p.siteManager || '')}</strong><em class="utility-signature-seal">(인)</em></div>
       </div>
       <p class="doc-recipient">${h.e(h.recipientFor(school.name))}</p>
     </article>`];
