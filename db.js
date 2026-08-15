@@ -163,7 +163,7 @@
       contractSecurityType: seed.contractSecurityType || '',
       contractSecurityRate: seed.contractSecurityRate ?? '',
       contractSecurityAmount: seed.contractSecurityAmount ?? '',
-      delayPenaltyRate: seed.delayPenaltyRate || '',
+      delayPenaltyRate: seed.delayPenaltyRate || '0.5‰',
       priceAdjustmentMethod: seed.priceAdjustmentMethod || '',
       defectSecurityType: seed.defectSecurityType || '',
       defectSecurityRate: seed.defectSecurityRate ?? '',
@@ -180,6 +180,10 @@
       costStatisticsItem: seed.costStatisticsItem || '',
       ledgerPrint: seed.ledgerPrint || '',
       warrantyInspections: Array.isArray(seed.warrantyInspections) ? seed.warrantyInspections : [],
+      warrantyItems: Array.isArray(seed.warrantyItems) ? seed.warrantyItems : [],
+      workCharacteristics: seed.workCharacteristics && typeof seed.workCharacteristics === 'object' ? { fall:false, electrical:false, confined:false, industrial:false, ...seed.workCharacteristics } : { fall:false, electrical:false, confined:false, industrial:false },
+      safetyChecklists: seed.safetyChecklists && typeof seed.safetyChecklists === 'object' ? { ...seed.safetyChecklists } : {},
+      selectedDocuments: Array.isArray(seed.selectedDocuments) ? seed.selectedDocuments : [],
       utilityCost: seed.utilityCost && typeof seed.utilityCost === 'object' ? { ...seed.utilityCost } : {
         directMaterialCost: '', directLaborCost: '', facilityUse: '수도광열비·전력비', electricCost: '', waterHeatCost: '', total: '', calculatedAt: ''
       },

@@ -1,6 +1,8 @@
 (() => {
   'use strict';
 
+  const ReferenceData = globalThis.ConstructionReferenceData;
+
   /*
    * 공사서류 템플릿 레지스트리
    * - 서류 정의/필수값/인쇄순서/출력 마크업을 앱 로직에서 분리한다.
@@ -72,6 +74,26 @@
       key:'warrantyLedger', label:'하자대장', outputTitle:'하 자 검 사 대 장', stage:'하자', version:'2026.04', pages:1, owner:'agency',
       description:'공사별 하자보증기간과 정기 하자검사 이력을 누적 관리하는 기관용 대장',
       required:['projectName','vendorName','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','defectStartDate','defectEndDate']
+    },
+    safetyGeneral: {
+      key:'safetyGeneral', label:'안전·보건 체크리스트', outputTitle:'공사(용역) 안전·보건 체크리스트(공통)', stage:'안전·보건', version:'2026.04', pages:1, owner:'agency',
+      description:'기관(학교)에서 점검하고 업체에서 확인하여 자체 보관하는 공통 체크리스트', required:['schoolName','projectName','vendorName']
+    },
+    safetyFall: {
+      key:'safetyFall', label:'추락재해 예방 체크리스트', outputTitle:'추락재해 예방 체크리스트', stage:'안전·보건', version:'2026.04', pages:2, owner:'vendor',
+      description:'추락위험 작업 시 공사업체가 작성·제출하고 기관이 확인하는 체크리스트', required:['projectName','vendorName']
+    },
+    safetyElectrical: {
+      key:'safetyElectrical', label:'감전재해 예방 체크리스트', outputTitle:'전기공사 감전재해 예방 체크리스트', stage:'안전·보건', version:'2026.04', pages:1, owner:'vendor',
+      description:'감전위험 작업 시 공사(용역)업체가 작성·제출하고 기관이 확인하는 체크리스트', required:['projectName','vendorName']
+    },
+    safetyConfined: {
+      key:'safetyConfined', label:'밀폐공간 질식재해예방 체크리스트', outputTitle:'밀폐공간 질식재해예방 체크리스트', stage:'안전·보건', version:'2026.04', pages:1, owner:'vendor',
+      description:'밀폐공간 작업 시 공사(용역)업체가 작성·제출하고 기관이 확인하는 체크리스트', required:['projectName','vendorName']
+    },
+    safetyIndustrial: {
+      key:'safetyIndustrial', label:'일반 산업재해 예방 체크리스트', outputTitle:'일반 산업재해 예방 체크리스트', stage:'안전·보건', version:'2026.04', pages:1, owner:'vendor',
+      description:'일반 산업재해 우려 작업 시 공사(용역)업체가 작성·제출하고 기관이 확인하는 체크리스트', required:['projectName','vendorName']
     }
   };
 
@@ -90,7 +112,7 @@
   const PRINT_ORDER = [
     'standardContract','acceptanceTerms','useSealForm','privateContractPledge',
     'startReport','completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord','paymentRequest',
-    'constructionLedger','warrantyInspectionReport','warrantyLedger'
+    'constructionLedger','safetyGeneral','safetyFall','safetyElectrical','safetyConfined','safetyIndustrial','warrantyInspectionReport','warrantyLedger'
   ];
 
   const SETS = {
@@ -98,8 +120,9 @@
     start: { label:'착공서류', types:['startReport'] },
     completion: { label:'준공서류', types:['completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord'] },
     payment: { label:'지출서류', types:['paymentRequest'] },
-    agencyManagement: { label:'행정기관 관리서류', types:['constructionLedger','supervisionReport','completionInspectionRecord','warrantyInspectionReport','warrantyLedger'] },
-    all: { label:'전체 13종', types:[...PRINT_ORDER] }
+    agencyManagement: { label:'행정기관 관리서류', types:['constructionLedger','supervisionReport','completionInspectionRecord','safetyGeneral','warrantyInspectionReport','warrantyLedger'] },
+    safety: { label:'안전·보건 서류', types:['safetyGeneral','safetyFall','safetyElectrical','safetyConfined','safetyIndustrial'] },
+    all: { label:'전체 18종', types:[...PRINT_ORDER] }
   };
 
   function common(ctx) {
@@ -125,6 +148,8 @@
     const contractSecurityAmount = ctx.value ? ctx.value('contractSecurityAmount') : p.contractSecurityAmount;
     const defectSecurityAmount = ctx.value ? ctx.value('defectSecurityAmount') : p.defectSecurityAmount;
     const defectRate = h.percentText(p.defectSecurityRate);
+    const warrantyItems = Array.isArray(p.warrantyItems) && p.warrantyItems.length ? p.warrantyItems : [{subcategory:p.workType,years:p.defectPeriodYears}];
+    const warrantyRows = warrantyItems.slice(0,4).map((item,index)=>`<tr><td>${h.e(item.subcategory || item.category || p.workType || '')}</td><td>${index===0?h.e(h.moneyNumberText(p.currentContractAmount)):''}</td><td>${index===0?`(${h.e(defectRate)}%)&nbsp;&nbsp; ${h.e(h.moneyNumberText(defectSecurityAmount))}`:''}</td><td>${item.years?h.e(String(item.years))+'년':''}</td></tr>`).join('');
     return [`<article class="paper-a4 admin-document standard-contract document-print-page">
       <div class="standard-contract-title-row"><h1>공 사 도 급 표 준 계 약 서</h1><table><tbody><tr><th>계약번호 제</th><td>${h.e(p.contractNumber)}</td><td>호</td></tr><tr><th>공고번호 제</th><td></td><td>호</td></tr></tbody></table></div>
       <table class="standard-contract-table party-table"><colgroup><col style="width:10mm"><col style="width:27mm"><col style="width:31mm"><col style="width:50mm"><col style="width:31mm"><col style="width:20mm"><col style="width:21mm"></colgroup><tbody>
@@ -148,7 +173,7 @@
         <tr><th>기타사항</th><td colspan="5"></td></tr>
       </tbody></table>
       <div class="contract-defect-caption">하자담보책임(복합공종의 경우 공종별 구분 기재)</div>
-      <table class="standard-contract-table contract-defect-table"><thead><tr><th>공 종</th><th>공종별 계약금액</th><th>하자보수보증금율(%) 및 금액</th><th>하자담보책임기간</th></tr></thead><tbody><tr><td>${h.e(p.workType)}</td><td>${h.e(h.moneyNumberText(p.currentContractAmount))}</td><td>(${h.e(defectRate)}%)&nbsp;&nbsp; ${h.e(h.moneyNumberText(defectSecurityAmount))}</td><td>${h.e(String(p.defectPeriodYears || ''))}년</td></tr><tr><td>&nbsp;</td><td></td><td></td><td></td></tr></tbody></table>
+      <table class="standard-contract-table contract-defect-table"><thead><tr><th>공 종</th><th>공종별 계약금액</th><th>하자보수보증금율(%) 및 금액</th><th>하자담보책임기간</th></tr></thead><tbody>${warrantyRows}${Array.from({length:Math.max(0,2-warrantyItems.length)},()=>'<tr><td>&nbsp;</td><td></td><td></td><td></td></tr>').join('')}</tbody></table>
       <p class="contract-declaration">계약담당자와 계약상대자는 상호 대등한 입장에서 붙임의 계약문서에 의하여 위 공사에 대한 도급계약을 체결하고 신의에 따라 성실히 계약상의 의무를 이행할 것을 확약하며, 연대보증인은 계약자와 연대하여 계약상의 의무를 이행할 것을 확약한다. 이 계약의 증거로서 계약서를 작성하여 당사자가 기명날인한 후 각각 1통씩 보관한다.</p>
       <div class="contract-attachments"><strong>붙임서류</strong><ol><li>공사입찰유의서 1부</li><li>공사계약일반조건 1부</li><li>공사계약특수조건 1부</li><li>설계서 1부</li><li>산출내역서 1부</li></ol></div>
       <p class="contract-date">${h.e(h.formatKoreanDate(p.contractDate))}</p>
@@ -158,14 +183,16 @@
 
   function renderAcceptanceTerms(ctx) {
     const { p, h } = common(ctx);
-    const years = String(p.defectPeriodYears || '');
+    const warrantyItems = Array.isArray(p.warrantyItems) ? p.warrantyItems : [];
+    const years = String(warrantyItems[0]?.years || p.defectPeriodYears || '');
+    const warrantySentence = warrantyItems.length > 1 ? '계약상대자는 공사 준공일로부터 각 세부공종별 하자담보책임기간 동안 해당 공종의 하자에 대하여 담보 책임을 진다.' : `계약상대자는 공사 준공일로부터 ${years}년간 그 공사의 공종별 하자에 대하여 담보 책임을 진다.`;
     return [`<article class="paper-a4 admin-document acceptance-terms document-print-page">
       <h1 class="doc-title wide-spacing acceptance-title">승 낙 사 항 (공 사 집 행)</h1>
       <ol class="acceptance-list">
         <li>계약사항에 의하여 ${h.e(h.formatKoreanDate(p.plannedStartDate))} 착공하고 ${h.e(h.formatKoreanDate(p.completionDueDate))}까지 준공하여야 한다.</li>
         <li>설계의 변경에 의하여 계약금액에 증감이 생긴 때에는 명세서상의 단가로 증감하고 그 단가에 의하기 어려운 때에는 설계변경 당시의 단가에 의한다.</li>
         <li>기한 내에 공사를 준공하지 못한 때에는 그 지연일수 1일에 대하여 계약금액의 ${h.e(p.delayPenaltyRate)}에 해당하는 지연배상금을 납부하여야 하며, 납부하여야 할 금액은 계약대가에서 상계할 수 있다.</li>
-        <li>계약상대자는 공사 준공일로부터 ${h.e(years)}년간 그 공사의 공종별 하자에 대하여 담보 책임을 진다.</li>
+        <li>${h.e(warrantySentence)}</li>
         <li>기타 이 계약서에 명시되지 아니한 사항은 지방자치단체를 당사자로 하는 계약에 관한 법률 등의 규정을 준용한다.</li>
       </ol>
       <p class="acceptance-date">${h.e(h.formatKoreanDate(p.contractDate))}</p>
@@ -431,6 +458,7 @@
   function renderWarrantyLedger(ctx) {
     const { p, h } = common(ctx);
     const inspections = Array.isArray(p.warrantyInspections) ? p.warrantyInspections : [];
+    const warrantyItems = Array.isArray(p.warrantyItems) ? p.warrantyItems : [];
     const chunks = inspections.length ? Array.from({length:Math.ceil(inspections.length/5)},(_,i)=>inspections.slice(i*5,i*5+5)) : [[]];
     return chunks.map((items,pageIndex)=>`<article class="paper-a4 admin-document warranty-ledger document-print-page">
       <h1>하 자 검 사 대 장</h1>
@@ -441,12 +469,36 @@
         <tr><th>도급자</th><td colspan="3">${h.e(p.vendorName)}</td><th>착공년월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.startDate))}</td><th>준공년월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td></tr>
         <tr><th>감독관</th><td colspan="3">${h.e(ctx.value('supervisor') || '')}</td><th>준공검사일</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionInspectionDate))}</td><th>하자보증기간</th><td colspan="2">${h.e(h.formatKoreanDate(p.defectStartDate))} ~ ${h.e(h.formatKoreanDate(p.defectEndDate))}</td></tr>
       </tbody></table>
-      <h2>2. 정기 하자검사 내역${chunks.length>1?` (${pageIndex+1}/${chunks.length})`:''}</h2>
+      ${warrantyItems.length?`<h2>2. 하자담보 공종</h2><table class="warranty-ledger-items"><thead><tr><th>세부공종</th><th>기간</th><th>시작일</th><th>종료일</th></tr></thead><tbody>${warrantyItems.map(x=>`<tr><td>${h.e(x.subcategory||x.category||'')}</td><td>${x.years?h.e(String(x.years))+'년':''}</td><td>${h.e(h.formatKoreanDate(x.startDate))}</td><td>${h.e(h.formatKoreanDate(x.endDate))}</td></tr>`).join('')}</tbody></table>`:''}
+      <h2>${warrantyItems.length?'3':'2'}. 정기 하자검사 내역${chunks.length>1?` (${pageIndex+1}/${chunks.length})`:''}</h2>
       <table class="warranty-ledger-list"><thead><tr><th>하자검사<br>년 월 일</th><th>하자검사 내용 및 조치사항</th><th>하자검사자</th><th>결재</th></tr></thead><tbody>
         ${(items.length?items:[null]).map(x=>`<tr><td>${x?h.e(h.formatKoreanDate(x.date)):''}</td><td>${x?h.e([x.result,x.issueDetails,x.actions].filter(Boolean).join(' / ')):''}</td><td>${x?h.e(x.inspector||''):''}</td><td></td></tr>`).join('')}
         ${Array.from({length:Math.max(0,5-items.length)},()=>`<tr><td></td><td></td><td></td><td></td></tr>`).join('')}
       </tbody></table>
     </article>`);
+  }
+
+  function checklistMark(status, target) {
+    return status === target ? '✓' : '';
+  }
+
+  function renderSafetyChecklist(ctx, type) {
+    const { p, school, h } = common(ctx);
+    const def = ReferenceData?.safetyChecklists?.[type];
+    if (!def) return [];
+    const saved = p.safetyChecklists?.[type] || {};
+    const results = saved.results || {};
+    const isAgency = def.owner === 'agency';
+    const inspector = saved.inspector || (isAgency ? (p.supervisor || school.supervisor || '') : (p.representative || ''));
+    const date = saved.date || p.startDate || p.contractDate || '';
+    const header = isAgency
+      ? `<div class="safety-meta"><div><strong>■ 학교(기관)명:</strong><span>${h.e(school.name || '')}</span></div><div><strong>■ 점 검 자:</strong><span>${h.e(inspector)}</span><em>(인)</em></div><div><strong>■ 점검 일자:</strong><span>${h.e(h.formatKoreanDate(date))}</span></div></div>`
+      : `<div class="safety-meta"><div><strong>■ 공사 업체명:</strong><span>${h.e(p.vendorName || '')}</span></div><div><strong>■ 점 검 자:</strong><span>${h.e(inspector)}</span><em>(서명)</em></div><div><strong>■ 점검 일자:</strong><span>${h.e(h.formatKoreanDate(date))}</span></div></div>`;
+    const rows = def.items.map((item,i)=>{ const status=results[String(i+1)] || ''; return `<tr><td>${i+1}</td><td>${h.e(item)}</td><td>${checklistMark(status,'yes')}</td><td>${checklistMark(status,'no')}</td><td>${checklistMark(status,'na')}</td></tr>`; }).join('');
+    const page1 = `<article class="paper-a4 admin-document safety-checklist ${h.e(type)} document-print-page"><h1>${h.e(type==='safetyGeneral'?'공사(용역) 안전·보건 체크리스트(공통)':def.label)}</h1><p class="safety-subtitle">[ ${h.e(def.subtitle)} ]</p>${header}<table class="safety-check-table"><thead><tr><th>번호</th><th>점 검 내 용</th><th>예</th><th>아니요</th><th>해당없음</th></tr></thead><tbody>${rows}</tbody></table><p class="safety-footer">※ ${h.e(def.footer || '')}</p>${saved.notes?`<div class="safety-written-note"><strong>비고</strong><span>${h.e(saved.notes)}</span></div>`:''}${isAgency?`<div class="safety-vendor-confirm"><h2>공사(용역)업체 확인·서약서</h2><p>학교(기관)로부터 위 점검항목에 대하여 안내(주지)받았으며, 공사(용역) 전 과정에 걸쳐 참여하는 근로자에게 안전보건교육을 실시하고 필요한 개인보호구를 지급 및 착용하며 작업 시 안전수칙을 준수할 것을 서약합니다.</p><div><span>소속(회사) :</span><strong>${h.e(p.vendorName||'')}</strong></div><div><span>공사업체 책임자 :</span><strong>${h.e(p.representative||'')} (서명)</strong></div></div>`:''}</article>`;
+    if (type !== 'safetyFall' || !(def.notes||[]).length) return [page1];
+    const page2 = `<article class="paper-a4 admin-document safety-reference-page document-print-page"><h1>안전보건 점검사항 및 조치사항(예시)</h1><ol>${def.notes.map(x=>`<li>${h.e(x)}</li>`).join('')}</ol><div class="safety-risk-note"><strong>위험공종 안전관리 담당자 안내</strong><p>2m 이상 고소작업, 1.5m 이상 굴착·가설공사, 철골 구조물 공사, 2m 이상 외부도장 공사, 승강기 설치공사는 위험작업 전 공사감독자에게 작업계획 제출·검토·확인이 필요합니다.</p></div></article>`;
+    return [page1,page2];
   }
 
   const RENDERERS = {
@@ -461,6 +513,11 @@
     completionInspectionRecord: renderInspectionRecord,
     paymentRequest: renderPayment,
     constructionLedger: renderConstructionLedger,
+    safetyGeneral: ctx => renderSafetyChecklist(ctx,'safetyGeneral'),
+    safetyFall: ctx => renderSafetyChecklist(ctx,'safetyFall'),
+    safetyElectrical: ctx => renderSafetyChecklist(ctx,'safetyElectrical'),
+    safetyConfined: ctx => renderSafetyChecklist(ctx,'safetyConfined'),
+    safetyIndustrial: ctx => renderSafetyChecklist(ctx,'safetyIndustrial'),
     warrantyInspectionReport: renderWarrantyInspection,
     warrantyLedger: renderWarrantyLedger
   };
