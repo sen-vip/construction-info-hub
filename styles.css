@@ -1142,19 +1142,9 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 }
 
 
-/* v0.4.1.1 — 공사대장 셀 정렬 / 수도광열비 계산식 출력 */
-.ledger-composite-cell { padding: 0 !important; }
-.ledger-composite-grid { display: grid; grid-template-columns: 1fr 1fr; }
-.ledger-inner { width: 100%; border-collapse: collapse; table-layout: fixed; }
-.ledger-inner + .ledger-inner { border-left: .25mm solid #333; }
-.ledger-inner th,.ledger-inner td { border: 0; border-right: .25mm solid #333; border-bottom: .25mm solid #333; padding: 1.25mm 1.1mm; height: 6.4mm; vertical-align: middle; overflow-wrap: anywhere; }
-.ledger-inner tr:last-child th,.ledger-inner tr:last-child td { border-bottom: 0; }
-.ledger-inner th:last-child,.ledger-inner td:last-child { border-right: 0; }
-.ledger-inner th { background:#fafafa; text-align:center; font-weight:500; }
-.ledger-change-table .ledger-vertical-label { width: 13mm; }
-.ledger-change-table th:not(.ledger-vertical-label) { width: 28%; }
-.ledger-budget-table .ledger-vertical-label { width: 12mm; }
-.ledger-budget-table th:not(.ledger-vertical-label) { width: 22mm; }
+/* 공사대장 가운데 구역도 바깥 12열 표를 그대로 사용 */
+.ledger-split-row > * { height: 6.4mm; box-sizing: border-box; }
+.ledger-section-label,.ledger-budget-label { text-align: center; word-break: keep-all; }
 
 .paper-a4-landscape {
   box-sizing: border-box; width: 297mm; min-height: 210mm; margin: 0 auto; padding: 11mm 12mm 9mm;
@@ -1212,22 +1202,15 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 @media (max-width:760px){.safety-edit-row{grid-template-columns:36px 1fr}.safety-edit-options{grid-column:1/-1;justify-content:flex-end;border-top:1px dashed #e1e7ef}.recommended-document{align-items:flex-start}.work-characteristics{display:grid}.warranty-item{align-items:flex-start}.my-document-chips{display:grid}.my-document-chips button{justify-content:space-between}}
 
 
-/* v0.4.2.1 — 원본 역할구분·인쇄서식 핫픽스 */
+/* v0.4.2.2 — 원본 역할구분·인쇄서식 핫픽스 */
 .label-optional{font-size:11px;color:#7a8796;font-weight:500;margin-left:4px}
 .work-characteristics label{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;line-height:1.35}
 .work-characteristics input[type="checkbox"]{appearance:auto;width:17px!important;height:17px!important;min-width:17px!important;flex:0 0 17px!important;margin:0!important;padding:0!important}
 
 .ledger-table col{width:8.333333%}
 .ledger-table th,.ledger-table td{border:.2mm solid #444!important}
-.ledger-composite-grid{grid-template-columns:44% 56%;align-items:stretch}
-.ledger-inner{height:100%;border-spacing:0}
-.ledger-inner + .ledger-inner{border-left:.2mm solid #444}
-.ledger-inner th,.ledger-inner td{border-color:#444!important;border-width:0 .2mm .2mm 0!important}
-.ledger-inner tr:last-child th,.ledger-inner tr:last-child td{border-bottom:0!important}
-.ledger-inner th:last-child,.ledger-inner td:last-child{border-right:0!important}
-.ledger-budget-table th:not(.ledger-vertical-label){width:25mm}
-.ledger-budget-table td{word-break:keep-all;overflow-wrap:anywhere}
-.ledger-change-table th:not(.ledger-vertical-label){width:auto}
+.ledger-table{border:.2mm solid #444}
+.ledger-split-row td{word-break:keep-all;overflow-wrap:anywhere}
 
 .warranty-inspection-table{width:100%;table-layout:fixed;border-collapse:collapse}
 .warranty-inspection-table .wi-col-b{width:17.608%}

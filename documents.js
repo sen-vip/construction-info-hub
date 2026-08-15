@@ -397,6 +397,21 @@
     const { p, h } = common(ctx);
     const changes = Array.isArray(p.contractChanges) ? p.contractChanges : [];
     const changeRows = changes.slice(0,4);
+    const budgetRows = [
+      ['정책사업', p.budgetPolicyProject],
+      ['단위사업', p.budgetUnitProject],
+      ['세부사업', p.budgetDetailProject],
+      ['세부항목', p.budgetDetailItem],
+      ['원가통계목', p.costStatisticsItem],
+      ['산출내역', p.budgetCalculationDetails]
+    ];
+    const ledgerSplitRows = budgetRows.map(([label,value],i) => {
+      const c = i > 0 && i <= 4 ? changeRows[i-1] : null;
+      const changeCells = i === 0
+        ? '<th>년 월 일</th><th colspan="2">증감액</th><th colspan="2">변경금액</th>'
+        : `<td>${c?h.e(h.formatKoreanDate(c.changeDate)):''}</td><td colspan="2">${c?h.e(h.moneyNumberText(Number(c.afterAmount||0)-Number(c.beforeAmount||0))):''}</td><td colspan="2">${c?h.e(h.moneyNumberText(c.afterAmount)):''}</td>`;
+      return `<tr class="ledger-split-row">${i===0?'<th rowspan="6" class="ledger-section-label">설계변경<br>증감</th>':''}${changeCells}${i===0?'<th rowspan="6" class="ledger-section-label">지출과목</th>':''}<th colspan="2" class="ledger-budget-label">${h.e(label)}</th><td colspan="3">${h.e(value || '')}</td></tr>`;
+    }).join('');
     return [`<article class="paper-a4 admin-document construction-ledger document-print-page">
       <div class="ledger-title-row"><h1>공  사  대  장</h1><div>계약번호 : <strong>${h.e(p.contractNumber || '')}</strong></div></div>
       <table class="ledger-table">
@@ -406,22 +421,7 @@
         <tr><th rowspan="2">계약금액</th><td colspan="4" rowspan="2">${h.e(h.moneyNumberText(p.currentContractAmount))}</td><th>계약방법</th><td colspan="3">${h.e(p.contractMethod || '')}</td><th>전화번호</th><td colspan="2">${h.e(p.vendorPhone || '')}</td></tr>
         <tr><th>계약일</th><td colspan="3">${h.e(h.formatKoreanDate(p.contractDate))}</td><th>대표자</th><td colspan="2">${h.e(p.representative || '')}</td></tr>
 
-        <tr class="ledger-composite-row"><td colspan="12" class="ledger-composite-cell">
-          <div class="ledger-composite-grid">
-            <table class="ledger-inner ledger-change-table"><tbody>
-              <tr><th rowspan="5" class="ledger-vertical-label">설계변경<br>증감</th><th>년 월 일</th><th>증감액</th><th>변경금액</th></tr>
-              ${Array.from({length:4},(_,i)=>{ const c=changeRows[i]; return `<tr><td>${c?h.e(h.formatKoreanDate(c.changeDate)):''}</td><td>${c?h.e(h.moneyNumberText(Number(c.afterAmount||0)-Number(c.beforeAmount||0))):''}</td><td>${c?h.e(h.moneyNumberText(c.afterAmount)):''}</td></tr>`; }).join('')}
-            </tbody></table>
-            <table class="ledger-inner ledger-budget-table"><tbody>
-              <tr><th rowspan="6" class="ledger-vertical-label">지출과목</th><th>정책사업</th><td>${h.e(p.budgetPolicyProject || '')}</td></tr>
-              <tr><th>단위사업</th><td>${h.e(p.budgetUnitProject || '')}</td></tr>
-              <tr><th>세부사업</th><td>${h.e(p.budgetDetailProject || '')}</td></tr>
-              <tr><th>세부항목</th><td>${h.e(p.budgetDetailItem || '')}</td></tr>
-              <tr><th>원가통계목</th><td>${h.e(p.costStatisticsItem || '')}</td></tr>
-              <tr><th>산출내역</th><td>${h.e(p.budgetCalculationDetails || '')}</td></tr>
-            </tbody></table>
-          </div>
-        </td></tr>
+        ${ledgerSplitRows}
 
         <tr><th>계약내용</th><th colspan="2">계약보증금</th><td colspan="3">${h.e(h.moneyNumberText(ctx.value('contractSecurityAmount')))}</td><td colspan="2">${h.e(p.contractSecurityType || '')}</td><th>재원</th><td colspan="3">${h.e(p.fundingSource || '')}</td></tr>
 
@@ -432,7 +432,7 @@
 
         <tr><th rowspan="3">하자담보</th><th>시작일</th><td colspan="3">${h.e(h.formatKoreanDate(p.defectStartDate))}</td><th rowspan="3">검사내역</th><th>준공검사일</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionInspectionDate))}</td><th>검사자</th><td colspan="2">${h.e(ctx.value('inspector') || '')}</td></tr>
         <tr><th>종료일</th><td colspan="3">${h.e(h.formatKoreanDate(p.defectEndDate))}</td><th>공정</th><td colspan="2">1</td><th>입회자</th><td colspan="2">${h.e(ctx.value('witness') || '')}</td></tr>
-        <tr><th>보증금</th><td colspan="2">${h.e(h.moneyNumberText(ctx.value('defectSecurityAmount')))}</td><td>${h.e(p.defectSecurityType || '')}</td><th>설계자</th><td colspan="4">${h.e(p.designer || '')}</td></tr>
+        <tr><th>보증금</th><td colspan="2">${h.e(h.moneyNumberText(ctx.value('defectSecurityAmount')))}</td><td>${h.e(p.defectSecurityType || '')}</td><th>설계자</th><td colspan="5">${h.e(p.designer || '')}</td></tr>
       </tbody></table>
       <div class="ledger-note">※ 공사정보 허브에 저장된 공사정보를 기준으로 자동 작성</div>
     </article>`];
@@ -506,7 +506,7 @@
     const saved = p.safetyChecklists?.[type] || {};
     const results = saved.results || {};
     const isAgency = def.owner === 'agency';
-    const inspector = saved.inspector || (isAgency ? (p.supervisor || school.supervisor || '') : (p.representative || ''));
+    const inspector = saved.inspector || (isAgency ? (p.supervisor || school.supervisor || '') : '');
     const date = saved.date || p.startDate || p.contractDate || '';
     const header = isAgency
       ? `<div class="safety-meta"><div><strong>■ 학교(기관)명:</strong><span>${h.e(school.name || '')}</span></div><div><strong>■ 점 검 자:</strong><span>${h.e(inspector)}</span><em>(인)</em></div><div><strong>■ 점검 일자:</strong><span>${h.e(h.formatKoreanDate(date))}</span></div></div>`

@@ -735,9 +735,9 @@
   function openSafetyChecklistModal(type, afterSave=null) {
     const p=currentProject(); const def=ReferenceData?.safetyChecklists?.[type]; if(!p||!def)return;
     const saved=safetyChecklistFor(p,type)||{}; const results=saved.results||{}; const agency=def.owner==='agency';
-    const defaultInspector=saved.inspector || (agency?(p.supervisor||state.school?.supervisor||''):(p.representative||''));
+    const defaultInspector=saved.inspector || (agency?(p.supervisor||state.school?.supervisor||''):'');
     const rows=def.items.map((item,i)=>{const key=String(i+1),v=results[key]||'';return `<div class="safety-edit-row"><div class="safety-edit-number">${i+1}</div><div class="safety-edit-question">${e(item)}</div><div class="safety-edit-options"><label><input type="radio" name="safety_${i}" value="yes" ${v==='yes'?'checked':''}> 예</label><label><input type="radio" name="safety_${i}" value="no" ${v==='no'?'checked':''}> 아니요</label><label><input type="radio" name="safety_${i}" value="na" ${v==='na'?'checked':''}> 해당없음</label></div></div>`;}).join('');
-    openModal({eyebrow:`안전·보건 · ${agency?'기관 점검':'업체 작성·기관 확인'}`,title:def.label,wide:true,body:`<div class="notice"><strong>${e(def.subtitle)}</strong><br>원본 「공사서류 원클릭 프로그램(2026.4.)」의 점검항목을 기준으로 작성합니다.</div><div class="modal-grid safety-meta-edit" style="margin-top:16px">${modalDateField('safetyChecklistDate','점검일',saved.date||p.startDate||p.contractDate||'')}${modalField('safetyChecklistInspector','점검자',defaultInspector)}<div class="field full"><label for="safetyChecklistNotes">비고</label><input id="safetyChecklistNotes" value="${e(saved.notes||'')}"></div></div><div class="safety-edit-list">${rows}</div>${def.footer?`<p class="safety-edit-footer">※ ${e(def.footer)}</p>`:''}`,actions:`<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="saveSafetyChecklistBtn">저장${afterSave?'하고 계속':''}</button>`});
+    openModal({eyebrow:`안전·보건 · ${agency?'기관 점검':'업체 작성·기관 확인'}`,title:def.label,wide:true,body:`<div class="notice"><strong>${e(def.subtitle)}</strong><br>원본 「공사서류 원클릭 프로그램(2026.4.)」의 점검항목을 기준으로 작성합니다.</div><div class="modal-grid safety-meta-edit" style="margin-top:16px">${modalDateField('safetyChecklistDate','점검일',saved.date||p.startDate||p.contractDate||'')}${modalField('safetyChecklistInspector',agency?'점검자':'점검자 직접 입력',defaultInspector)}${agency?'':'<div class="field full"><span class="hint">회사 대표자가 아니라 실제 점검한 사람의 이름을 입력합니다.</span></div>'}<div class="field full"><label for="safetyChecklistNotes">비고</label><input id="safetyChecklistNotes" value="${e(saved.notes||'')}"></div></div><div class="safety-edit-list">${rows}</div>${def.footer?`<p class="safety-edit-footer">※ ${e(def.footer)}</p>`:''}`,actions:`<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="saveSafetyChecklistBtn">저장${afterSave?'하고 계속':''}</button>`});
     initDateInputs(modalBody); modalActions.querySelector('[data-modal-close]').addEventListener('click',closeModal); modalActions.querySelector('#saveSafetyChecklistBtn').addEventListener('click',()=>saveSafetyChecklist(type,afterSave));
   }
 
@@ -799,7 +799,7 @@
     const missing = batchMissingFields(selected, p);
     const readyCount = selected.filter(type => documentMissing(type,p).length === 0 && (!isSafetyDocument(type) || safetyChecklistComplete(p,type) || !safetyRequiresCompletion(type))).length;
     return `<div class="documents-panel">
-      <div class="documents-head"><div><p class="eyebrow">행정기관 작성·관리 우선</p><h2>공사서류</h2><p>공종과 작업특성에 따라 필요한 서류를 추천하고, 실제 사용하는 문서만 ‘내 서류’에 모아 관리합니다.</p></div><div class="documents-head-note"><strong>v0.4.2.1</strong><span>하자기간 추천 · 복합공종 · 안전서류 추천</span></div></div>
+      <div class="documents-head"><div><p class="eyebrow">행정기관 작성·관리 우선</p><h2>공사서류</h2><p>공종과 작업특성에 따라 필요한 서류를 추천하고, 실제 사용하는 문서만 ‘내 서류’에 모아 관리합니다.</p></div><div class="documents-head-note"><strong>v0.4.2.2</strong><span>공사대장 정렬 · 점검자 직접 입력</span></div></div>
       ${myDocumentsHtml(p)}
       ${safetyRecommendationsHtml(p)}
       <div class="document-batch-toolbar">
@@ -2344,7 +2344,7 @@
 
   function openHelp() {
     openModal({
-      eyebrow:'도움말', title:'v0.4.2.1 사용 흐름',
+      eyebrow:'도움말', title:'v0.4.2.2 사용 흐름',
       body:`<div class="notice"><strong>핵심 원칙</strong><br>같은 공사정보는 한 번 입력하고 다시 입력하지 않습니다.</div>
       <div style="display:grid;gap:16px;margin-top:18px;font-size:14px">
         <div><strong>1. 공사를 여러 건 저장</strong><p class="muted">전기·건축·체육관 공사를 동시에 등록해도 각 공사는 독립적으로 자동저장됩니다.</p></div>
