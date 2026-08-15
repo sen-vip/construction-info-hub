@@ -1210,3 +1210,34 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .warranty-ledger-items{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:4mm;font-size:8.3pt}.warranty-ledger-items th,.warranty-ledger-items td{border:1px solid #222;padding:1.5mm;text-align:center}.warranty-ledger-items th{background:#f3f3f3}
 
 @media (max-width:760px){.safety-edit-row{grid-template-columns:36px 1fr}.safety-edit-options{grid-column:1/-1;justify-content:flex-end;border-top:1px dashed #e1e7ef}.recommended-document{align-items:flex-start}.work-characteristics{display:grid}.warranty-item{align-items:flex-start}.my-document-chips{display:grid}.my-document-chips button{justify-content:space-between}}
+
+
+/* v0.4.2.1 — 원본 역할구분·인쇄서식 핫픽스 */
+.label-optional{font-size:11px;color:#7a8796;font-weight:500;margin-left:4px}
+.work-characteristics label{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;line-height:1.35}
+.work-characteristics input[type="checkbox"]{appearance:auto;width:17px!important;height:17px!important;min-width:17px!important;flex:0 0 17px!important;margin:0!important;padding:0!important}
+
+.ledger-table col{width:8.333333%}
+.ledger-table th,.ledger-table td{border:.2mm solid #444!important}
+.ledger-composite-grid{grid-template-columns:44% 56%;align-items:stretch}
+.ledger-inner{height:100%;border-spacing:0}
+.ledger-inner + .ledger-inner{border-left:.2mm solid #444}
+.ledger-inner th,.ledger-inner td{border-color:#444!important;border-width:0 .2mm .2mm 0!important}
+.ledger-inner tr:last-child th,.ledger-inner tr:last-child td{border-bottom:0!important}
+.ledger-inner th:last-child,.ledger-inner td:last-child{border-right:0!important}
+.ledger-budget-table th:not(.ledger-vertical-label){width:25mm}
+.ledger-budget-table td{word-break:keep-all;overflow-wrap:anywhere}
+.ledger-change-table th:not(.ledger-vertical-label){width:auto}
+
+.warranty-inspection-table{width:100%;table-layout:fixed;border-collapse:collapse}
+.warranty-inspection-table .wi-col-b{width:17.608%}
+.warranty-inspection-table .wi-col-c{width:22.757%}
+.warranty-inspection-table .wi-col-d{width:3.156%}
+.warranty-inspection-table .wi-col-e{width:20.432%}
+.warranty-inspection-table .wi-col-f{width:13.953%}
+.warranty-inspection-table .wi-col-g{width:22.093%}
+.warranty-inspection-table th,.warranty-inspection-table td{border:.2mm solid #333!important;padding:2.1mm 2.3mm;box-sizing:border-box}
+.warranty-inspection-table th{width:auto!important}
+.warranty-inspection-table .wi-tilde{text-align:center;padding-left:0;padding-right:0}
+.warranty-inspection-table .wi-work-type{text-align:center}
+.warranty-signatures strong{min-height:1.4em}

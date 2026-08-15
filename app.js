@@ -678,6 +678,7 @@
   }
 
   function isSafetyDocument(type) { return /^safety/.test(String(type || '')); }
+  function safetyRequiresCompletion(type) { return type === 'safetyGeneral'; }
 
   function safetyChecklistFor(p, type) { return p?.safetyChecklists?.[type] || null; }
 
@@ -714,12 +715,21 @@
 
   function myDocumentsHtml(p) {
     const types=myDocumentTypes(p);
-    return `<section class="my-documents-panel"><div class="document-group-title"><strong>내 서류 ${types.length}종</strong><span>이 공사에서 실제 사용하는 서류만 모아봅니다.</span></div>${types.length?`<div class="my-document-chips">${types.map(type=>`<button type="button" data-doc-open="${e(type)}"><span>${e(DOCUMENT_DEFINITIONS[type].label)}</span><em>${isSafetyDocument(type)?(safetyChecklistComplete(p,type)?'작성완료':'작성 필요'):(documentMissing(type,p).length?'정보 필요':'생성 가능')}</em></button>`).join('')}</div>`:`<div class="contract-change-empty">아직 내 서류가 없습니다. 아래 추천 또는 전체 서류에서 필요한 문서를 추가하세요.</div>`}</section>`;
+    return `<section class="my-documents-panel"><div class="document-group-title"><strong>내 서류 ${types.length}종</strong><span>이 공사에서 실제 사용하는 서류만 모아봅니다.</span></div>${types.length?`<div class="my-document-chips">${types.map(type=>`<button type="button" data-doc-open="${e(type)}"><span>${e(DOCUMENT_DEFINITIONS[type].label)}</span><em>${isSafetyDocument(type)?(safetyChecklistComplete(p,type)?'작성완료':(safetyRequiresCompletion(type)?'작성 필요':'빈 양식 가능')):(documentMissing(type,p).length?'정보 필요':'생성 가능')}</em></button>`).join('')}</div>`:`<div class="contract-change-empty">아직 내 서류가 없습니다. 아래 추천 또는 전체 서류에서 필요한 문서를 추가하세요.</div>`}</section>`;
   }
 
   function safetyDocumentCardHtml(type,p){
-    const def=DOCUMENT_DEFINITIONS[type]; const saved=safetyChecklistFor(p,type); const complete=safetyChecklistComplete(p,type); const selected=myDocumentTypes(p).includes(type); const batchSelected=selectionForProject(p).has(type); const source=ReferenceData.safetyChecklists[type]?.owner==='agency'?'기관 점검·자체 보관':'업체 작성·제출 / 기관 확인';
-    return `<article class="document-card safety-document-card ${complete?'ready':'needs-info'} ${batchSelected?'selected':''}" data-document-card="${e(type)}"><div class="document-card-top"><label class="document-select"><input type="checkbox" data-doc-select="${e(type)}" ${batchSelected?'checked':''}><span>선택</span></label><div><span class="document-stage">${e(source)}</span><span class="document-version">양식 ${e(def.version)}</span></div></div><h3>${e(def.label)}</h3><p>${e(def.description)}</p><div class="document-requirement ${complete?'ready':''}"><strong>${complete?'✓ 작성 완료':'점검결과 입력 필요'}</strong><span>${saved?.date?`최근 점검 ${e(formatDate(saved.date))}`:'원본 체크리스트 항목을 웹에서 입력합니다.'}</span></div><div class="document-card-actions"><button class="button ${complete?'secondary':'primary'}" type="button" data-safety-edit="${e(type)}">${complete?'작성내용 수정':'체크리스트 작성'}</button>${complete?`<button class="button ghost" type="button" data-doc-open="${e(type)}">미리보기</button>`:''}</div><button class="my-doc-toggle ${selected?'active':''}" type="button" data-my-doc-toggle="${e(type)}">${selected?'✓ 내 서류':'＋ 내 서류'}</button></article>`;
+    const def=DOCUMENT_DEFINITIONS[type];
+    const saved=safetyChecklistFor(p,type);
+    const complete=safetyChecklistComplete(p,type);
+    const mustComplete=safetyRequiresCompletion(type);
+    const selected=myDocumentTypes(p).includes(type);
+    const batchSelected=selectionForProject(p).has(type);
+    const vendorForm=!mustComplete;
+    const source=vendorForm?'업체 작성·제출 / 기관 확인':'기관 점검·자체 보관';
+    const statusTitle=complete?'✓ 작성 완료':(vendorForm?'빈 양식 출력 가능':'점검결과 입력 필요');
+    const statusDesc=saved?.date?`최근 점검 ${e(formatDate(saved.date))}`:(vendorForm?'업체가 직접 점검·작성할 수 있도록 체크하지 않은 원본 양식도 출력할 수 있습니다.':'원본 체크리스트 항목을 웹에서 입력합니다.');
+    return `<article class="document-card safety-document-card ${complete||vendorForm?'ready':'needs-info'} ${batchSelected?'selected':''}" data-document-card="${e(type)}"><div class="document-card-top"><label class="document-select"><input type="checkbox" data-doc-select="${e(type)}" ${batchSelected?'checked':''}><span>선택</span></label><div><span class="document-stage">${e(source)}</span><span class="document-version">양식 ${e(def.version)}</span></div></div><h3>${e(def.label)}</h3><p>${e(def.description)}</p><div class="document-requirement ${complete||vendorForm?'ready':''}"><strong>${e(statusTitle)}</strong><span>${statusDesc}</span></div><div class="document-card-actions"><button class="button ${complete?'secondary':'primary'}" type="button" data-safety-edit="${e(type)}">${complete?'작성내용 수정':'체크리스트 작성'}</button>${(complete||vendorForm)?`<button class="button ghost" type="button" data-doc-open="${e(type)}">${complete?'미리보기':'빈 양식 미리보기'}</button>`:''}</div><button class="my-doc-toggle ${selected?'active':''}" type="button" data-my-doc-toggle="${e(type)}">${selected?'✓ 내 서류':'＋ 내 서류'}</button></article>`;
   }
 
   function openSafetyChecklistModal(type, afterSave=null) {
@@ -745,8 +755,9 @@
   function documentQuickItemHtml(type, p) {
     const def = DOCUMENT_DEFINITIONS[type];
     const missing = documentMissing(type, p);
-    const safetyIncomplete = isSafetyDocument(type) && !safetyChecklistComplete(p,type);
-    const status = safetyIncomplete ? '작성 필요' : (missing.length ? `${missing.length}개 정보 필요` : '생성 가능');
+    const safetyIncomplete = isSafetyDocument(type) && safetyRequiresCompletion(type) && !safetyChecklistComplete(p,type);
+    const vendorBlank = isSafetyDocument(type) && !safetyRequiresCompletion(type) && !safetyChecklistComplete(p,type);
+    const status = safetyIncomplete ? '작성 필요' : (vendorBlank ? '빈 양식 가능' : (missing.length ? `${missing.length}개 정보 필요` : '생성 가능'));
     return `<button class="doc-item doc-item-button ${(missing.length||safetyIncomplete)?'needs-info':'ready'}" type="button" data-doc-open="${e(type)}"><span>${e(def.label)}</span><em>${e(status)}</em></button>`;
   }
 
@@ -786,9 +797,9 @@
   function documentsTabHtml(p) {
     const selected = orderedSelectedTypes(p);
     const missing = batchMissingFields(selected, p);
-    const readyCount = selected.filter(type => documentMissing(type,p).length === 0 && (!isSafetyDocument(type) || safetyChecklistComplete(p,type))).length;
+    const readyCount = selected.filter(type => documentMissing(type,p).length === 0 && (!isSafetyDocument(type) || safetyChecklistComplete(p,type) || !safetyRequiresCompletion(type))).length;
     return `<div class="documents-panel">
-      <div class="documents-head"><div><p class="eyebrow">행정기관 작성·관리 우선</p><h2>공사서류</h2><p>공종과 작업특성에 따라 필요한 서류를 추천하고, 실제 사용하는 문서만 ‘내 서류’에 모아 관리합니다.</p></div><div class="documents-head-note"><strong>v0.4.2</strong><span>하자기간 추천 · 복합공종 · 안전서류 추천</span></div></div>
+      <div class="documents-head"><div><p class="eyebrow">행정기관 작성·관리 우선</p><h2>공사서류</h2><p>공종과 작업특성에 따라 필요한 서류를 추천하고, 실제 사용하는 문서만 ‘내 서류’에 모아 관리합니다.</p></div><div class="documents-head-note"><strong>v0.4.2.1</strong><span>하자기간 추천 · 복합공종 · 안전서류 추천</span></div></div>
       ${myDocumentsHtml(p)}
       ${safetyRecommendationsHtml(p)}
       <div class="document-batch-toolbar">
@@ -823,7 +834,7 @@
     if (!summary) return;
     const selected = orderedSelectedTypes(p);
     const missing = batchMissingFields(selected,p);
-    const readyCount = selected.filter(type => documentMissing(type,p).length === 0 && (!isSafetyDocument(type) || safetyChecklistComplete(p,type))).length;
+    const readyCount = selected.filter(type => documentMissing(type,p).length === 0 && (!isSafetyDocument(type) || safetyChecklistComplete(p,type) || !safetyRequiresCompletion(type))).length;
     summary.innerHTML = `<div><strong>${selected.length ? `${selected.length}종 선택` : '서류를 선택하세요'}</strong><span>${selected.length ? (missing.length ? `공통 부족정보 ${missing.length}개 · 바로 출력 ${readyCount}종` : '모든 서류가 바로 출력 가능합니다.') : '개별 선택 또는 단계별 세트를 사용할 수 있습니다.'}</span></div><button class="button primary" type="button" id="openBatchPreviewBtn" ${selected.length?'':'disabled'}>${missing.length ? `부족정보 ${missing.length}개 확인` : `선택한 ${selected.length}종 미리보기`}</button>`;
     summary.querySelector('#openBatchPreviewBtn')?.addEventListener('click',()=>openSelectedDocumentsFlow());
   }
@@ -864,7 +875,7 @@
     if (!p) return;
     const types = orderedSelectedTypes(p);
     if (!types.length) { showToast('인쇄할 서류를 먼저 선택해주세요.', 'warn'); return; }
-    const incompleteSafety = types.find(type => isSafetyDocument(type) && !safetyChecklistComplete(p,type));
+    const incompleteSafety = types.find(type => isSafetyDocument(type) && safetyRequiresCompletion(type) && !safetyChecklistComplete(p,type));
     if (incompleteSafety) { showToast(`${DOCUMENT_DEFINITIONS[incompleteSafety].label}을 먼저 작성해주세요.`, 'warn'); openSafetyChecklistModal(incompleteSafety,()=>openSelectedDocumentsFlow()); return; }
     const missing = batchMissingFields(types, p);
     if (missing.length) openBatchMissingModal(types, missing);
@@ -989,7 +1000,7 @@
     const p = currentProject();
     const def = DOCUMENT_DEFINITIONS[type];
     if (!p || !def) return;
-    if (isSafetyDocument(type) && !safetyChecklistComplete(p,type)) { openSafetyChecklistModal(type,()=>openDocumentPreview(type)); return; }
+    if (isSafetyDocument(type) && safetyRequiresCompletion(type) && !safetyChecklistComplete(p,type)) { openSafetyChecklistModal(type,()=>openDocumentPreview(type)); return; }
     if (type === 'warrantyInspectionReport' && !(p.warrantyInspections || []).length) { openWarrantyInspectionModal(null,true); return; }
     if (type === 'warrantyInspectionReport' && !state.activeWarrantyInspectionId) state.activeWarrantyInspectionId = p.warrantyInspections[p.warrantyInspections.length-1]?.id || null;
     const missing = documentMissing(type, p);
@@ -1555,13 +1566,13 @@
     const p = currentProject();
     if (!p) return;
     const current = record || {};
-    const inspector = current.inspector || p.inspector || state.school?.inspector || '';
+    const inspector = current.inspector || '';
     const witness = current.witness || p.witness || state.school?.witness || '';
     openModal({
       eyebrow:'행정기관 하자관리', title:record ? '하자검사 기록 수정' : '하자검사 기록 추가',
       body:`<div class="notice"><strong>검사기록은 누적됩니다.</strong><br>새 검사를 추가해도 이전 검사기록은 사라지지 않습니다.</div><div class="modal-grid" style="margin-top:16px">
         ${modalDateField('warrantyDate','검사일',current.date || '')}
-        ${modalField('warrantyInspectorInput','검사자',inspector)}
+        <div class="field"><label for="warrantyInspectorInput">검사자 <span class="label-optional">선택</span></label><input id="warrantyInspectorInput" value="${e(inspector)}" placeholder="출력 후 직접 기재할 경우 비워두세요"><span class="hint">기본값을 자동 입력하지 않습니다.</span></div>
         ${modalField('warrantyWitnessInput','입회자',witness)}
         <div class="field"><label for="warrantyHasDefect">하자 유무</label><select id="warrantyHasDefect"><option value="">선택</option><option value="no" ${current.hasDefect==='no'?'selected':''}>이상 없음</option><option value="yes" ${current.hasDefect==='yes'?'selected':''}>하자 있음</option></select></div>
         <div class="field full"><label for="warrantyResult">검사결과</label><textarea id="warrantyResult">${e(current.result || '')}</textarea></div>
@@ -1581,7 +1592,7 @@
     if (!p) return;
     const date = modalBody.querySelector('#warrantyDate')?.value || '';
     const inspector = modalBody.querySelector('#warrantyInspectorInput')?.value?.trim() || '';
-    if (!date || !inspector) { showToast('검사일과 검사자를 입력해주세요.','warn'); return; }
+    if (!date) { showToast('검사일을 입력해주세요.','warn'); return; }
     const list = Array.isArray(p.warrantyInspections) ? [...p.warrantyInspections] : [];
     const existingIndex = recordId ? list.findIndex(x=>x.id===recordId) : -1;
     const base = existingIndex >= 0 ? list[existingIndex] : {};
@@ -1604,10 +1615,6 @@
     p.updatedAt = new Date().toISOString();
     await DB.put('projects',p);
     state.activeWarrantyInspectionId = next.id;
-    if (!meaningful(state.school?.inspector) && inspector) {
-      state.school = {...(state.school||{}),inspector};
-      await DB.put('settings',{key:'school',value:state.school});
-    }
     await loadState(); state.currentProjectId=p.id;
     closeModal(); renderProjectDetail();
     showToast('하자검사 기록을 저장했습니다.');
@@ -2337,7 +2344,7 @@
 
   function openHelp() {
     openModal({
-      eyebrow:'도움말', title:'v0.4.2 사용 흐름',
+      eyebrow:'도움말', title:'v0.4.2.1 사용 흐름',
       body:`<div class="notice"><strong>핵심 원칙</strong><br>같은 공사정보는 한 번 입력하고 다시 입력하지 않습니다.</div>
       <div style="display:grid;gap:16px;margin-top:18px;font-size:14px">
         <div><strong>1. 공사를 여러 건 저장</strong><p class="muted">전기·건축·체육관 공사를 동시에 등록해도 각 공사는 독립적으로 자동저장됩니다.</p></div>

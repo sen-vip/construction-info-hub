@@ -68,7 +68,7 @@
     warrantyInspectionReport: {
       key:'warrantyInspectionReport', label:'하자검사조서', outputTitle:'하  자  검  사  조  서', stage:'하자', version:'2026.04', pages:1, owner:'agency',
       description:'완료공사의 하자(만료)검사 결과를 기록하는 기관용 조서',
-      required:['projectName','vendorName','representative','workType','currentContractAmount','startDate','actualCompletionDate','defectEndDate','warrantyInspectionDate','warrantyInspector']
+      required:['projectName','vendorName','representative','workType','currentContractAmount','startDate','actualCompletionDate','defectEndDate','warrantyInspectionDate']
     },
     warrantyLedger: {
       key:'warrantyLedger', label:'하자대장', outputTitle:'하 자 검 사 대 장', stage:'하자', version:'2026.04', pages:1, owner:'agency',
@@ -394,36 +394,45 @@
 
 
   function renderConstructionLedger(ctx) {
-    const { p, school, h } = common(ctx);
+    const { p, h } = common(ctx);
     const changes = Array.isArray(p.contractChanges) ? p.contractChanges : [];
+    const changeRows = changes.slice(0,4);
     return [`<article class="paper-a4 admin-document construction-ledger document-print-page">
       <div class="ledger-title-row"><h1>공  사  대  장</h1><div>계약번호 : <strong>${h.e(p.contractNumber || '')}</strong></div></div>
-      <table class="ledger-table"><tbody>
-        <tr><th>공사명</th><td colspan="5">${h.e(p.projectName)}</td><th>도급자</th><td colspan="3">${h.e(p.vendorName)}</td><th>공사감독<br>성명</th><td colspan="2">${h.e(ctx.value('supervisor') || '')}</td></tr>
-        <tr><th rowspan="2">계약금액</th><td colspan="5" rowspan="2">${h.e(h.moneyNumberText(p.currentContractAmount))}</td><th>계약방법</th><td colspan="3">${h.e(p.contractMethod || '')}</td><th>전화번호</th><td colspan="2">${h.e(p.vendorPhone || '')}</td></tr>
+      <table class="ledger-table">
+        <colgroup>${Array.from({length:12},()=>'<col>').join('')}</colgroup>
+        <tbody>
+        <tr><th>공사명</th><td colspan="4">${h.e(p.projectName)}</td><th>도급자</th><td colspan="3">${h.e(p.vendorName)}</td><th>공사감독<br>성명</th><td colspan="2">${h.e(ctx.value('supervisor') || '')}</td></tr>
+        <tr><th rowspan="2">계약금액</th><td colspan="4" rowspan="2">${h.e(h.moneyNumberText(p.currentContractAmount))}</td><th>계약방법</th><td colspan="3">${h.e(p.contractMethod || '')}</td><th>전화번호</th><td colspan="2">${h.e(p.vendorPhone || '')}</td></tr>
         <tr><th>계약일</th><td colspan="3">${h.e(h.formatKoreanDate(p.contractDate))}</td><th>대표자</th><td colspan="2">${h.e(p.representative || '')}</td></tr>
-        <tr class="ledger-composite-row"><td colspan="13" class="ledger-composite-cell"><div class="ledger-composite-grid">
-          <table class="ledger-inner ledger-change-table"><tbody>
-            <tr><th rowspan="5" class="ledger-vertical-label">설계변경<br>증감</th><th>년 월 일</th><th>증감액</th><th>변경금액</th></tr>
-            ${(() => { const rows = changes.slice(0,4); return Array.from({length:4},(_,i)=>{ const c=rows[i]; return `<tr><td>${c?h.e(h.formatKoreanDate(c.changeDate)):''}</td><td>${c?h.e(h.moneyNumberText(Number(c.afterAmount||0)-Number(c.beforeAmount||0))):''}</td><td>${c?h.e(h.moneyNumberText(c.afterAmount)):''}</td></tr>`; }).join(''); })()}
-          </tbody></table>
-          <table class="ledger-inner ledger-budget-table"><tbody>
-            <tr><th rowspan="6" class="ledger-vertical-label">지출과목</th><th>정책사업</th><td>${h.e(p.budgetPolicyProject || '')}</td></tr>
-            <tr><th>단위사업</th><td>${h.e(p.budgetUnitProject || '')}</td></tr>
-            <tr><th>세부사업</th><td>${h.e(p.budgetDetailProject || '')}</td></tr>
-            <tr><th>세부항목</th><td>${h.e(p.budgetDetailItem || '')}</td></tr>
-            <tr><th>원가통계목</th><td>${h.e(p.costStatisticsItem || '')}</td></tr>
-            <tr><th>산출내역</th><td>${h.e(p.budgetCalculationDetails || '')}</td></tr>
-          </tbody></table>
-        </div></td></tr>
+
+        <tr class="ledger-composite-row"><td colspan="12" class="ledger-composite-cell">
+          <div class="ledger-composite-grid">
+            <table class="ledger-inner ledger-change-table"><tbody>
+              <tr><th rowspan="5" class="ledger-vertical-label">설계변경<br>증감</th><th>년 월 일</th><th>증감액</th><th>변경금액</th></tr>
+              ${Array.from({length:4},(_,i)=>{ const c=changeRows[i]; return `<tr><td>${c?h.e(h.formatKoreanDate(c.changeDate)):''}</td><td>${c?h.e(h.moneyNumberText(Number(c.afterAmount||0)-Number(c.beforeAmount||0))):''}</td><td>${c?h.e(h.moneyNumberText(c.afterAmount)):''}</td></tr>`; }).join('')}
+            </tbody></table>
+            <table class="ledger-inner ledger-budget-table"><tbody>
+              <tr><th rowspan="6" class="ledger-vertical-label">지출과목</th><th>정책사업</th><td>${h.e(p.budgetPolicyProject || '')}</td></tr>
+              <tr><th>단위사업</th><td>${h.e(p.budgetUnitProject || '')}</td></tr>
+              <tr><th>세부사업</th><td>${h.e(p.budgetDetailProject || '')}</td></tr>
+              <tr><th>세부항목</th><td>${h.e(p.budgetDetailItem || '')}</td></tr>
+              <tr><th>원가통계목</th><td>${h.e(p.costStatisticsItem || '')}</td></tr>
+              <tr><th>산출내역</th><td>${h.e(p.budgetCalculationDetails || '')}</td></tr>
+            </tbody></table>
+          </div>
+        </td></tr>
+
         <tr><th>계약내용</th><th colspan="2">계약보증금</th><td colspan="3">${h.e(h.moneyNumberText(ctx.value('contractSecurityAmount')))}</td><td colspan="2">${h.e(p.contractSecurityType || '')}</td><th>재원</th><td colspan="3">${h.e(p.fundingSource || '')}</td></tr>
-        <tr><th rowspan="4">공정</th><th>구분</th><th colspan="2">계약상 년월일</th><th colspan="2">실제 년월일</th><th rowspan="4">지급내역</th><th>구분</th><th colspan="2">년월일</th><th colspan="3">지급금액</th></tr>
-        <tr><th>착공</th><td colspan="2">${h.e(h.formatKoreanDate(p.plannedStartDate || p.startDate))}</td><td colspan="2">${h.e(h.formatKoreanDate(p.startDate))}</td><th>선급금</th><td colspan="2"></td><td colspan="3">${h.e(h.moneyNumberText(p.priorPaymentAmount))}</td></tr>
-        <tr><th>준공</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionDueDate))}</td><td colspan="2">${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td><th>준공금</th><td colspan="2">${h.e(h.formatKoreanDate(p.paymentDate))}</td><td colspan="3">${h.e(h.moneyNumberText(p.paymentAmount || p.settlementAmount))}</td></tr>
-        <tr><th>준공정산금</th><td colspan="4">${h.e(h.moneyNumberText(p.settlementAmount))}</td><th>잔액</th><td colspan="5">${h.e(h.moneyNumberText(Math.max(0, Number(p.currentContractAmount||0)-Number(p.paymentAmount||0))))}</td></tr>
-        <tr><th rowspan="3">하자담보</th><th>시작일</th><td colspan="4">${h.e(h.formatKoreanDate(p.defectStartDate))}</td><th rowspan="3">검사내역</th><th>준공검사일</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionInspectionDate))}</td><th>검사자</th><td colspan="2">${h.e(ctx.value('inspector') || '')}</td></tr>
-        <tr><th>종료일</th><td colspan="4">${h.e(h.formatKoreanDate(p.defectEndDate))}</td><th>공정</th><td colspan="2">1</td><th>입회자</th><td colspan="2">${h.e(ctx.value('witness') || '')}</td></tr>
-        <tr><th>보증금</th><td colspan="2">${h.e(h.moneyNumberText(ctx.value('defectSecurityAmount')))}</td><td colspan="2">${h.e(p.defectSecurityType || '')}</td><th>설계자</th><td colspan="5">${h.e(p.designer || '')}</td></tr>
+
+        <tr><th rowspan="4">공정</th><th>구분</th><th colspan="2">계약상 년월일</th><th colspan="2">실제 년월일</th><th rowspan="4">지급내역</th><th>구분</th><th colspan="2">년월일</th><th colspan="2">지급금액</th></tr>
+        <tr><th>착공</th><td colspan="2">${h.e(h.formatKoreanDate(p.plannedStartDate || p.startDate))}</td><td colspan="2">${h.e(h.formatKoreanDate(p.startDate))}</td><th>선급금</th><td colspan="2"></td><td colspan="2">${h.e(h.moneyNumberText(p.priorPaymentAmount))}</td></tr>
+        <tr><th>준공</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionDueDate))}</td><td colspan="2">${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td><th>준공금</th><td colspan="2">${h.e(h.formatKoreanDate(p.paymentDate))}</td><td colspan="2">${h.e(h.moneyNumberText(p.paymentAmount || p.settlementAmount))}</td></tr>
+        <tr><th>준공정산금</th><td colspan="4">${h.e(h.moneyNumberText(p.settlementAmount))}</td><th>잔액</th><td colspan="4">${h.e(h.moneyNumberText(Math.max(0, Number(p.currentContractAmount||0)-Number(p.paymentAmount||0))))}</td></tr>
+
+        <tr><th rowspan="3">하자담보</th><th>시작일</th><td colspan="3">${h.e(h.formatKoreanDate(p.defectStartDate))}</td><th rowspan="3">검사내역</th><th>준공검사일</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionInspectionDate))}</td><th>검사자</th><td colspan="2">${h.e(ctx.value('inspector') || '')}</td></tr>
+        <tr><th>종료일</th><td colspan="3">${h.e(h.formatKoreanDate(p.defectEndDate))}</td><th>공정</th><td colspan="2">1</td><th>입회자</th><td colspan="2">${h.e(ctx.value('witness') || '')}</td></tr>
+        <tr><th>보증금</th><td colspan="2">${h.e(h.moneyNumberText(ctx.value('defectSecurityAmount')))}</td><td>${h.e(p.defectSecurityType || '')}</td><th>설계자</th><td colspan="4">${h.e(p.designer || '')}</td></tr>
       </tbody></table>
       <div class="ledger-note">※ 공사정보 허브에 저장된 공사정보를 기준으로 자동 작성</div>
     </article>`];
@@ -439,19 +448,27 @@
     const notes = ctx.value('warrantyNotes');
     return [`<article class="paper-a4 admin-document warranty-inspection-report document-print-page">
       <h1 class="doc-title wide-spacing">하 자 검 사 조 서</h1>
-      <table class="official-table warranty-inspection-table"><colgroup><col style="width:27mm"><col style="width:24mm"><col style="width:25mm"><col style="width:25mm"><col style="width:25mm"><col style="width:24mm"><col style="width:26mm"></colgroup><tbody>
-        <tr><th>공 사 명</th><td colspan="5">${h.e(p.projectName)}</td></tr>
-        <tr><th rowspan="2">도 급 자</th><th>회 사 명</th><td colspan="3">${h.e(p.vendorName)}</td><th>공 종</th><td>${h.e(p.workType || '')}</td></tr>
-        <tr><th>대 표</th><td colspan="3">${h.e(p.representative)}</td><th></th><td></td></tr>
-        <tr><th>도 급 금 액</th><td colspan="3">${h.e(h.moneyNumberText(p.currentContractAmount))}</td><th>준 공 일</th><td colspan="2">${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td></tr>
-        <tr><th>공 사 기 간</th><td colspan="2">${h.e(h.formatKoreanDate(p.startDate))}</td><td>~</td><td>${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td><th>하자만료일</th><td>${h.e(h.formatKoreanDate(p.defectEndDate))}</td></tr>
-        <tr class="warranty-large-row"><th>하자발생내용</th><td colspan="6">${h.e(issue || '')}</td></tr>
-        <tr class="warranty-large-row"><th>처 리 사 항</th><td colspan="6">${h.e(actions || '')}</td></tr>
-        <tr class="warranty-large-row"><th>기타참고사항</th><td colspan="6">${h.e(notes || '')}</td></tr>
-      </tbody></table>
+      <table class="official-table warranty-inspection-table">
+        <colgroup>
+          <col class="wi-col-b"><col class="wi-col-c"><col class="wi-col-d"><col class="wi-col-e"><col class="wi-col-f"><col class="wi-col-g">
+        </colgroup>
+        <tbody>
+          <tr><th>공 사 명</th><td colspan="5">${h.e(p.projectName)}</td></tr>
+          <tr><th rowspan="2">도 급 자</th><th>회 사 명</th><td colspan="3">${h.e(p.vendorName)}</td><th>공 종</th></tr>
+          <tr><th>대 표</th><td colspan="3">${h.e(p.representative)}</td><td class="wi-work-type">${h.e(p.workType || '')}</td></tr>
+          <tr><th>도 급 금 액</th><td colspan="3">${h.e(h.moneyNumberText(p.currentContractAmount))}</td><th>준 공 일</th><td>${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td></tr>
+          <tr><th>공 사 기 간</th><td>${h.e(h.formatKoreanDate(p.startDate))}</td><td class="wi-tilde">~</td><td>${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td><th>하자만료일</th><td>${h.e(h.formatKoreanDate(p.defectEndDate))}</td></tr>
+          <tr class="warranty-large-row"><th>하자발생내용</th><td colspan="5">${h.e(issue || '')}</td></tr>
+          <tr class="warranty-large-row"><th>처 리 사 항</th><td colspan="5">${h.e(actions || '')}</td></tr>
+          <tr class="warranty-large-row"><th>기타참고사항</th><td colspan="5">${h.e(notes || '')}</td></tr>
+        </tbody>
+      </table>
       <p class="warranty-statement">위와 같이 하자(만료)검사를 필하였음.</p>
       <p class="record-date">${h.e(h.formatKoreanDate(date))}</p>
-      <div class="warranty-signatures"><div><span>검 사 자 :</span><span>${h.e(school.name || '')}</span><strong>${h.e(h.representativeWithSeal(inspector))}</strong></div><div><span>입 회 자 :</span><span></span><strong>${h.e(h.representativeWithSeal(witness))}</strong></div></div>
+      <div class="warranty-signatures">
+        <div><span>검 사 자 :</span><span>${h.e(school.name || '')}</span><strong>${inspector ? h.e(h.representativeWithSeal(inspector)) : '(인)'}</strong></div>
+        <div><span>입 회 자 :</span><span></span><strong>${witness ? h.e(h.representativeWithSeal(witness)) : '(인)'}</strong></div>
+      </div>
     </article>`];
   }
 
