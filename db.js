@@ -151,6 +151,7 @@
       siteManager: seed.siteManager || '',
       siteManagerLicense: seed.siteManagerLicense || '',
       settlementAmount: seed.settlementAmount ?? '',
+      settlementReductionReason: seed.settlementReductionReason || '',
       priorPaymentAmount: seed.priorPaymentAmount ?? '',
       deductionAmount: seed.deductionAmount ?? '',
       supervisor: seed.supervisor || '',

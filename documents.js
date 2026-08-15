@@ -11,88 +11,103 @@
 
   const DEFINITIONS = {
     standardContract: {
-      key:'standardContract', label:'공사도급표준계약서', outputTitle:'공 사 도 급 표 준 계 약 서', stage:'계약', version:'2026.04', pages:1, owner:'vendor',
+      key:'standardContract', label:'공사도급표준계약서', outputTitle:'공 사 도 급 표 준 계 약 서', stage:'계약', version:'2026.05 수정', pages:1, owner:'vendor',
       description:'발주기관과 계약상대자가 체결하는 공사도급 표준계약서',
       required:['schoolName','schoolAddress','principal','projectName','contractNumber','currentContractAmount','contractSecurityAmount','contractDate','plannedStartDate','completionDueDate','vendorName','businessNumber','vendorAddress','vendorPhone','representative','workType','delayPenaltyRate','priceAdjustmentMethod','defectSecurityRate','defectSecurityAmount','defectPeriodYears']
     },
     acceptanceTerms: {
-      key:'acceptanceTerms', label:'승낙사항', outputTitle:'승 낙 사 항 (공 사 집 행)', stage:'계약', version:'2026.04', pages:1, owner:'vendor',
+      key:'acceptanceTerms', label:'승낙사항', outputTitle:'승 낙 사 항 (공 사 집 행)', stage:'계약', version:'2026.05 수정', pages:1, owner:'vendor',
       description:'공사 집행 시 계약상대자가 확인하는 승낙사항',
       required:['projectName','contractDate','plannedStartDate','completionDueDate','vendorName','businessNumber','vendorAddress','representative','delayPenaltyRate','defectPeriodYears']
     },
     useSealForm: {
-      key:'useSealForm', label:'사용인감계', outputTitle:'사 용 인 감 계', stage:'계약', version:'2026.04', pages:1, owner:'vendor',
+      key:'useSealForm', label:'사용인감계', outputTitle:'사 용 인 감 계', stage:'계약', version:'2026.05 수정', pages:1, owner:'vendor',
       description:'계약 관련 업무에 사용할 사용인감을 신고하는 서류',
       required:['schoolName','projectName','contractDate','vendorName','vendorAddress','representative']
     },
     privateContractPledge: {
-      key:'privateContractPledge', label:'수의계약 통합서약서', outputTitle:'수 의 계 약 통 합 서 약 서', stage:'계약', version:'2026.04', pages:2, owner:'vendor',
+      key:'privateContractPledge', label:'수의계약 통합서약서', outputTitle:'수 의 계 약 통 합 서 약 서', stage:'계약', version:'2026.05 수정', pages:2, owner:'vendor',
       description:'수의계약 관련 각서·청렴·안전·개인정보 동의를 통합한 서약서',
       required:['schoolName','projectName','contractDate','vendorName','businessNumber','vendorAddress','vendorPhone','representative']
     },
     startReport: {
-      key:'startReport', label:'착공계', outputTitle:'착 공 신 고 서', stage:'착공', version:'2026.04', pages:1, owner:'vendor',
+      key:'startReport', label:'착공계', outputTitle:'착 공 신 고 서', stage:'착공', version:'2026.05 수정', pages:1, owner:'vendor',
       description:'착공 신고 시 제출하는 기본 착공계',
       required:['schoolName','projectName','currentContractAmount','contractDate','startDate','completionDueDate','vendorName','businessNumber','vendorAddress','representative']
     },
+    utilityPaymentPledge: {
+      key:'utilityPaymentPledge', label:'수도·전기료 납부각서', outputTitle:'각 서', stage:'착공', version:'2026.05 수정', pages:1, owner:'vendor',
+      description:'학교의 수도·전력을 사용한 경우 계산된 사용료를 납부하겠다는 업체 각서. 현장대리인 이름은 공란으로도 출력할 수 있습니다.',
+      required:['schoolName','projectName','currentContractAmount','contractDate','startDate','completionDueDate','vendorName','representative']
+    },
     completionReport: {
-      key:'completionReport', label:'준공계', outputTitle:'준 공 계', stage:'준공', version:'2026.04', pages:1, owner:'vendor',
+      key:'completionReport', label:'준공계', outputTitle:'준 공 계', stage:'준공', version:'2026.05 수정', pages:1, owner:'vendor',
       description:'공사 완료 후 제출하는 준공계',
       required:['schoolName','projectName','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','vendorName','businessNumber','vendorAddress','representative']
     },
     completionInspectionRequest: {
-      key:'completionInspectionRequest', label:'준공검사원', outputTitle:'준 공 검 사 원', stage:'준공', version:'2026.04', pages:1, owner:'vendor',
+      key:'completionInspectionRequest', label:'준공검사원', outputTitle:'준 공 검 사 원', stage:'준공', version:'2026.05 수정', pages:1, owner:'vendor',
       description:'준공 사실을 확인하고 검사를 요청하는 서류',
       required:['schoolName','projectName','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','vendorName','businessNumber','vendorAddress','representative']
     },
     supervisionReport: {
-      key:'supervisionReport', label:'공사감독조서', outputTitle:'공 사 감 독 조 서', stage:'준공', version:'2026.04', pages:1, owner:'agency',
+      key:'supervisionReport', label:'공사감독조서', outputTitle:'공 사 감 독 조 서', stage:'준공', version:'2026.05 수정', pages:1, owner:'agency',
       description:'공사감독자가 현장 감독 결과를 확인하는 기관용 조서',
       required:['schoolName','projectName','vendorName','representative','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','supervisor']
     },
     completionInspectionRecord: {
-      key:'completionInspectionRecord', label:'준공검사조서', outputTitle:'준 공 검 사 조 서', stage:'준공', version:'2026.04', pages:1, owner:'agency',
+      key:'completionInspectionRecord', label:'준공검사조서', outputTitle:'준 공 검 사 조 서', stage:'준공', version:'2026.05 수정', pages:1, owner:'agency',
       description:'준공검사 결과와 검사자·입회자를 기록하는 기관용 조서',
       required:['schoolName','projectName','vendorName','representative','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','completionInspectionDate','settlementAmount','inspector','witness']
     },
+    defectSecurityDeposit: {
+      key:'defectSecurityDeposit', label:'하자보증금납부서', outputTitle:'하 자 보 수 보 증 금 납 부 서', stage:'준공', version:'2026.05 수정', pages:1, owner:'vendor',
+      description:'하자보수보증금의 금액·기간·납부방법을 확인하여 제출하는 서류',
+      required:['schoolName','projectName','currentContractAmount','contractDate','actualCompletionDate','defectSecurityRate','defectSecurityAmount','defectStartDate','defectEndDate','defectSecurityType','vendorName','businessNumber','vendorAddress','representative']
+    },
+    completionSettlementAgreement: {
+      key:'completionSettlementAgreement', label:'준공정산동의서', outputTitle:'준 공 정 산 동 의 서', stage:'준공', version:'2026.05 수정', pages:1, owner:'vendor',
+      description:'계약금액과 준공정산금액의 차액 및 감액 사유에 동의하는 업체 서류',
+      required:['schoolName','projectName','currentContractAmount','settlementAmount','settlementReductionReason','actualCompletionDate','vendorName','vendorAddress','representative']
+    },
     paymentRequest: {
-      key:'paymentRequest', label:'대금청구서', outputTitle:'대 금 청 구 서', stage:'지출', version:'2026.04', pages:1, owner:'vendor',
+      key:'paymentRequest', label:'대금청구서', outputTitle:'대 금 청 구 서', stage:'지출', version:'2026.05 수정', pages:1, owner:'vendor',
       description:'준공 후 계약대금을 지정계좌로 청구하는 서류',
       required:['schoolName','projectName','currentContractAmount','settlementAmount','priorPaymentAmount','deductionAmount','completionInspectionDate','vendorName','vendorAddress','representative','bankName','accountNumber','accountHolder']
     },
     constructionLedger: {
-      key:'constructionLedger', label:'공사대장', outputTitle:'공  사  대  장', stage:'관리', version:'2026.04', pages:1, owner:'agency',
+      key:'constructionLedger', label:'공사대장', outputTitle:'공  사  대  장', stage:'관리', version:'2026.05 수정', pages:1, owner:'agency',
       description:'개별 공사의 계약·공정·지급·검사·하자 내용을 한 장에 관리하는 기관용 대장',
       required:['projectName','vendorName','currentContractAmount','contractMethod','contractDate','startDate','completionDueDate']
     },
     warrantyInspectionReport: {
-      key:'warrantyInspectionReport', label:'하자검사조서', outputTitle:'하  자  검  사  조  서', stage:'하자', version:'2026.04', pages:1, owner:'agency',
+      key:'warrantyInspectionReport', label:'하자검사조서', outputTitle:'하  자  검  사  조  서', stage:'하자', version:'2026.05 수정', pages:1, owner:'agency',
       description:'완료공사의 하자(만료)검사 결과를 기록하는 기관용 조서',
       required:['projectName','vendorName','representative','workType','currentContractAmount','startDate','actualCompletionDate','defectEndDate','warrantyInspectionDate']
     },
     warrantyLedger: {
-      key:'warrantyLedger', label:'하자대장', outputTitle:'하 자 검 사 대 장', stage:'하자', version:'2026.04', pages:1, owner:'agency',
+      key:'warrantyLedger', label:'하자대장', outputTitle:'하 자 검 사 대 장', stage:'하자', version:'2026.05 수정', pages:1, owner:'agency',
       description:'공사별 하자보증기간과 정기 하자검사 이력을 누적 관리하는 기관용 대장',
       required:['projectName','vendorName','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','defectStartDate','defectEndDate']
     },
     safetyGeneral: {
-      key:'safetyGeneral', label:'안전·보건 체크리스트', outputTitle:'공사(용역) 안전·보건 체크리스트(공통)', stage:'안전·보건', version:'2026.04', pages:1, owner:'agency',
+      key:'safetyGeneral', label:'안전·보건 체크리스트', outputTitle:'공사(용역) 안전·보건 체크리스트(공통)', stage:'안전·보건', version:'2026.05 수정', pages:1, owner:'agency',
       description:'기관(학교)에서 점검하고 업체에서 확인하여 자체 보관하는 공통 체크리스트', required:['schoolName','projectName','vendorName']
     },
     safetyFall: {
-      key:'safetyFall', label:'추락재해 예방 체크리스트', outputTitle:'추락재해 예방 체크리스트', stage:'안전·보건', version:'2026.04', pages:2, owner:'vendor',
+      key:'safetyFall', label:'추락재해 예방 체크리스트', outputTitle:'추락재해 예방 체크리스트', stage:'안전·보건', version:'2026.05 수정', pages:2, owner:'vendor',
       description:'추락위험 작업 시 공사업체가 작성·제출하고 기관이 확인하는 체크리스트', required:['projectName','vendorName']
     },
     safetyElectrical: {
-      key:'safetyElectrical', label:'감전재해 예방 체크리스트', outputTitle:'전기공사 감전재해 예방 체크리스트', stage:'안전·보건', version:'2026.04', pages:1, owner:'vendor',
+      key:'safetyElectrical', label:'감전재해 예방 체크리스트', outputTitle:'전기공사 감전재해 예방 체크리스트', stage:'안전·보건', version:'2026.05 수정', pages:1, owner:'vendor',
       description:'감전위험 작업 시 공사(용역)업체가 작성·제출하고 기관이 확인하는 체크리스트', required:['projectName','vendorName']
     },
     safetyConfined: {
-      key:'safetyConfined', label:'밀폐공간 질식재해예방 체크리스트', outputTitle:'밀폐공간 질식재해예방 체크리스트', stage:'안전·보건', version:'2026.04', pages:1, owner:'vendor',
+      key:'safetyConfined', label:'밀폐공간 질식재해예방 체크리스트', outputTitle:'밀폐공간 질식재해예방 체크리스트', stage:'안전·보건', version:'2026.05 수정', pages:1, owner:'vendor',
       description:'밀폐공간 작업 시 공사(용역)업체가 작성·제출하고 기관이 확인하는 체크리스트', required:['projectName','vendorName']
     },
     safetyIndustrial: {
-      key:'safetyIndustrial', label:'일반 산업재해 예방 체크리스트', outputTitle:'일반 산업재해 예방 체크리스트', stage:'안전·보건', version:'2026.04', pages:1, owner:'vendor',
+      key:'safetyIndustrial', label:'일반 산업재해 예방 체크리스트', outputTitle:'일반 산업재해 예방 체크리스트', stage:'안전·보건', version:'2026.05 수정', pages:1, owner:'vendor',
       description:'일반 산업재해 우려 작업 시 공사(용역)업체가 작성·제출하고 기관이 확인하는 체크리스트', required:['projectName','vendorName']
     }
   };
@@ -100,29 +115,29 @@
   const FIELD_LABELS = {
     schoolName:'기관명', schoolAddress:'기관 주소', principal:'기관 대표자(학교장 등)',
     projectName:'공사명', workType:'공종', contractNumber:'계약번호', currentContractAmount:'계약금액', contractDate:'계약일', plannedStartDate:'착공예정일', startDate:'착공일', completionDueDate:'준공기한', actualCompletionDate:'실제 준공일',
-    completionInspectionDate:'준공검사일', settlementAmount:'준공정산금액', priorPaymentAmount:'기지급액', deductionAmount:'공제금액',
+    completionInspectionDate:'준공검사일', settlementAmount:'준공정산금액', settlementReductionReason:'준공 감액 사유', priorPaymentAmount:'기지급액', deductionAmount:'공제금액',
     vendorName:'업체명', businessNumber:'사업자등록번호', vendorAddress:'사업장 주소', vendorPhone:'업체 전화번호', representative:'대표자',
     contractSecurityAmount:'계약보증금액', delayPenaltyRate:'지연배상금률', priceAdjustmentMethod:'물가변동 계약금액 조정방법',
     defectSecurityRate:'하자보증률', defectSecurityAmount:'하자보증금액', defectPeriodYears:'하자담보기간(년)', defectStartDate:'하자 시작일', defectEndDate:'하자 종료일',
-    supervisor:'공사감독', inspector:'검사자', witness:'준공검사 입회자', bankName:'은행명', accountNumber:'계좌번호', accountHolder:'예금주명',
-    warrantyInspectionDate:'하자검사일', warrantyInspector:'하자검사자', warrantyWitness:'하자검사 입회자', warrantyInspectionResult:'검사결과', warrantyIssueDetails:'하자발생내용', warrantyActions:'처리사항', warrantyNotes:'기타참고사항'
+    siteManager:'현장대리인', supervisor:'공사감독', inspector:'검사자', witness:'준공검사 입회자', bankName:'은행명', accountNumber:'계좌번호', accountHolder:'예금주명',
+    warrantyInspectionDate:'하자검사일', warrantyInspector:'하자검사자', warrantyInspectorPosition:'하자검사자 직위', warrantyInspectorName:'하자검사자 성명', warrantyWitness:'하자검사 입회자', warrantyWitnessPosition:'하자검사 입회자 직위', warrantyWitnessName:'하자검사 입회자 성명', warrantyInspectionResult:'검사결과', warrantyIssueDetails:'하자발생내용', warrantyActions:'처리사항', warrantyNotes:'기타참고사항'
   
   };
 
   const PRINT_ORDER = [
     'standardContract','acceptanceTerms','useSealForm','privateContractPledge',
-    'startReport','completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord','paymentRequest',
+    'startReport','utilityPaymentPledge','completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord','defectSecurityDeposit','completionSettlementAgreement','paymentRequest',
     'constructionLedger','safetyGeneral','safetyFall','safetyElectrical','safetyConfined','safetyIndustrial','warrantyInspectionReport','warrantyLedger'
   ];
 
   const SETS = {
     contract: { label:'계약서류 4종', types:['standardContract','acceptanceTerms','useSealForm','privateContractPledge'] },
-    start: { label:'착공서류', types:['startReport'] },
-    completion: { label:'준공서류', types:['completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord'] },
+    start: { label:'착공서류', types:['startReport','utilityPaymentPledge'] },
+    completion: { label:'준공서류', types:['completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord','defectSecurityDeposit','completionSettlementAgreement'] },
     payment: { label:'지출서류', types:['paymentRequest'] },
     agencyManagement: { label:'행정기관 관리서류', types:['constructionLedger','supervisionReport','completionInspectionRecord','safetyGeneral','warrantyInspectionReport','warrantyLedger'] },
     safety: { label:'안전·보건 서류', types:['safetyGeneral','safetyFall','safetyElectrical','safetyConfined','safetyIndustrial'] },
-    all: { label:'전체 18종', types:[...PRINT_ORDER] }
+    all: { label:'전체 21종', types:[...PRINT_ORDER] }
   };
 
   function common(ctx) {
@@ -286,6 +301,28 @@
     </article>`];
   }
 
+  function renderUtilityPaymentPledge(ctx) {
+    const { p, school, h } = common(ctx);
+    return [`<article class="paper-a4 admin-document vendor-form-page utility-payment-pledge document-print-page">
+      <h1 class="vendor-form-title spaced-title">각&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;서</h1>
+      <p class="vendor-form-intro">당사는 발주처인 ${h.e(school.name || '')}와 계약체결하여 시공 예정인 아래 공사 건에 대하여 귀 기관의 수도·전력을 사용할 경우에는 대한건설협회 완성공사원가분석 경비율에 의한 계산식으로 수도광열비·전력비 요금을 귀 기관에 세입조치하고 이에 대하여 이의를 제기하지 않을 것을 확약합니다.</p>
+      <table class="vendor-form-facts"><tbody>
+        <tr><th>○ 공 사 명 :</th><td colspan="3">${h.e(p.projectName)}</td></tr>
+        <tr><th>○ 계 약 자 :</th><td>${h.e(p.vendorName)}</td><th class="compact-head">대표 :</th><td>${h.e(p.representative)}</td></tr>
+        <tr><th>○ 공사금액 :</th><td colspan="3">${h.e(h.documentMoney(p.currentContractAmount))}</td></tr>
+        <tr><th>○ 공사기간 :</th><td>${h.e(h.formatKoreanDate(p.startDate))}</td><th class="range-mark">~</th><td>${h.e(h.formatKoreanDate(p.completionDueDate))}</td></tr>
+      </tbody></table>
+      <p class="vendor-form-date">${h.e(h.formatKoreanDate(p.contractDate))}</p>
+      <div class="vendor-form-signatures utility-signatures">
+        <div class="signature-heading">계약자</div>
+        <div><span>업&nbsp;&nbsp;체&nbsp;&nbsp;명 :</span><strong>${h.e(p.vendorName)}</strong></div>
+        <div><span>대&nbsp;&nbsp;표&nbsp;&nbsp;자 :</span><strong>${h.e(h.representativeWithSeal(p.representative))}</strong></div>
+        <div><span>현장대리인 :</span><strong>${p.siteManager?h.e(h.representativeWithSeal(p.siteManager)):'(인)'}</strong></div>
+      </div>
+      <p class="doc-recipient">${h.e(h.recipientFor(school.name))}</p>
+    </article>`];
+  }
+
   function renderCompletionReport(ctx) {
     const { p, school, h } = common(ctx);
     return [`<article class="paper-a4 admin-document completion-report document-print-page">
@@ -367,6 +404,60 @@
     </article>`];
   }
 
+  function renderDefectSecurityDeposit(ctx) {
+    const { p, school, h } = common(ctx);
+    const recordDate = p.defectStartDate || p.actualCompletionDate;
+    return [`<article class="paper-a4 admin-document vendor-form-page defect-security-deposit document-print-page">
+      <h1 class="vendor-form-title defect-deposit-title">하 자 보 수 보 증 금&nbsp;&nbsp;납 부 서</h1>
+      <table class="vendor-form-table defect-deposit-table"><tbody>
+        <tr><th>공 사 명</th><td colspan="3">${h.e(p.projectName)}</td></tr>
+        <tr><th>계약금액</th><td colspan="3">${h.e(h.documentMoney(p.currentContractAmount))}</td></tr>
+        <tr><th>계약일자</th><td>${h.e(h.formatKoreanDate(p.contractDate))}</td><th>준공일자</th><td>${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td></tr>
+        <tr><th>하자보증금율</th><td colspan="3">${h.e(h.percentText(p.defectSecurityRate))}%</td></tr>
+        <tr><th>하자보증금액</th><td colspan="3">${h.e(h.documentMoney(ctx.value('defectSecurityAmount')))}</td></tr>
+        <tr><th>하자담보책임기간</th><td>${h.e(h.formatKoreanDate(p.defectStartDate))}</td><th class="range-mark">~</th><td>${h.e(h.formatKoreanDate(p.defectEndDate))}</td></tr>
+        <tr><th>보증금 납부방법</th><td colspan="3">${h.e(p.defectSecurityType || '')}</td></tr>
+      </tbody></table>
+      <p class="vendor-form-declaration">위의 금액을 하자보수보증금으로 납부합니다.</p>
+      <p class="vendor-form-date">${h.e(h.formatKoreanDate(recordDate))}</p>
+      <div class="vendor-form-signatures">
+        <div><span>업&nbsp;&nbsp;&nbsp;체&nbsp;&nbsp;&nbsp;명 :</span><strong>${h.e(p.vendorName)}</strong></div>
+        <div><span>사업자등록번호 :</span><strong>${h.e(h.businessNumber(p.businessNumber))}</strong></div>
+        <div><span>주&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;소 :</span><strong>${h.e(p.vendorAddress)}</strong></div>
+        <div><span>대&nbsp;&nbsp;&nbsp;표&nbsp;&nbsp;&nbsp;자 :</span><strong>${h.e(h.representativeWithSeal(p.representative))}</strong></div>
+      </div>
+      <p class="doc-recipient">${h.e(h.recipientFor(school.name))}</p>
+    </article>`];
+  }
+
+  function renderCompletionSettlementAgreement(ctx) {
+    const { p, school, h } = common(ctx);
+    const contractAmount = Number(p.currentContractAmount || 0);
+    const settlementAmount = Number(p.settlementAmount || 0);
+    const reductionAmount = Math.max(0, contractAmount - settlementAmount);
+    const recordDate = p.defectStartDate || p.completionInspectionDate || p.actualCompletionDate;
+    return [`<article class="paper-a4 admin-document vendor-form-page completion-settlement-agreement document-print-page">
+      <h1 class="vendor-form-title settlement-title">준 공 정 산 동 의 서</h1>
+      <table class="vendor-form-table settlement-project-table"><tbody>
+        <tr><th>공 사 명</th><td>${h.e(p.projectName)}</td></tr>
+        <tr><th>공사현장</th><td>${h.e(school.name || '')}</td></tr>
+      </tbody></table>
+      <h2 class="settlement-section-title">◈ 동의 사항</h2>
+      <h3 class="settlement-subtitle">1. 계약금액</h3>
+      <table class="vendor-form-table settlement-amount-table"><thead><tr><th>구분</th><th>당초</th><th>준공</th><th>감액</th><th>비고</th></tr></thead><tbody><tr><th>계약금액</th><td>${h.e(h.moneyNumberText(contractAmount))}</td><td>${h.e(h.moneyNumberText(settlementAmount))}</td><td>${h.e(h.moneyNumberText(reductionAmount))}</td><td></td></tr></tbody></table>
+      <h3 class="settlement-subtitle">2. 준공감액 사유</h3>
+      <div class="settlement-reason">${h.e(p.settlementReductionReason || '')}</div>
+      <p class="vendor-form-declaration settlement-declaration">당사는 귀 기관과 계약 체결하여 공사 완료한 본 공사에 대하여 상기 준공감액 내역 및 붙임 내역서와 같이 감액함에 동의하고 이의 없이 계약자로서의 의무를 성실히 이행할 것을 확약합니다.</p>
+      <p class="vendor-form-date">${h.e(h.formatKoreanDate(recordDate))}</p>
+      <div class="vendor-form-signatures">
+        <div><span>업&nbsp;&nbsp;&nbsp;체&nbsp;&nbsp;&nbsp;명 :</span><strong>${h.e(p.vendorName)}</strong></div>
+        <div><span>주&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;소 :</span><strong>${h.e(p.vendorAddress)}</strong></div>
+        <div><span>대&nbsp;&nbsp;&nbsp;표&nbsp;&nbsp;&nbsp;자 :</span><strong>${h.e(h.representativeWithSeal(p.representative))}</strong></div>
+      </div>
+      <p class="doc-recipient">${h.e(h.recipientFor(school.name))}</p>
+    </article>`];
+  }
+
   function renderPayment(ctx) {
     const { p, school, payout, h } = common(ctx);
     const claimAmount = h.claimAmountFor(p);
@@ -439,9 +530,11 @@
   }
 
   function renderWarrantyInspection(ctx) {
-    const { p, school, h } = common(ctx);
-    const inspector = ctx.value('warrantyInspector');
-    const witness = ctx.value('warrantyWitness');
+    const { p, h } = common(ctx);
+    const inspectorPosition = ctx.value('warrantyInspectorPosition');
+    const inspectorName = ctx.value('warrantyInspectorName') || ctx.value('warrantyInspector');
+    const witnessPosition = ctx.value('warrantyWitnessPosition');
+    const witnessName = ctx.value('warrantyWitnessName') || ctx.value('warrantyWitness');
     const date = ctx.value('warrantyInspectionDate');
     const issue = ctx.value('warrantyIssueDetails');
     const actions = ctx.value('warrantyActions');
@@ -457,7 +550,7 @@
           <tr><th rowspan="2">도 급 자</th><th>회 사 명</th><td colspan="3">${h.e(p.vendorName)}</td><th>공 종</th></tr>
           <tr><th>대 표</th><td colspan="3">${h.e(p.representative)}</td><td class="wi-work-type">${h.e(p.workType || '')}</td></tr>
           <tr><th>도 급 금 액</th><td colspan="3">${h.e(h.moneyNumberText(p.currentContractAmount))}</td><th>준 공 일</th><td>${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td></tr>
-          <tr><th>공 사 기 간</th><td>${h.e(h.formatKoreanDate(p.startDate))}</td><td class="wi-tilde">~</td><td>${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td><th>하자만료일</th><td>${h.e(h.formatKoreanDate(p.defectEndDate))}</td></tr>
+          <tr><th>공 사 기 간</th><td class="wi-period-start">${h.e(h.formatKoreanDate(p.startDate))}</td><td class="wi-tilde">~</td><td class="wi-period-end">${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td><th>하자만료일</th><td>${h.e(h.formatKoreanDate(p.defectEndDate))}</td></tr>
           <tr class="warranty-large-row"><th>하자발생내용</th><td colspan="5">${h.e(issue || '')}</td></tr>
           <tr class="warranty-large-row"><th>처 리 사 항</th><td colspan="5">${h.e(actions || '')}</td></tr>
           <tr class="warranty-large-row"><th>기타참고사항</th><td colspan="5">${h.e(notes || '')}</td></tr>
@@ -466,8 +559,8 @@
       <p class="warranty-statement">위와 같이 하자(만료)검사를 필하였음.</p>
       <p class="record-date">${h.e(h.formatKoreanDate(date))}</p>
       <div class="warranty-signatures">
-        <div><span>검 사 자 :</span><span>${h.e(school.name || '')}</span><strong>${inspector ? h.e(h.representativeWithSeal(inspector)) : '(인)'}</strong></div>
-        <div><span>입 회 자 :</span><span></span><strong>${witness ? h.e(h.representativeWithSeal(witness)) : '(인)'}</strong></div>
+        <div><span>검 사 자 :</span><span>직위 ${h.e(inspectorPosition || '')}</span><strong>성명 ${inspectorName ? h.e(h.representativeWithSeal(inspectorName)) : '　　　　　　　　 (인)'}</strong></div>
+        <div><span>입 회 자 :</span><span>직위 ${h.e(witnessPosition || '')}</span><strong>성명 ${witnessName ? h.e(h.representativeWithSeal(witnessName)) : '　　　　　　　　 (인)'}</strong></div>
       </div>
     </article>`];
   }
@@ -508,9 +601,14 @@
     const isAgency = def.owner === 'agency';
     const inspector = saved.inspector || (isAgency ? (p.supervisor || school.supervisor || '') : '');
     const date = saved.date || p.startDate || p.contractDate || '';
+    const signature = typeof ctx.signature === 'function' ? ctx.signature(type) : '';
+    const signatureLabel = isAgency ? '인' : '서명';
+    const signatureMarkup = signature
+      ? `<span class="safety-signature-print"><img src="${h.e(signature)}" alt="점검자 서명"><em>(${signatureLabel})</em></span>`
+      : `<em>(${signatureLabel})</em>`;
     const header = isAgency
-      ? `<div class="safety-meta"><div><strong>■ 학교(기관)명:</strong><span>${h.e(school.name || '')}</span></div><div><strong>■ 점 검 자:</strong><span>${h.e(inspector)}</span><em>(인)</em></div><div><strong>■ 점검 일자:</strong><span>${h.e(h.formatKoreanDate(date))}</span></div></div>`
-      : `<div class="safety-meta"><div><strong>■ 공사 업체명:</strong><span>${h.e(p.vendorName || '')}</span></div><div><strong>■ 점 검 자:</strong><span>${h.e(inspector)}</span><em>(서명)</em></div><div><strong>■ 점검 일자:</strong><span>${h.e(h.formatKoreanDate(date))}</span></div></div>`;
+      ? `<div class="safety-meta"><div><strong>■ 학교(기관)명:</strong><span>${h.e(school.name || '')}</span></div><div><strong>■ 점 검 자:</strong><span>${h.e(inspector)}</span>${signatureMarkup}</div><div><strong>■ 점검 일자:</strong><span>${h.e(h.formatKoreanDate(date))}</span></div></div>`
+      : `<div class="safety-meta"><div><strong>■ 공사 업체명:</strong><span>${h.e(p.vendorName || '')}</span></div><div><strong>■ 점 검 자:</strong><span>${h.e(inspector)}</span>${signatureMarkup}</div><div><strong>■ 점검 일자:</strong><span>${h.e(h.formatKoreanDate(date))}</span></div></div>`;
     const rows = def.items.map((item,i)=>{ const status=results[String(i+1)] || ''; return `<tr><td>${i+1}</td><td>${h.e(item)}</td><td>${checklistMark(status,'yes')}</td><td>${checklistMark(status,'no')}</td><td>${checklistMark(status,'na')}</td></tr>`; }).join('');
     const page1 = `<article class="paper-a4 admin-document safety-checklist ${h.e(type)} document-print-page"><h1>${h.e(type==='safetyGeneral'?'공사(용역) 안전·보건 체크리스트(공통)':def.label)}</h1><p class="safety-subtitle">[ ${h.e(def.subtitle)} ]</p>${header}<table class="safety-check-table"><thead><tr><th>번호</th><th>점 검 내 용</th><th>예</th><th>아니요</th><th>해당없음</th></tr></thead><tbody>${rows}</tbody></table><p class="safety-footer">※ ${h.e(def.footer || '')}</p>${saved.notes?`<div class="safety-written-note"><strong>비고</strong><span>${h.e(saved.notes)}</span></div>`:''}${isAgency?`<div class="safety-vendor-confirm"><h2>공사(용역)업체 확인·서약서</h2><p>학교(기관)로부터 위 점검항목에 대하여 안내(주지)받았으며, 공사(용역) 전 과정에 걸쳐 참여하는 근로자에게 안전보건교육을 실시하고 필요한 개인보호구를 지급 및 착용하며 작업 시 안전수칙을 준수할 것을 서약합니다.</p><div><span>소속(회사) :</span><strong>${h.e(p.vendorName||'')}</strong></div><div><span>공사업체 책임자 :</span><strong>${h.e(p.representative||'')} (서명)</strong></div></div>`:''}</article>`;
     if (type !== 'safetyFall' || !(def.notes||[]).length) return [page1];
@@ -524,10 +622,13 @@
     useSealForm: renderUseSeal,
     privateContractPledge: renderPrivateContractPledge,
     startReport: renderStartReport,
+    utilityPaymentPledge: renderUtilityPaymentPledge,
     completionReport: renderCompletionReport,
     completionInspectionRequest: renderInspectionRequest,
     supervisionReport: renderSupervision,
     completionInspectionRecord: renderInspectionRecord,
+    defectSecurityDeposit: renderDefectSecurityDeposit,
+    completionSettlementAgreement: renderCompletionSettlementAgreement,
     paymentRequest: renderPayment,
     constructionLedger: renderConstructionLedger,
     safetyGeneral: ctx => renderSafetyChecklist(ctx,'safetyGeneral'),

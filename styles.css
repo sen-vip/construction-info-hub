@@ -520,6 +520,8 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .documents-head-note strong, .documents-head-note span { display: block; }
 .documents-head-note strong { color: var(--primary-strong); font-size: 12px; }
 .documents-head-note span { margin-top: 2px; color: var(--muted); font-size: 10px; }
+.reference-program-banner { display: flex; align-items: center; gap: 10px; margin: 18px 24px 0; padding: 12px 14px; border: 1px solid #cfdced; border-radius: 12px; background: #f4f8fd; color: #40556e; font-size: 12px; }
+.reference-program-banner strong { flex: none; color: var(--primary-strong); }
 .document-group { padding: 22px 24px 4px; }
 .document-group + .document-group { border-top: 1px solid #edf0f4; }
 .document-group-title { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
@@ -541,7 +543,29 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .document-requirement.ready strong { color: var(--success); }
 .document-requirement.ready span { color: #557264; }
 .document-card .button { width: 100%; margin-top: auto; }
+.oneclick-gap-panel { margin: 18px 24px; border: 1px solid #d8e2ee; border-radius: 14px; background: #fbfcfe; overflow: hidden; }
+.oneclick-gap-panel summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 15px 16px; cursor: pointer; list-style-position: inside; }
+.oneclick-gap-panel summary > span { display: inline-grid; gap: 2px; }
+.oneclick-gap-panel summary strong { font-size: 14px; }
+.oneclick-gap-panel summary small { color: var(--muted); font-size: 11px; font-weight: 400; }
+.oneclick-gap-panel summary em { flex: none; padding: 4px 8px; border-radius: 999px; background: var(--primary-soft); color: var(--primary-strong); font-size: 10px; font-style: normal; font-weight: 800; }
+.oneclick-gap-body { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 0 16px 14px; }
+.oneclick-gap-body > div { padding: 13px 14px; border: 1px solid #e2e8f0; border-radius: 11px; background: #fff; }
+.oneclick-gap-body h3 { margin: 0 0 8px; font-size: 13px; }
+.oneclick-gap-body ul { display: grid; gap: 5px; margin: 0; padding-left: 18px; color: #52647a; font-size: 12px; }
+.oneclick-gap-body li span { color: var(--warn); font-size: 10px; font-weight: 800; }
+.oneclick-gap-note { margin: 0; padding: 11px 16px; border-top: 1px solid #e5eaf0; background: #fff; color: var(--muted); font-size: 11px; }
 .document-footnote { margin: 8px 24px 24px; padding: 12px 14px; border-radius: 10px; background: var(--surface-soft); color: var(--muted); font-size: 11px; }
+
+.signature-print-notice { display: grid; gap: 3px; padding: 13px 14px; border: 1px solid #cfe0d7; border-radius: 12px; background: var(--success-soft); }
+.signature-print-notice strong { color: var(--success); }
+.signature-print-notice span { color: #536c61; font-size: 12px; }
+.signature-target-list { display: grid; gap: 7px; margin: 14px 0; padding: 0; list-style: none; }
+.signature-target-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.signature-target-list li span { color: var(--muted); font-size: 12px; }
+.signature-pad-wrap { position: relative; overflow: hidden; border: 2px dashed #9dafc4; border-radius: 14px; background: #fff; }
+.signature-pad-wrap > span { position: absolute; left: 50%; top: 50%; z-index: 0; transform: translate(-50%,-50%); color: #a0acb9; font-size: 14px; pointer-events: none; }
+.signature-pad { position: relative; z-index: 1; display: block; width: 100%; height: 190px; cursor: crosshair; touch-action: none; }
 
 .modal.wide-modal { width: min(1120px, calc(100vw - 28px)); }
 .doc-preview-note { margin-bottom: 12px; color: var(--muted); font-size: 12px; }
@@ -613,6 +637,10 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
   .contract-tab-history { padding: 16px 18px 20px; }
   .document-group { padding-left: 18px; padding-right: 18px; }
   .document-grid { grid-template-columns: 1fr; }
+  .reference-program-banner { align-items: flex-start; flex-direction: column; margin-left: 18px; margin-right: 18px; }
+  .oneclick-gap-panel { margin-left: 18px; margin-right: 18px; }
+  .oneclick-gap-panel summary { align-items: flex-start; }
+  .oneclick-gap-body { grid-template-columns: 1fr; }
   .document-footnote { margin-left: 18px; margin-right: 18px; }
   .doc-preview-scroll { padding: 10px; }
   .paper-a4 { margin: 0; }
@@ -658,7 +686,10 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
   /* Keep blocks together and pin the addressee to the same bottom position. */
   body.print-only-document .doc-facts,
   body.print-only-document .doc-attachments,
-  body.print-only-document .doc-vendor-block { break-inside: avoid !important; page-break-inside: avoid !important; }
+  body.print-only-document .doc-vendor-block,
+  body.print-only-document .vendor-form-facts,
+  body.print-only-document .vendor-form-table,
+  body.print-only-document .vendor-form-signatures { break-inside: avoid !important; page-break-inside: avoid !important; }
   body.print-only-document .doc-recipient {
     position: absolute !important;
     right: 16mm !important;
@@ -748,13 +779,52 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .payment-vendor strong { font-weight: 400; overflow-wrap: anywhere; }
 .payment-note { margin: 10mm 0 0; font-size: 10.7pt; }
 
+/* 업체 제출서류 — 수도·전기료 납부각서 / 하자보증금납부서 / 준공정산동의서 */
+.vendor-form-page { padding: 18mm 18mm 14mm; font-size: 11.5pt; line-height: 1.55; }
+.vendor-form-title { margin: 3mm 0 14mm; text-align: center; font-size: 25pt; line-height: 1.2; font-weight: 700; }
+.vendor-form-title.spaced-title { letter-spacing: .42em; text-indent: .42em; }
+.vendor-form-intro { margin: 0 2mm 13mm; text-align: justify; text-indent: 2em; line-height: 2; }
+.vendor-form-facts,.vendor-form-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.vendor-form-facts th,.vendor-form-facts td { padding: 2.4mm 2mm; vertical-align: middle; }
+.vendor-form-facts th { width: 36mm; text-align: left; font-weight: 500; white-space: nowrap; }
+.vendor-form-facts th.compact-head { width: 17mm; text-align: center; }
+.vendor-form-facts th.range-mark { width: 8mm; text-align: center; }
+.vendor-form-date { margin: 15mm 0 0; text-align: center; font-size: 12pt; }
+.vendor-form-signatures { display: grid; gap: 4.2mm; width: 120mm; margin: 16mm 0 0 47mm; }
+.vendor-form-signatures > div { display: grid; grid-template-columns: 42mm minmax(0,1fr); gap: 4mm; align-items: baseline; }
+.vendor-form-signatures .signature-heading { display: block; margin-bottom: 1mm; text-align: left; font-size: 12pt; }
+.vendor-form-signatures span { white-space: nowrap; }
+.vendor-form-signatures strong { min-width: 0; font-weight: 400; overflow-wrap: anywhere; }
+.utility-payment-pledge .vendor-form-signatures { margin-top: 14mm; }
+.vendor-form-table th,.vendor-form-table td { border: .3mm solid #222; padding: 2.7mm 3mm; vertical-align: middle; overflow-wrap: anywhere; }
+.vendor-form-table th { width: 38mm; text-align: center; font-weight: 500; background: #fafafa; }
+.vendor-form-table th.range-mark { width: 10mm; padding-left: 0; padding-right: 0; }
+.vendor-form-declaration { margin: 15mm 3mm 0; text-align: center; line-height: 1.8; }
+.defect-deposit-title { margin-bottom: 10mm; font-size: 23pt; letter-spacing: .08em; text-indent: .08em; }
+.defect-deposit-table th { width: 41mm; }
+.defect-security-deposit .vendor-form-date { margin-top: 17mm; }
+.settlement-title { margin-bottom: 10mm; letter-spacing: .12em; text-indent: .12em; }
+.settlement-project-table th { width: 35mm; }
+.settlement-section-title { margin: 9mm 0 4mm; font-size: 14pt; }
+.settlement-subtitle { margin: 5mm 0 2.5mm; font-size: 11.5pt; font-weight: 500; }
+.settlement-amount-table th,.settlement-amount-table td { width: auto; padding: 2.3mm 1.2mm; text-align: center; }
+.settlement-amount-table thead th:first-child,.settlement-amount-table tbody th { width: 27mm; }
+.settlement-amount-table thead th:last-child { width: 20mm; }
+.settlement-reason { box-sizing: border-box; min-height: 24mm; padding: 3mm; border: .3mm solid #222; white-space: pre-wrap; }
+.settlement-declaration { margin-top: 9mm; text-align: justify; text-indent: 2em; }
+.completion-settlement-agreement .vendor-form-date { margin-top: 9mm; }
+.completion-settlement-agreement .vendor-form-signatures { margin-top: 10mm; }
+
 @media print {
   body.print-only-document .official-record .doc-title { margin-top: 0; }
   body.print-only-document .official-table,
   body.print-only-document .record-signature-row,
   body.print-only-document .inspection-signatures,
   body.print-only-document .payment-account-table,
-  body.print-only-document .payment-vendor { break-inside: avoid !important; page-break-inside: avoid !important; }
+  body.print-only-document .payment-vendor,
+  body.print-only-document .vendor-form-facts,
+  body.print-only-document .vendor-form-table,
+  body.print-only-document .vendor-form-signatures { break-inside: avoid !important; page-break-inside: avoid !important; }
   body.print-only-document .supervision-record .record-statement { margin-top: 14mm; }
   body.print-only-document .supervision-record .record-date { margin-top: 16mm; }
   body.print-only-document .supervision-record .record-signature-row { margin-top: 20mm; }
@@ -912,7 +982,10 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
   body.print-batch-documents .inspection-signatures,
   body.print-batch-documents .payment-account-table,
   body.print-batch-documents .payment-vendor,
-  body.print-batch-documents .payment-lines-table {
+  body.print-batch-documents .payment-lines-table,
+  body.print-batch-documents .vendor-form-facts,
+  body.print-batch-documents .vendor-form-table,
+  body.print-batch-documents .vendor-form-signatures {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
@@ -1103,7 +1176,7 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .warranty-statement { margin: 12mm 0 0 5mm; font-size: 12pt; }
 .warranty-inspection-report .record-date { margin-top: 11mm; text-align: center; font-size: 12pt; }
 .warranty-signatures { display: grid; gap: 8mm; margin: 15mm 0 0 28mm; width: 142mm; font-size: 11.5pt; }
-.warranty-signatures > div { display: grid; grid-template-columns: 26mm 55mm minmax(0,1fr); gap: 4mm; align-items: center; }
+.warranty-signatures > div { display: grid; grid-template-columns: 26mm 42mm minmax(0,1fr); gap: 4mm; align-items: center; }
 .warranty-signatures strong { font-weight: 400; }
 
 /* 하자검사대장 */
@@ -1194,7 +1267,7 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 
 /* 인쇄 — 안전·보건 체크리스트 */
 .safety-checklist{padding:12mm 13mm 10mm;font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;color:#111;font-size:9pt;line-height:1.28}
-.safety-checklist h1,.safety-reference-page h1{text-align:center;font-size:18pt;letter-spacing:.07em;margin:0 0 5mm}.safety-subtitle{text-align:center;font-size:8.5pt;margin:-2mm 0 6mm}.safety-meta{display:grid;gap:2mm;margin-bottom:4mm}.safety-meta>div{display:grid;grid-template-columns:35mm 1fr auto;gap:2mm;align-items:center}.safety-meta strong{font-size:9pt}.safety-meta em{font-style:normal}
+.safety-checklist h1,.safety-reference-page h1{text-align:center;font-size:18pt;letter-spacing:.07em;margin:0 0 5mm}.safety-subtitle{text-align:center;font-size:8.5pt;margin:-2mm 0 6mm}.safety-meta{display:grid;gap:2mm;margin-bottom:4mm}.safety-meta>div{display:grid;grid-template-columns:35mm 1fr 32mm;gap:2mm;align-items:center}.safety-meta strong{font-size:9pt}.safety-meta em{font-style:normal}.safety-signature-print{display:flex;align-items:center;justify-content:flex-end;gap:1mm;min-height:11mm}.safety-signature-print img{display:block;max-width:24mm;max-height:11mm;object-fit:contain}.safety-signature-print em{flex:none;font-size:8pt}
 .safety-check-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:8.2pt}.safety-check-table th,.safety-check-table td{border:1px solid #222;padding:1.35mm 1.5mm;vertical-align:middle}.safety-check-table th:nth-child(1),.safety-check-table td:nth-child(1){width:9mm;text-align:center}.safety-check-table th:nth-child(3),.safety-check-table td:nth-child(3),.safety-check-table th:nth-child(4),.safety-check-table td:nth-child(4),.safety-check-table th:nth-child(5),.safety-check-table td:nth-child(5){width:13mm;text-align:center;font-size:10pt}.safety-check-table th{background:#f3f3f3}.safety-footer{font-size:8pt;margin:2.5mm 0}.safety-written-note{border:1px solid #333;display:grid;grid-template-columns:18mm 1fr;margin-top:2mm}.safety-written-note>*{padding:2mm}.safety-written-note strong{border-right:1px solid #333;text-align:center}.safety-vendor-confirm{margin-top:5mm}.safety-vendor-confirm h2{text-align:center;font-size:12pt;margin:0 0 3mm}.safety-vendor-confirm p{font-size:8.5pt;line-height:1.5}.safety-vendor-confirm>div{display:flex;justify-content:flex-end;gap:5mm;margin-top:2mm;padding-right:10mm}.safety-reference-page{padding:18mm 18mm;font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif}.safety-reference-page ol{font-size:11pt;line-height:1.8}.safety-risk-note{margin-top:12mm;border:1px solid #333;padding:6mm}.safety-risk-note strong{font-size:13pt}.safety-risk-note p{line-height:1.7}
 .safetyIndustrial .safety-check-table{font-size:7.4pt}.safetyIndustrial .safety-check-table th,.safetyIndustrial .safety-check-table td{padding:1mm 1.2mm;line-height:1.2}.safetyConfined .safety-check-table{font-size:7.9pt}.safetyGeneral .safety-check-table{font-size:8.1pt}
 .warranty-ledger-items{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:4mm;font-size:8.3pt}.warranty-ledger-items th,.warranty-ledger-items td{border:1px solid #222;padding:1.5mm;text-align:center}.warranty-ledger-items th{background:#f3f3f3}
@@ -1221,6 +1294,8 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .warranty-inspection-table .wi-col-g{width:22.093%}
 .warranty-inspection-table th,.warranty-inspection-table td{border:.2mm solid #333!important;padding:2.1mm 2.3mm;box-sizing:border-box}
 .warranty-inspection-table th{width:auto!important}
-.warranty-inspection-table .wi-tilde{text-align:center;padding-left:0;padding-right:0}
+.warranty-inspection-table .wi-period-start{border-right:0!important}
+.warranty-inspection-table .wi-tilde{border-left:0!important;border-right:0!important;text-align:center;padding-left:0;padding-right:0}
+.warranty-inspection-table .wi-period-end{border-left:0!important}
 .warranty-inspection-table .wi-work-type{text-align:center}
 .warranty-signatures strong{min-height:1.4em}
