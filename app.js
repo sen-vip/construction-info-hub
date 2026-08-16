@@ -16,7 +16,7 @@
   const moreMenu = document.getElementById('moreMenu');
   const excelFileInput = document.getElementById('excelFileInput');
   const backupFileInput = document.getElementById('backupFileInput');
-  const APP_VERSION = '0.4.3.11';
+  const APP_VERSION = '0.4.3.12';
   const REFERENCE_PROGRAM = '서울시교육청 교육시설안전과 「공사서류 원클릭(간소화)프로그램」(2026.5.수정)';
 
   const state = {
@@ -475,7 +475,7 @@
     const vendorOptions = [`<option value="">직접 입력 / 새 업체</option>`, ...state.vendors.map(v => `<option value="${e(v.id)}" ${p.vendorId===v.id?'selected':''}>${e(v.name)}${v.businessNumber ? ` · ${e(v.businessNumber)}` : ''}</option>`)].join('');
 
     main.innerHTML = `
-      <button class="back-button" id="backToList" type="button">← 공사 목록</button>
+      <button class="back-button" id="backToList" type="button"><span class="back-button-icon" aria-hidden="true">←</span><span>공사 목록</span></button>
       <div class="detail-head">
         <div class="current-project">
           <p class="eyebrow">현재 작업 중인 공사</p>
@@ -486,9 +486,18 @@
       </div>
 
       <nav class="detail-tabs" aria-label="공사 상세 메뉴">
-        <button type="button" class="detail-tab ${state.detailTab==='info'?'active':''}" data-detail-tab="info">공사정보</button>
-        <button type="button" class="detail-tab ${state.detailTab==='changes'?'active':''}" data-detail-tab="changes">변경계약${p.contractChanges?.length ? ` <span>${p.contractChanges.length}</span>` : ''}</button>
-        <button type="button" class="detail-tab ${state.detailTab==='documents'?'active':''}" data-detail-tab="documents">서류 <span>21</span></button>
+        <button type="button" class="detail-tab ${state.detailTab==='info'?'active':''}" data-detail-tab="info">
+          <svg class="detail-tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5z"></path><path d="M8 8h8M8 12h8M8 16h5"></path></svg>
+          <span class="detail-tab-label">공사정보</span>
+        </button>
+        <button type="button" class="detail-tab ${state.detailTab==='changes'?'active':''}" data-detail-tab="changes">
+          <svg class="detail-tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10H7z"></path><path d="M4 10V4h6M20 14v6h-6"></path></svg>
+          <span class="detail-tab-label">변경계약</span>${p.contractChanges?.length ? ` <span class="detail-tab-count">${p.contractChanges.length}</span>` : ''}
+        </button>
+        <button type="button" class="detail-tab ${state.detailTab==='documents'?'active':''}" data-detail-tab="documents">
+          <svg class="detail-tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6z"></path><path d="M14 3v4h4M9 11h6M9 15h6"></path></svg>
+          <span class="detail-tab-label">서류</span><span class="detail-tab-count">21</span>
+        </button>
       </nav>
 
       <section class="workflow-strip ${state.detailTab==='info'?'':'hidden'}" aria-label="공사 진행 단계">
@@ -827,8 +836,23 @@
     const defaultInspector=saved.inspector || (agency?(p.supervisor||state.school?.supervisor||''):'');
     const rows=def.items.map((item,i)=>{const key=String(i+1),v=results[key]||'';return `<div class="safety-edit-row"><div class="safety-edit-number">${i+1}</div><div class="safety-edit-question">${e(item)}</div><div class="safety-edit-options"><label><input type="radio" name="safety_${i}" value="yes" ${v==='yes'?'checked':''}> 예</label><label><input type="radio" name="safety_${i}" value="no" ${v==='no'?'checked':''}> 아니요</label><label><input type="radio" name="safety_${i}" value="na" ${v==='na'?'checked':''}> 해당없음</label></div></div>`;}).join('');
     const signatureNotice = '<div class="safety-signature-edit-note"><strong>출력 시 점검자 서명을 넣을 수 있습니다.</strong><span>작성한 체크리스트는 인쇄 직전 마우스·터치·펜으로 서명하거나 서명 없이 출력할 수 있으며, 서명 이미지는 저장하지 않습니다.</span></div>';
-    openModal({eyebrow:`안전·보건 · ${agency?'기관 점검':'업체 작성·기관 확인'}`,title:def.label,wide:true,body:`<div class="notice"><strong>${e(def.subtitle)}</strong><br>${e(REFERENCE_PROGRAM)}의 점검항목을 기준으로 작성합니다.</div>${signatureNotice}<div class="modal-grid safety-meta-edit" style="margin-top:16px">${modalDateField('safetyChecklistDate','점검일',saved.date||p.startDate||p.contractDate||'')}${modalField('safetyChecklistInspector',agency?'점검자':'점검자 직접 입력',defaultInspector)}${agency?'':'<div class="field full"><span class="hint">회사 대표자가 아니라 실제 점검한 사람의 이름을 입력합니다.</span></div>'}<div class="field full"><label for="safetyChecklistNotes">비고</label><input id="safetyChecklistNotes" value="${e(saved.notes||'')}"></div></div><div class="safety-edit-list">${rows}</div>${def.footer?`<p class="safety-edit-footer">※ ${e(def.footer)}</p>`:''}`,actions:`<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="saveSafetyChecklistBtn">저장${afterSave?'하고 계속':''}</button>`});
-    initDateInputs(modalBody); modalActions.querySelector('[data-modal-close]').addEventListener('click',closeModal); modalActions.querySelector('#saveSafetyChecklistBtn').addEventListener('click',()=>saveSafetyChecklist(type,afterSave));
+    openModal({eyebrow:`안전·보건 · ${agency?'기관 점검':'업체 작성·기관 확인'}`,title:def.label,wide:true,body:`<div class="notice"><strong>${e(def.subtitle)}</strong><br>${e(REFERENCE_PROGRAM)}의 점검항목을 기준으로 작성합니다.</div>${signatureNotice}<div class="modal-grid safety-meta-edit" style="margin-top:16px">${modalDateField('safetyChecklistDate','점검일',saved.date||p.startDate||p.contractDate||'')}${modalField('safetyChecklistInspector',agency?'점검자':'점검자 직접 입력',defaultInspector)}${agency?'':'<div class="field full"><span class="hint">회사 대표자가 아니라 실제 점검한 사람의 이름을 입력합니다.</span></div>'}<div class="field full"><label for="safetyChecklistNotes">비고</label><input id="safetyChecklistNotes" value="${e(saved.notes||'')}"></div></div><div class="safety-bulk-toolbar"><div><strong>빠른 입력</strong><span>미응답 항목만 ‘예’로 채우며, 이미 선택한 ‘아니요·해당없음’은 유지합니다.</span></div><div class="safety-bulk-actions"><button class="button secondary small" type="button" id="fillUnansweredSafetyYesBtn">미응답 모두 예</button><button class="button ghost small" type="button" id="resetSafetyAnswersBtn">응답 초기화</button></div></div><div class="safety-edit-list">${rows}</div>${def.footer?`<p class="safety-edit-footer">※ ${e(def.footer)}</p>`:''}`,actions:`<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="saveSafetyChecklistBtn">저장${afterSave?'하고 계속':''}</button>`});
+    initDateInputs(modalBody);
+    modalActions.querySelector('[data-modal-close]').addEventListener('click',closeModal);
+    modalActions.querySelector('#saveSafetyChecklistBtn').addEventListener('click',()=>saveSafetyChecklist(type,afterSave));
+    modalBody.querySelector('#fillUnansweredSafetyYesBtn')?.addEventListener('click',()=>{
+      let changed=0;
+      modalBody.querySelectorAll('.safety-edit-row').forEach(row=>{
+        if(row.querySelector('input[type="radio"]:checked')) return;
+        const yes=row.querySelector('input[type="radio"][value="yes"]');
+        if(yes){yes.checked=true;changed++;}
+      });
+      showToast(changed?`미응답 ${changed}개 항목을 ‘예’로 채웠습니다.`:'미응답 항목이 없습니다.');
+    });
+    modalBody.querySelector('#resetSafetyAnswersBtn')?.addEventListener('click',()=>{
+      modalBody.querySelectorAll('.safety-edit-row input[type="radio"]:checked').forEach(input=>{input.checked=false;});
+      showToast('체크리스트 응답을 화면에서 초기화했습니다. 저장 전까지 기존 저장값은 유지됩니다.');
+    });
   }
 
   async function saveSafetyChecklist(type, afterSave=null){
@@ -1196,7 +1220,8 @@
   function openDocumentInfoEditModal(type, previewOptions = {}) {
     const p=currentProject(); const def=DOCUMENT_DEFINITIONS[type];
     if(!p||!def)return;
-    const fields=[...new Set(def.required||[])];
+    const extraFields=type==='warrantyLedger'?['supervisor']:[];
+    const fields=[...new Set([...(def.required||[]),...extraFields])];
     openModal({
       eyebrow:`${def.label} · 입력정보 수정`,
       title:'이 서류에 쓰이는 정보를 수정합니다',
@@ -1294,6 +1319,9 @@
       if (type === 'utilityPaymentPledge') {
         return `<div class="document-preview-mode utility-site-manager-preview"><strong>현장대리인 <span>선택</span></strong><input id="previewUtilitySiteManager" value="${e(renderOptions.utilitySiteManager || '')}" placeholder="입력하지 않아도 출력 가능"><button class="button secondary small" type="button" id="applyUtilitySiteManagerBtn">입력값 적용·저장</button><button class="button ghost small" type="button" id="blankUtilitySiteManagerBtn">이번 출력은 공란</button></div>`;
       }
+      if (type === 'warrantyLedger') {
+        return `<div class="document-preview-mode warranty-ledger-supervisor-preview"><strong>감독관</strong><input id="previewWarrantySupervisor" value="${e(documentValue('supervisor',p) || '')}" placeholder="감독관 성명"><button class="button secondary small" type="button" id="applyWarrantySupervisorBtn">감독관 저장</button></div>`;
+      }
       return '';
     };
 
@@ -1319,6 +1347,17 @@
         showToast(value?'현장대리인 입력값을 공사정보에 저장했습니다.':'현장대리인을 공란으로 저장했습니다.'); paintPreview();
       });
       modalBody.querySelector('#blankUtilitySiteManagerBtn')?.addEventListener('click',()=>{renderOptions.utilitySiteManager='';paintPreview();});
+      modalBody.querySelector('#applyWarrantySupervisorBtn')?.addEventListener('click',async()=>{
+        const value=modalBody.querySelector('#previewWarrantySupervisor')?.value?.trim() || '';
+        p.supervisor=value;
+        p.updatedAt=new Date().toISOString();
+        await DB.put('projects',p);
+        await loadState();
+        state.currentProjectId=p.id;
+        p=currentProject()||p;
+        showToast(value?'하자대장 감독관을 저장했습니다.':'하자대장 감독관을 공란으로 저장했습니다.');
+        paintPreview();
+      });
     };
 
     openModal({eyebrow:`${def.stage} 서류 · 양식 ${def.version}`,title:`${def.label} 미리보기`,wide:true,body:'',actions:`<button class="button secondary" type="button" data-modal-close>닫기</button><button class="button primary" type="button" id="printDocumentBtn">인쇄 / PDF 저장</button>`});
