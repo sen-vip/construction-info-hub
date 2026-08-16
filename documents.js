@@ -603,11 +603,12 @@
     const { p, school, h } = common(ctx);
     const def = ReferenceData?.safetyChecklists?.[type];
     if (!def) return [];
-    const saved = p.safetyChecklists?.[type] || {};
-    const results = saved.results || {};
+    const blankSafety = !!ctx.renderOptions?.blankSafety;
+    const saved = blankSafety ? {} : (p.safetyChecklists?.[type] || {});
+    const results = blankSafety ? {} : (saved.results || {});
     const isAgency = def.owner === 'agency';
-    const inspector = saved.inspector || (isAgency ? (p.supervisor || school.supervisor || '') : '');
-    const date = saved.date || p.startDate || p.contractDate || '';
+    const inspector = blankSafety ? '' : (saved.inspector || (isAgency ? (p.supervisor || school.supervisor || '') : ''));
+    const date = blankSafety ? '' : (saved.date || p.startDate || p.contractDate || '');
     const signature = typeof ctx.signature === 'function' ? ctx.signature(type) : '';
     const signatureLabel = isAgency ? '인' : '서명';
     const signatureMarkup = signature

@@ -1426,3 +1426,38 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
   .utility-site-manager-preview .button { width:100%; }
 }
 .utility-site-manager-preview input#previewUtilitySiteManager { width:100%; height:36px; margin:0; accent-color:auto; }
+
+
+/* v0.4.3.8 — project reset / consistent checklist actions / preview correction UX */
+.popover button.popover-danger { margin-top:4px; border-top:1px solid #f2d7d7; border-radius:0 0 8px 8px; color:var(--danger); }
+.popover button.popover-danger:hover { background:#fff5f5; }
+.detail-head-actions { display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+.detail-delete-button { white-space:nowrap; }
+.preview-information-banner {
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  margin:0 0 12px; padding:12px 14px; border:1px solid #cbd8e8; border-radius:12px; background:#f7f9fc;
+}
+.preview-information-banner > div:first-child { min-width:0; }
+.preview-information-banner strong { display:block; margin-bottom:3px; font-size:13px; }
+.preview-information-banner span { display:block; color:#53657a; font-size:12px; line-height:1.5; overflow-wrap:anywhere; }
+.preview-information-banner.warning { border-color:#efd39b; background:#fff8e8; }
+.preview-information-banner.warning strong { color:#8a5d18; }
+.preview-information-banner.ready { border-color:#cfe0d7; background:#f4faf6; }
+.preview-information-banner.ready strong { color:#287247; }
+.preview-information-banner.blank { border-color:#cbdcf2; background:#f4f8fd; }
+.preview-information-banner.blank strong { color:#335a89; }
+.preview-information-actions { display:flex; flex:none; gap:7px; flex-wrap:wrap; justify-content:flex-end; }
+@media (max-width:760px) {
+  .detail-head-actions { justify-content:flex-start; }
+  .preview-information-banner { align-items:stretch; flex-direction:column; }
+  .preview-information-actions { justify-content:stretch; }
+  .preview-information-actions .button { flex:1; }
+}
+
+.document-edit-guide { display:flex; align-items:center; gap:9px; margin:-4px 24px 16px; padding:10px 12px; border:1px dashed #cbd8e8; border-radius:10px; background:#fbfcfe; color:var(--muted); font-size:12px; }
+.document-edit-guide strong { color:var(--text); white-space:nowrap; }
+.document-edit-guide b { color:var(--primary-strong); }
+@media (max-width:760px){ .document-edit-guide { margin-left:16px; margin-right:16px; align-items:flex-start; flex-direction:column; gap:3px; } }
+
+.reset-projects-toolbar { color:var(--danger); border-color:#efd5d5; }
+.reset-projects-toolbar:hover { background:#fff5f5 !important; border-color:#e8bdbd !important; }
