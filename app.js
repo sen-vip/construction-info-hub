@@ -15,7 +15,7 @@
   const moreMenu = document.getElementById('moreMenu');
   const excelFileInput = document.getElementById('excelFileInput');
   const backupFileInput = document.getElementById('backupFileInput');
-  const APP_VERSION = '0.4.3.4';
+  const APP_VERSION = '0.4.3.5';
   const REFERENCE_PROGRAM = '서울시교육청 교육시설안전과 「공사서류 원클릭(간소화)프로그램」(2026.5.수정)';
 
   const state = {
@@ -185,10 +185,10 @@
   }
 
   function sourceLabel(p) {
-    if (String(p.source || '').includes('edufine') && String(p.source || '').includes('audit')) return '기존 공사이력에서 불러온 뒤 K-에듀파인 자료로 보완한 공사';
+    if (String(p.source || '').includes('edufine') && String(p.source || '').includes('audit')) return '공사관리대장에서 불러온 뒤 K-에듀파인 자료로 보완한 공사';
     if (p.source === 'manual+edufine') return '웹에서 만든 뒤 K-에듀파인 자료로 보완한 공사';
     if (p.source === 'edufine') return 'K-에듀파인에서 불러온 공사';
-    if (p.source === 'audit-excel') return '기존 학교 공사이력에서 불러온 공사';
+    if (p.source === 'audit-excel') return '공사관리대장에서 불러온 공사';
     return '웹에서 직접 만든 공사';
   }
 
@@ -290,7 +290,7 @@
         </button>
         <button class="start-card" type="button" data-start-history>
           <span class="start-step">2</span>
-          <span class="start-copy"><strong>기존 공사이력 불러오기</strong><small>학교 공사 이력 현황.xlsx의 여러 공사를 한꺼번에 가져옵니다.</small></span>
+          <span class="start-copy"><strong>공사관리대장 불러오기</strong><small>공사관리대장.xlsx의 여러 공사를 한꺼번에 가져옵니다.</small></span>
           <span class="start-arrow">›</span>
         </button>
         <button class="start-card" type="button" data-start-edufine>
@@ -577,7 +577,9 @@
     document.getElementById('openDocumentsTab')?.addEventListener('click', () => { state.detailTab='documents'; renderProjectDetail(); });
     document.getElementById('jumpCurrentStage')?.addEventListener('click', () => jumpToSection(sectionForStatus(status.key)));
     main.querySelectorAll('[data-detail-tab]').forEach(btn => btn.addEventListener('click', () => { state.detailTab = btn.dataset.detailTab; renderProjectDetail(); }));
-    main.querySelectorAll('[data-doc-open]').forEach(btn => btn.addEventListener('click', () => openDocumentPreview(btn.dataset.docOpen)));
+    main.querySelectorAll('[data-doc-open]').forEach(btn => btn.addEventListener('click', () => openDocumentPreview(btn.dataset.docOpen, {mode:btn.dataset.previewMode || ''})));
+    main.querySelectorAll('[data-pledge-edit]').forEach(btn => btn.addEventListener('click', () => openPrivateContractPledgeModal()));
+    main.querySelectorAll('[data-warranty-report-edit]').forEach(btn => btn.addEventListener('click', () => openWarrantyInspectionModal(activeWarrantyInspection(p), false)));
     bindDocumentBatchControls(p);
     main.querySelectorAll('[data-jump-section]').forEach(btn => btn.addEventListener('click', () => jumpToSection(btn.dataset.jumpSection)));
     main.querySelectorAll('[data-change-delete]').forEach(btn => btn.addEventListener('click', () => confirmDeleteContractChange(btn.dataset.changeDelete)));
@@ -684,6 +686,9 @@
 
   function isSafetyDocument(type) { return /^safety/.test(String(type || '')); }
   function safetyRequiresCompletion(type) { return type === 'safetyGeneral'; }
+  function isPrivateContractPledge(type) { return type === 'privateContractPledge'; }
+  function privateContractPledgeData(p) { return p?.privateContractPledge || {results:{}}; }
+  function privateContractPledgeAnsweredCount(p) { return Object.values(privateContractPledgeData(p).results || {}).filter(Boolean).length; }
 
   function safetyChecklistFor(p, type) { return p?.safetyChecklists?.[type] || null; }
 
@@ -718,9 +723,19 @@
       <div class="recommended-document-list">${recommended.map(type=>{const def=DOCUMENT_DEFINITIONS[type];if(!def)return'';const source=ReferenceData.safetyChecklists[type]?.owner==='agency'?'기관 점검':'업체 작성·기관 확인';return `<div class="recommended-document"><div><strong>${e(def.label)}</strong><span>${e(source)}</span></div><button class="button ${selected.has(type)?'ghost':'secondary'} small" type="button" data-my-doc-toggle="${e(type)}">${selected.has(type)?'내 서류에서 빼기':'내 서류에 추가'}</button></div>`;}).join('')}</div></section>`;
   }
 
+  function documentChipStatus(type,p) {
+    if (isSafetyDocument(type)) return safetyChecklistComplete(p,type)?'작성완료':(safetyRequiresCompletion(type)?'작성 필요':'빈 양식 가능');
+    if (type === 'privateContractPledge') {
+      const count=privateContractPledgeAnsweredCount(p),total=(ReferenceData?.privateContractPledgeItems||[]).length;
+      return count?`선택 ${count}/${total}`:'빈 양식 가능';
+    }
+    if (type === 'warrantyInspectionReport') return activeWarrantyInspection(p)?'입력/공란 선택':'작성 필요';
+    return documentMissing(type,p).length?'정보 필요':'생성 가능';
+  }
+
   function myDocumentsHtml(p) {
     const types=myDocumentTypes(p);
-    return `<section class="my-documents-panel"><div class="document-group-title"><strong>내 서류 ${types.length}종</strong><span>이 공사에서 실제 사용하는 서류만 모아봅니다.</span></div>${types.length?`<div class="my-document-chips">${types.map(type=>`<button type="button" data-doc-open="${e(type)}"><span>${e(DOCUMENT_DEFINITIONS[type].label)}</span><em>${isSafetyDocument(type)?(safetyChecklistComplete(p,type)?'작성완료':(safetyRequiresCompletion(type)?'작성 필요':'빈 양식 가능')):(documentMissing(type,p).length?'정보 필요':'생성 가능')}</em></button>`).join('')}</div>`:`<div class="contract-change-empty">아직 내 서류가 없습니다. 아래 추천 또는 전체 서류에서 필요한 문서를 추가하세요.</div>`}</section>`;
+    return `<section class="my-documents-panel"><div class="document-group-title"><strong>내 서류 ${types.length}종</strong><span>이 공사에서 실제 사용하는 서류만 모아봅니다.</span></div>${types.length?`<div class="my-document-chips">${types.map(type=>`<button type="button" data-doc-open="${e(type)}"><span>${e(DOCUMENT_DEFINITIONS[type].label)}</span><em>${e(documentChipStatus(type,p))}</em></button>`).join('')}</div>`:`<div class="contract-change-empty">아직 내 서류가 없습니다. 아래 추천 또는 전체 서류에서 필요한 문서를 추가하세요.</div>`}</section>`;
   }
 
   function safetyDocumentCardHtml(type,p){
@@ -759,6 +774,31 @@
     p.updatedAt=new Date().toISOString();await DB.put('projects',p);await loadState();state.currentProjectId=p.id;closeModal();renderProjectDetail();showToast(`${def.label}을 저장했습니다.`);if(typeof afterSave==='function')afterSave();
   }
 
+
+  function openPrivateContractPledgeModal(afterSavePreview = false) {
+    const p=currentProject(); if(!p)return;
+    const items=ReferenceData?.privateContractPledgeItems||[];
+    const saved=privateContractPledgeData(p); const results=saved.results||{};
+    const optionLabel={yes:'예',no:'아니오',na:'해당없음'};
+    const rows=items.map((item,i)=>`<div class="safety-edit-row pledge-edit-row"><div class="safety-edit-number">${e(item.number||String(i+1))}</div><div class="safety-edit-question"><strong>${e(item.group||'')}</strong><span>${e(item.text||'')}</span></div><div class="safety-edit-options">${(item.options||['yes','no']).map(opt=>`<label><input type="radio" name="pledge_${e(item.key)}" value="${e(opt)}" ${results[item.key]===opt?'checked':''}> ${e(optionLabel[opt]||opt)}</label>`).join('')}</div></div>`).join('');
+    openModal({eyebrow:'계약서류 · 선택 입력',title:'수의계약 통합서약서 작성',wide:true,body:`<div class="notice"><strong>예·아니오를 미리 선택해 출력할 수 있습니다.</strong><br>모든 항목을 선택하지 않아도 저장할 수 있으며, 작성내용과 별개로 체크하지 않은 빈 양식도 언제든 출력할 수 있습니다.</div><div class="safety-edit-list pledge-edit-list">${rows}</div>`,actions:`<button class="button ghost" type="button" id="clearPledgeChoicesBtn">선택 모두 지우기</button><span class="modal-action-spacer"></span><button class="button secondary" type="button" data-modal-close>취소</button><button class="button secondary" type="button" id="savePledgeChoicesBtn">저장</button><button class="button primary" type="button" id="savePreviewPledgeChoicesBtn">저장하고 미리보기</button>`});
+    modalActions.querySelector('[data-modal-close]')?.addEventListener('click',closeModal);
+    modalActions.querySelector('#clearPledgeChoicesBtn')?.addEventListener('click',()=>modalBody.querySelectorAll('input[name^="pledge_"]').forEach(input=>{input.checked=false;}));
+    modalActions.querySelector('#savePledgeChoicesBtn')?.addEventListener('click',()=>savePrivateContractPledge(false));
+    modalActions.querySelector('#savePreviewPledgeChoicesBtn')?.addEventListener('click',()=>savePrivateContractPledge(true));
+  }
+
+  async function savePrivateContractPledge(previewAfterSave=false) {
+    const p=currentProject(); if(!p)return;
+    const items=ReferenceData?.privateContractPledgeItems||[]; const results={};
+    items.forEach(item=>{const v=modalBody.querySelector(`input[name="pledge_${item.key}"]:checked`)?.value||''; if(v)results[item.key]=v;});
+    p.privateContractPledge={results,updatedAt:new Date().toISOString()};
+    if(!p.selectedDocuments?.includes('privateContractPledge'))p.selectedDocuments=[...(p.selectedDocuments||[]),'privateContractPledge'];
+    p.updatedAt=new Date().toISOString(); await DB.put('projects',p); await loadState(); state.currentProjectId=p.id; closeModal(); renderProjectDetail();
+    showToast(Object.keys(results).length?`수의계약 통합서약서 선택 ${Object.keys(results).length}개를 저장했습니다.`:'선택을 비웠습니다. 빈 양식으로 출력할 수 있습니다.');
+    if(previewAfterSave)openDocumentPreview('privateContractPledge',{mode:Object.keys(results).length?'filled':'blank'});
+  }
+
   function documentQuickItemHtml(type, p) {
     const def = DOCUMENT_DEFINITIONS[type];
     const missing = documentMissing(type, p);
@@ -768,8 +808,34 @@
     return `<button class="doc-item doc-item-button ${(missing.length||safetyIncomplete)?'needs-info':'ready'}" type="button" data-doc-open="${e(type)}"><span>${e(def.label)}</span><em>${e(status)}</em></button>`;
   }
 
+  function privateContractPledgeCardHtml(type,p) {
+    const def=DOCUMENT_DEFINITIONS[type];
+    const missing=documentMissing(type,p);
+    const checked=selectionForProject(p).has(type);
+    const inMyDocs=myDocumentTypes(p).includes(type);
+    const answered=privateContractPledgeAnsweredCount(p);
+    const total=(ReferenceData?.privateContractPledgeItems||[]).length;
+    const statusTitle=answered?`✓ 선택내용 ${answered}/${total} 저장`:'빈 양식 출력 가능';
+    const statusDesc=answered?'저장한 예·아니오 선택을 반영하거나, 필요하면 체크하지 않은 빈 양식으로 출력할 수 있습니다.':'작성하지 않아도 체크하지 않은 원본 양식을 바로 미리보기·출력할 수 있습니다.';
+    const labels=missing.map(x=>DOCUMENT_FIELD_LABELS[x]||x);
+    return `<article class="document-card pledge-document-card ${missing.length?'needs-info':'ready'} ${checked?'selected':''}" data-document-card="${e(type)}"><div class="document-card-top"><label class="document-select"><input type="checkbox" data-doc-select="${e(type)}" ${checked?'checked':''}><span>선택</span></label><div><span class="document-stage">업체 작성·제출</span><span class="document-version">양식 ${e(def.version)}</span></div></div><h3>${e(def.label)}</h3><p>${e(def.description)}</p>${missing.length?`<div class="document-requirement"><strong>추가 입력 ${missing.length}개</strong><span>${e(labels.slice(0,3).join(' · '))}${labels.length>3?' 외':''}</span></div>`:`<div class="document-requirement ready"><strong>${e(statusTitle)}</strong><span>${e(statusDesc)}</span></div>`}<div class="document-card-actions"><button class="button secondary" type="button" data-pledge-edit>${answered?'선택내용 수정':'예·아니오 선택'}</button>${answered?`<button class="button primary" type="button" data-doc-open="${e(type)}" data-preview-mode="filled">작성본 미리보기</button>`:''}<button class="button ghost" type="button" data-doc-open="${e(type)}" data-preview-mode="blank">빈 양식 미리보기</button></div><button class="my-doc-toggle ${inMyDocs?'active':''}" type="button" data-my-doc-toggle="${e(type)}">${inMyDocs?'✓ 내 서류':'＋ 내 서류'}</button></article>`;
+  }
+
+  function warrantyInspectionCardHtml(type,p) {
+    const def=DOCUMENT_DEFINITIONS[type];
+    const record=activeWarrantyInspection(p);
+    const missing=documentMissing(type,p);
+    const checked=selectionForProject(p).has(type);
+    const inMyDocs=myDocumentTypes(p).includes(type);
+    const hasSignatories=!!(record && [record.inspectorPosition,record.inspectorName,record.witnessPosition,record.witnessName].some(Boolean));
+    const labels=missing.map(x=>DOCUMENT_FIELD_LABELS[x]||x);
+    return `<article class="document-card warranty-report-card ${missing.length?'needs-info':'ready'} ${checked?'selected':''}" data-document-card="${e(type)}"><div class="document-card-top"><label class="document-select"><input type="checkbox" data-doc-select="${e(type)}" ${checked?'checked':''}><span>선택</span></label><div><span class="document-stage">행정기관 작성·관리</span><span class="document-version">양식 ${e(def.version)}</span></div></div><h3>${e(def.label)}</h3><p>${e(def.description)}</p>${!record?`<div class="document-requirement"><strong>검사내용 입력 필요</strong><span>검사일·검사결과와 검사자·입회자 정보를 입력할 수 있습니다.</span></div>`:(missing.length?`<div class="document-requirement"><strong>추가 입력 ${missing.length}개</strong><span>${e(labels.slice(0,3).join(' · '))}${labels.length>3?' 외':''}</span></div>`:`<div class="document-requirement ready"><strong>✓ 하자검사 기록 있음</strong><span>${hasSignatories?'검사자·입회자 입력값 출력 또는 공란 출력을 선택할 수 있습니다.':'검사자·입회자는 공란으로 출력할 수 있으며 필요하면 직접 입력할 수 있습니다.'}</span></div>`)}<div class="document-card-actions"><button class="button secondary" type="button" data-warranty-report-edit>${record?'검사내용·서명자 수정':'하자검사조서 작성'}</button>${record&&!missing?`<button class="button ${hasSignatories?'primary':'ghost'}" type="button" data-doc-open="${e(type)}" data-preview-mode="${hasSignatories?'filled':'blank'}">미리보기</button>`:''}</div><button class="my-doc-toggle ${inMyDocs?'active':''}" type="button" data-my-doc-toggle="${e(type)}">${inMyDocs?'✓ 내 서류':'＋ 내 서류'}</button></article>`;
+  }
+
   function documentCardHtml(type, p) {
     if (isSafetyDocument(type)) return safetyDocumentCardHtml(type,p);
+    if (isPrivateContractPledge(type)) return privateContractPledgeCardHtml(type,p);
+    if (type === 'warrantyInspectionReport') return warrantyInspectionCardHtml(type,p);
     const def = DOCUMENT_DEFINITIONS[type];
     const missing = documentMissing(type, p);
     const labels = missing.map(x => DOCUMENT_FIELD_LABELS[x] || x);
@@ -1020,25 +1086,53 @@
     return modalField(id, label, value, ['vendorAddress','projectName','schoolAddress','priceAdjustmentMethod'].includes(field));
   }
 
-  function openDocumentPreview(type) {
+  function openDocumentPreview(type, previewOptions = {}) {
     const p = currentProject();
     const def = DOCUMENT_DEFINITIONS[type];
     if (!p || !def) return;
-    if (isSafetyDocument(type) && safetyRequiresCompletion(type) && !safetyChecklistComplete(p,type)) { openSafetyChecklistModal(type,()=>openDocumentPreview(type)); return; }
+    if (isSafetyDocument(type) && safetyRequiresCompletion(type) && !safetyChecklistComplete(p,type)) { openSafetyChecklistModal(type,()=>openDocumentPreview(type,previewOptions)); return; }
     if (type === 'warrantyInspectionReport' && !(p.warrantyInspections || []).length) { openWarrantyInspectionModal(null,true); return; }
     if (type === 'warrantyInspectionReport' && !state.activeWarrantyInspectionId) state.activeWarrantyInspectionId = p.warrantyInspections[p.warrantyInspections.length-1]?.id || null;
     const missing = documentMissing(type, p);
     if (missing.includes('defectPeriodYears') && !(p.warrantyItems || []).length) { showToast('하자담보기간은 별표 4 추천값을 확인한 뒤 적용해주세요.','warn'); openWarrantyManager(); return; }
-    if (missing.length) { openDocumentMissingModal(type, missing); return; }
-    openModal({
-      eyebrow:`${def.stage} 서류 · 양식 ${def.version}`,
-      title:`${def.label} 미리보기`,
-      wide:true,
-      body:`<div class="doc-preview-note">실제 출력될 A4 모습을 확인하세요. 수정이 필요하면 닫고 공사정보에서 고치면 모든 서류에 함께 반영됩니다.</div><div class="doc-preview-scroll">${documentMarkup(type,p)}</div>`,
-      actions:`<button class="button secondary" type="button" data-modal-close>닫기</button><button class="button primary" type="button" id="printDocumentBtn">인쇄 / PDF 저장</button>`
-    });
+    if (missing.length) { openDocumentMissingModal(type, missing, previewOptions); return; }
+
+    let renderOptions = {};
+    if (type === 'privateContractPledge') {
+      const hasAnswers=privateContractPledgeAnsweredCount(p)>0;
+      renderOptions.blankPledge = previewOptions.mode === 'blank' || (!hasAnswers && previewOptions.mode !== 'filled');
+    }
+    if (type === 'warrantyInspectionReport') {
+      renderOptions.useWarrantySignatories = previewOptions.mode === 'filled';
+    }
+
+    const previewModeControls = () => {
+      if (type === 'privateContractPledge') {
+        const hasAnswers=privateContractPledgeAnsweredCount(p)>0;
+        return `<div class="document-preview-mode"><strong>체크 표시</strong><label><input type="radio" name="previewMode" value="filled" ${!renderOptions.blankPledge?'checked':''} ${hasAnswers?'':'disabled'}> 저장한 선택값 반영</label><label><input type="radio" name="previewMode" value="blank" ${renderOptions.blankPledge?'checked':''}> 빈 양식</label><button class="button ghost small" type="button" id="editPreviewPledgeBtn">${hasAnswers?'선택내용 수정':'예·아니오 선택'}</button></div>`;
+      }
+      if (type === 'warrantyInspectionReport') {
+        const record=activeWarrantyInspection(p); const hasSignatories=!!(record&&[record.inspectorPosition,record.inspectorName,record.witnessPosition,record.witnessName].some(Boolean));
+        return `<div class="document-preview-mode"><strong>검사자·입회자</strong><label><input type="radio" name="previewMode" value="filled" ${renderOptions.useWarrantySignatories?'checked':''} ${hasSignatories?'':'disabled'}> 입력값 출력</label><label><input type="radio" name="previewMode" value="blank" ${!renderOptions.useWarrantySignatories?'checked':''}> 공란으로 출력</label><button class="button ghost small" type="button" id="editWarrantyReportBtn">입력값 수정</button></div>`;
+      }
+      return '';
+    };
+
+    const paintPreview = () => {
+      modalBody.innerHTML=`<div class="doc-preview-note">실제 출력될 A4 모습을 확인하세요. ${type==='privateContractPledge'?'체크값을 넣은 작성본과 빈 양식을 선택할 수 있습니다.':type==='warrantyInspectionReport'?'검사자·입회자 정보는 입력값 출력 또는 공란 출력을 선택할 수 있습니다.':'수정이 필요하면 닫고 공사정보에서 고치면 모든 서류에 함께 반영됩니다.'}</div>${previewModeControls()}<div class="doc-preview-scroll">${documentMarkup(type,p,renderOptions)}</div>`;
+      modalBody.querySelectorAll('input[name="previewMode"]').forEach(input=>input.addEventListener('change',()=>{
+        if(type==='privateContractPledge')renderOptions.blankPledge=input.value==='blank';
+        if(type==='warrantyInspectionReport')renderOptions.useWarrantySignatories=input.value==='filled';
+        paintPreview();
+      }));
+      modalBody.querySelector('#editPreviewPledgeBtn')?.addEventListener('click',()=>{closeModal();openPrivateContractPledgeModal(true);});
+      modalBody.querySelector('#editWarrantyReportBtn')?.addEventListener('click',()=>{const record=activeWarrantyInspection(p);closeModal();openWarrantyInspectionModal(record,false);});
+    };
+
+    openModal({eyebrow:`${def.stage} 서류 · 양식 ${def.version}`,title:`${def.label} 미리보기`,wide:true,body:'',actions:`<button class="button secondary" type="button" data-modal-close>닫기</button><button class="button primary" type="button" id="printDocumentBtn">인쇄 / PDF 저장</button>`});
+    paintPreview();
     modalActions.querySelector('[data-modal-close]').addEventListener('click', closeModal);
-    modalActions.querySelector('#printDocumentBtn').addEventListener('click', () => printAdministrativeDocument(type, p));
+    modalActions.querySelector('#printDocumentBtn').addEventListener('click', () => printAdministrativeDocument(type, p, renderOptions));
   }
 
   function printPagesInFrame(pages, title, onBeforePrint, options = {}) {
@@ -1110,11 +1204,11 @@
     window.setTimeout(()=>{ if (printDoc.readyState === 'complete') startPrint(); }, multi ? 600 : 500);
   }
 
-  function printAdministrativeDocument(type, p) {
+  function printAdministrativeDocument(type, p, renderOptions = {}) {
     const def = DOCUMENT_DEFINITIONS[type];
     if (!def || !p) return;
     openChecklistSignatureModal([type],p,signatures=>{
-      const pages = documentPages(type,p,{signatures});
+      const pages = documentPages(type,p,{...renderOptions,signatures});
       printPagesInFrame(pages, `${def.label} - ${p.projectName || '공사서류'}`);
     });
   }
@@ -1150,7 +1244,7 @@
     });
   }
 
-  function openDocumentMissingModal(type, missing) {
+  function openDocumentMissingModal(type, missing, previewOptions = {}) {
     const p = currentProject();
     const def = DOCUMENT_DEFINITIONS[type];
     openModal({
@@ -1161,15 +1255,15 @@
     initDateInputs(modalBody);
     initMoneyInputs(modalBody);
     modalActions.querySelector('[data-modal-close]').addEventListener('click', closeModal);
-    modalActions.querySelector('#saveMissingDocFields').addEventListener('click', () => saveDocumentMissingFields(type, missing));
+    modalActions.querySelector('#saveMissingDocFields').addEventListener('click', () => saveDocumentMissingFields(type, missing, previewOptions));
   }
 
-  async function saveDocumentMissingFields(type, fields) {
+  async function saveDocumentMissingFields(type, fields, previewOptions = {}) {
     const ok = await saveFieldsForDocuments(fields);
     if (!ok) return;
     closeModal();
     renderProjectDetail();
-    openDocumentPreview(type);
+    openDocumentPreview(type, previewOptions);
   }
 
   async function savePayoutForProject(p, values = {}) {
@@ -1469,6 +1563,7 @@
       payout: payoutForProject(p) || {},
       value: field => documentValue(field, p),
       signature: type => options.signatures?.[type] || '',
+      renderOptions: options,
       helpers: {
         e,
         formatKoreanDate,
@@ -1491,8 +1586,8 @@
     return Documents.renderPages(type, documentContext(p, options));
   }
 
-  function documentMarkup(type, p) {
-    return documentPages(type, p).join('<div class="document-page-gap" aria-hidden="true"></div>');
+  function documentMarkup(type, p, options = {}) {
+    return documentPages(type, p, options).join('<div class="document-page-gap" aria-hidden="true"></div>');
   }
 
   function openChecklistSignatureModal(types, p, onContinue) {
@@ -1729,7 +1824,7 @@
     const witnessName = current.witnessName || current.witness || '';
     openModal({
       eyebrow:'행정기관 하자관리', title:record ? '하자검사 기록 수정' : '하자검사 기록 추가',
-      body:`<div class="notice"><strong>최종 하자검사 당시 담당자를 기록합니다.</strong><br>계약 당시 교장·행정실장 정보는 자동으로 불러오지 않으며, 출력 후 직접 기재할 경우 모두 비워둘 수 있습니다.</div><div class="modal-grid" style="margin-top:16px">
+      body:`<div class="notice"><strong>최종 하자검사 당시 검사자·입회자를 직접 입력할 수 있습니다.</strong><br>입력값은 검사기록에 저장되지만, 미리보기에서 ‘입력값 출력 / 공란으로 출력’을 선택할 수 있습니다.</div><div class="modal-grid" style="margin-top:16px">
         ${modalDateField('warrantyDate','검사일',current.date || '')}
         <div class="field"><label for="warrantyInspectorPositionInput">검사자 직위 <span class="label-optional">선택</span></label><input id="warrantyInspectorPositionInput" value="${e(inspectorPosition)}" placeholder="예: 행정실장"></div>
         <div class="field"><label for="warrantyInspectorNameInput">검사자 성명 <span class="label-optional">선택</span></label><input id="warrantyInspectorNameInput" value="${e(inspectorName)}" placeholder="출력 후 기재할 경우 비워두세요"></div>
@@ -1741,7 +1836,7 @@
         <div class="field full"><label for="warrantyActions">처리사항</label><textarea id="warrantyActions">${e(current.actions || '')}</textarea></div>
         <div class="field full"><label for="warrantyNotes">기타참고사항</label><textarea id="warrantyNotes">${e(current.notes || '')}</textarea></div>
       </div>`,
-      actions:`<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="saveWarrantyInspectionBtn">저장</button>`
+      actions:`<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="saveWarrantyInspectionBtn">${previewAfterSave?'저장하고 미리보기':'저장'}</button>`
     });
     initDateInputs(modalBody);
     modalActions.querySelector('[data-modal-close]').addEventListener('click',closeModal);
@@ -2288,7 +2383,7 @@
         throw new Error('이 파일은 K-에듀파인 자료관리목록으로 보입니다. 「에듀파인으로 정보 업데이트」에서 선택해주세요.');
       }
       if (mode === 'edufine' && parsed.type !== 'edufine') {
-        throw new Error('이 파일은 학교 공사 이력 현황으로 보입니다. 「기존 공사이력 불러오기」에서 선택해주세요.');
+        throw new Error('이 파일은 공사관리대장으로 보입니다. 「공사관리대장 불러오기」에서 선택해주세요.');
       }
       const analysis = analyzeImport(parsed);
       openImportPreview(parsed, analysis, mode);
@@ -2305,10 +2400,10 @@
     const conflictCount = analysis.filter(x => x.conflicts.length).length;
     const unchangedCount = analysis.filter(x => x.match && !x.additions.length && !x.conflicts.length).length;
     const isEdufine = parsed.type === 'edufine';
-    const title = isEdufine ? '에듀파인 정보 업데이트 결과' : '기존 공사이력 불러오기 결과';
+    const title = isEdufine ? '에듀파인 정보 업데이트 결과' : '공사관리대장 불러오기 결과';
     const guide = isEdufine
       ? '기존 공사와 계약번호·공사명·업체·금액·계약일을 비교했습니다. 빈 값은 보완하고, 서로 다른 값은 선택한 경우에만 바꿉니다.'
-      : '공사이력의 각 행을 기존 공사와 비교했습니다. 처음 보는 공사는 새로 만들고, 기존 공사는 부족한 값만 보완합니다.';
+      : '공사관리대장의 각 행을 기존 공사와 비교했습니다. 처음 보는 공사는 새로 만들고, 기존 공사는 부족한 값만 보완합니다.';
     const previews = analysis.map(a => {
       const label = !a.match ? '새 공사' : a.conflicts.length ? '확인 필요' : a.additions.length ? '기존 공사 보완' : '변경 없음';
       return `<div class="preview-item" data-import-index="${a.index}">
@@ -2395,15 +2490,15 @@
     if (!state.projects.length) { showToast('내보낼 공사가 없습니다.', 'warn'); return; }
     const years = [...new Set(state.projects.map(p=>p.fiscalYear).filter(Boolean))].sort().reverse();
     openModal({
-      eyebrow: '학교 공사 이력 현황', title: '학교 양식으로 내보내기',
-      body: `<div class="notice">새로 정리한 학교 공사 이력 현황 양식의 열과 서식을 기준으로 생성합니다.</div><div class="field" style="margin-top:16px"><label>범위</label><select id="auditExportYear"><option value="all">전체 연도 (${state.projects.length}건)</option>${years.map(y=>`<option value="${e(y)}">${e(y)}회계연도 (${state.projects.filter(p=>p.fiscalYear===y).length}건)</option>`).join('')}</select></div>`,
+      eyebrow: '공사관리대장', title: '공사관리대장 엑셀로 내보내기',
+      body: `<div class="notice">공사관리대장 양식의 열과 서식을 기준으로 생성합니다.</div><div class="field" style="margin-top:16px"><label>범위</label><select id="auditExportYear"><option value="all">전체 연도 (${state.projects.length}건)</option>${years.map(y=>`<option value="${e(y)}">${e(y)}회계연도 (${state.projects.filter(p=>p.fiscalYear===y).length}건)</option>`).join('')}</select></div>`,
       actions: `<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="auditExportConfirm">엑셀 받기</button>`
     });
     modalActions.querySelector('[data-modal-close]').addEventListener('click', closeModal);
     modalActions.querySelector('#auditExportConfirm').addEventListener('click', async () => {
       const year = modalBody.querySelector('#auditExportYear').value;
       const list = year === 'all' ? state.projects : state.projects.filter(p => p.fiscalYear === year);
-      try { await Excel.exportAuditWorkbook(list, { year: year === 'all' ? '' : year }); closeModal(); showToast(`${list.length}건의 공사이력 엑셀을 만들었습니다.`); }
+      try { await Excel.exportAuditWorkbook(list, { year: year === 'all' ? '' : year }); closeModal(); showToast(`${list.length}건의 공사관리대장 엑셀을 만들었습니다.`); }
       catch (err) { showToast(err.message, 'danger'); }
     });
   }
@@ -2516,17 +2611,17 @@
       body:`<div class="notice"><strong>핵심 원칙</strong><br>같은 공사정보는 한 번 입력하고 다시 입력하지 않습니다.</div>
       <div style="display:grid;gap:16px;margin-top:18px;font-size:14px">
         <div><strong>1. 공사를 여러 건 저장</strong><p class="muted">전기·건축·체육관 공사를 동시에 등록해도 각 공사는 독립적으로 자동저장됩니다.</p></div>
-        <div><strong>2. 기존 공사이력 재사용</strong><p class="muted">학교 공사 이력 현황.xlsx를 불러오면 여러 공사를 한꺼번에 등록하고 기존 공사의 빈 정보를 보완합니다.</p></div><div><strong>3. 에듀파인으로 업데이트</strong><p class="muted">자료관리목록.xlsx를 다시 내려받아 올리면 계약·준공·지출 단계에서 새로 생긴 값만 기존 공사에 보완합니다. 다른 값은 자동 덮어쓰지 않습니다.</p></div>
+        <div><strong>2. 공사관리대장 재사용</strong><p class="muted">공사관리대장.xlsx를 불러오면 여러 공사를 한꺼번에 등록하고 기존 공사의 빈 정보를 보완합니다.</p></div><div><strong>3. 에듀파인으로 업데이트</strong><p class="muted">자료관리목록.xlsx를 다시 내려받아 올리면 계약·준공·지출 단계에서 새로 생긴 값만 기존 공사에 보완합니다. 다른 값은 자동 덮어쓰지 않습니다.</p></div>
         <div><strong>4. 업체 재사용</strong><p class="muted">업체명·대표자·사업자번호·주소·전화·면허를 업체 보관함에 저장해 다음 공사에서 다시 고를 수 있습니다.</p></div>
-        <div><strong>5. 공사서류 만들기</strong><p class="muted">공사 상세의 「서류」 탭에서 행정기관 작성·관리 서류를 먼저 확인할 수 있습니다. 공사대장·하자검사조서·하자대장과 기존 계약·착공·준공·지출서류를 같은 공사정보로 만들고 묶음 인쇄할 수 있습니다.</p></div>
-        <div><strong>6. 계약서류 세트</strong><p class="muted">공사도급표준계약서·승낙사항·사용인감계·수의계약 통합서약서를 한 번에 선택할 수 있습니다. 수의계약 통합서약서는 원본 양식 구조에 맞춰 2페이지로 출력됩니다.</p></div>
+        <div><strong>5. 공사서류 만들기</strong><p class="muted">공사 상세의 「서류」 탭에서 행정기관 작성·관리 서류를 먼저 확인할 수 있습니다. 공사대장·하자검사조서·하자대장과 기존 계약·착공·준공·지출서류를 같은 공사정보로 만들고 묶음 인쇄할 수 있습니다. 하자검사조서는 검사자·입회자를 입력해 출력하거나 공란으로 출력할 수 있습니다.</p></div>
+        <div><strong>6. 계약서류 세트</strong><p class="muted">공사도급표준계약서·승낙사항·사용인감계·수의계약 통합서약서를 한 번에 선택할 수 있습니다. 수의계약 통합서약서는 예·아니오·해당없음을 미리 선택해 작성본으로 출력하거나, 체크하지 않은 빈 양식으로도 2페이지 출력할 수 있습니다.</p></div>
         <div><strong>7. 서류 템플릿 분리</strong><p class="muted">서류별 필수정보·출력순서·양식 버전을 별도 정의로 관리해 이후 양식 변경 시 공사 데이터와 다른 서류에 미치는 영향을 줄였습니다.</p></div>
         <div><strong>8. 지급정보 재사용</strong><p class="muted">은행·계좌·예금주는 업체 지급정보로 분리 저장되며 대금청구서에서만 사용합니다. 업체 목록에는 계좌번호를 노출하지 않습니다.</p></div>
         <div><strong>9. 하자담보기간 추천</strong><p class="muted">건설산업기본법 시행령 별표 4를 참고해 공사종류·세부공종별 하자담보기간을 추천합니다. 추천값은 자동 확정하지 않으며 복합공종은 여러 하자공종으로 각각 관리할 수 있습니다.</p></div>
         <div><strong>10. 안전·보건 서류 추천</strong><p class="muted">공종과 고소·전기·밀폐공간·일반 산업재해 작업 특성에 따라 필요한 체크리스트를 추천합니다. 공통 안전·보건 체크리스트는 기관 점검용, 세부 체크리스트는 업체 작성·기관 확인용으로 구분합니다.</p></div>
         <div><strong>11. 내 서류</strong><p class="muted">이 공사에서 실제 사용하는 서류만 내 서류에 모아두고 다음에 다시 열어도 그대로 유지할 수 있습니다.</p></div>
         <div><strong>12. 원클릭 엑셀 별도 확인</strong><p class="muted">현장대리인계·공정표·직접시공계획서와 도시가스·노무비 관련 서류는 「서류」 탭의 별도 확인 목록을 보고 원클릭 엑셀에서 확인합니다.</p></div>
-        <div><strong>13. 인수인계</strong><p class="muted">전체 백업(JSON)은 앱 복원용이고, 공사이력 엑셀은 감사·업무용 결과물입니다.</p></div>
+        <div><strong>13. 인수인계</strong><p class="muted">전체 백업(JSON)은 앱 복원용이고, 공사관리대장 엑셀은 감사·업무용 결과물입니다.</p></div>
         <div><strong>기준 자료</strong><p class="muted">${e(REFERENCE_PROGRAM)} 버전을 기준으로 서식과 점검항목을 구성했습니다.</p></div>
         <div><strong>보안</strong><p class="muted">공사정보와 엑셀 내용은 서버로 전송하지 않습니다. 브라우저 저장소에 남으므로 공용 Windows 계정에서는 PC 접근통제와 정기 백업이 필요합니다.</p></div>
       </div>`,

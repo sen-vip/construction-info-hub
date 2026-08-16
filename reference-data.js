@@ -172,6 +172,27 @@
     }
   };
 
+
+  const PRIVATE_CONTRACT_PLEDGE_ITEMS = [
+    {key:'generalConditions', number:'1', group:'계약일반조건', text:'지방자치단체 입찰 및 계약 집행기준의 계약 일반조건을 준수합니다.', options:['yes','no']},
+    {key:'privateContractExclusion', number:'2', group:'수의계약 각서', text:'수의계약 배제사유 중 어느 사유에도 해당되지 않음을 확인합니다.', options:['yes','no','na']},
+    {key:'conflict1', number:'3-①', group:'수의계약 체결 제한', text:'발주기관의 소속 고위공직자, 배우자, 고위공직자의 직계존속·비속 또는 생계를 같이하는 배우자의 직계존속·비속에 해당하는가?', options:['yes','no','na']},
+    {key:'conflict2', number:'3-②', group:'수의계약 체결 제한', text:'계약 업무를 법령상·사실상 담당하는 공직자, 배우자, 공직자의 직계존속·비속 또는 생계를 같이하는 배우자의 직계존속·비속에 해당하는가?', options:['yes','no','na']},
+    {key:'conflict3', number:'3-③', group:'수의계약 체결 제한', text:'발주기관(산하기관)의 감독기관 소속 고위공직자, 배우자, 고위공직자의 직계존속·비속 또는 생계를 같이하는 배우자의 직계존속·비속에 해당하는가?', options:['yes','no','na']},
+    {key:'conflict4', number:'3-④', group:'수의계약 체결 제한', text:'발주기관(자회사)의 모회사 소속 고위공직자, 배우자, 고위공직자의 직계존속·비속 또는 생계를 같이하는 배우자의 직계존속·비속에 해당하는가?', options:['yes','no','na']},
+    {key:'conflict5', number:'3-⑤', group:'수의계약 체결 제한', text:'상임위원회 위원인 국회의원, 배우자, 국회의원의 직계존속·비속 또는 생계를 같이하는 배우자의 직계존속·비속에 해당하는가?', options:['yes','no','na']},
+    {key:'conflict6', number:'3-⑥', group:'수의계약 체결 제한', text:'공공기관을 감사 또는 조사하는 지방의회의 의원, 배우자, 의원의 직계존속·비속 또는 생계를 같이하는 배우자의 직계존속·비속에 해당하는가?', options:['yes','no','na']},
+    {key:'conflict7', number:'3-⑦', group:'수의계약 체결 제한', text:'앞의 어느 하나에 해당하는 사람이 대표자인 법인 또는 단체에 해당하는가?', options:['yes','no','na']},
+    {key:'conflict8', number:'3-⑧', group:'수의계약 체결 제한', text:'앞의 어느 하나에 해당하는 사람과 특수한 관계의 사업자에 해당하는가?', options:['yes','no','na']},
+    {key:'contractSecurity', number:'4', group:'계약보증금', text:'계약보증금을 귀속시켜야 할 사유가 발생하면 해당 금액을 납부하겠습니다.', options:['yes','no']},
+    {key:'integrity', number:'5', group:'청렴계약', text:'금품·향응 제공, 불공정행위, 알선·청탁 없이 청렴계약 의무를 준수합니다.', options:['yes','no']},
+    {key:'taxEvasion', number:'6', group:'조세포탈 여부', text:'조세포탈 등을 한 자가 아님을 확인하고 관련 사실이 발견되면 제재를 감수합니다.', options:['yes','no']},
+    {key:'defectRepair', number:'7', group:'하자보수', text:'하자보수보증금을 귀속시켜야 할 사유가 발생하면 해당 금액을 납부하겠습니다.', options:['yes','no']},
+    {key:'utility', number:'8', group:'전기·수도 사용료', text:'학교(기관)의 전기·수도를 사용한 경우 계산된 사용료를 납부하겠습니다.', options:['yes','no','na']},
+    {key:'safetyHealth', number:'9', group:'안전 및 보건', text:'산업안전보건법 등 관련 법규에 따른 안전·보건 확보 의무를 준수합니다.', options:['yes','no','na']},
+    {key:'privacy', number:'10', group:'개인정보 이용·수집', text:'계약업무 진행을 위한 개인정보 수집 및 이용에 동의합니다.', options:['yes','no']}
+  ];
+
   function warrantyCategory(name) {
     return WARRANTY_RULES.find(x => x.category === name) || null;
   }
@@ -195,6 +216,7 @@
   globalThis.ConstructionReferenceData = {
     warrantyRules: WARRANTY_RULES,
     safetyChecklists: SAFETY_CHECKLISTS,
+    privateContractPledgeItems: PRIVATE_CONTRACT_PLEDGE_ITEMS,
     warrantyCategory,
     warrantyRecommendation,
     recommendedSafetyTypes

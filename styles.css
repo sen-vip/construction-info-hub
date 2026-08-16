@@ -1311,8 +1311,7 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .warranty-inspection-table .wi-work-type{text-align:center}
 .warranty-signatures strong{min-height:1.4em}
 
-/* v0.4.3.4 — 수도광열비 검산성 / 하자서류 공란 출력 */
-/* 하자검사조서의 검사자·입회자 성명은 저장값과 무관하게 출력에서 공란 유지 */
+/* v0.4.3.4 — 수도광열비 검산성 */
 .utility-basis-summary{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1.2fr);gap:8px;align-items:stretch;margin-bottom:12px}
 .utility-basis-summary>div{display:grid;gap:4px;padding:10px 12px;border:1px solid #e0e7ef;border-radius:10px;background:#fff}
 .utility-basis-summary>i{align-self:center;font-style:normal;font-weight:800;color:#708095}
@@ -1357,3 +1356,18 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .warranty-name-space{display:inline-block;width:34mm;height:1.2em;margin:0 2mm}
 
 @media (max-width:720px){.utility-basis-summary{grid-template-columns:1fr}.utility-basis-summary>i{display:none}}
+
+/* v0.4.3.5 — 공사관리대장 용어 / 수의계약 통합서약서 선택입력 / 하자검사조서 출력모드 */
+.document-preview-mode{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;margin:0 0 12px;padding:10px 12px;border:1px solid #cfdaea;border-radius:11px;background:#f7f9fc}
+.document-preview-mode strong{font-size:12px;color:#244f83;margin-right:2px}
+.document-preview-mode label{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#40556e;cursor:pointer}
+.document-preview-mode input{width:16px;height:16px;margin:0;accent-color:var(--primary)}
+.document-preview-mode label:has(input:disabled){opacity:.45;cursor:default}
+.document-preview-mode .button{margin-left:auto}
+.pledge-edit-row .safety-edit-number{font-size:11px;text-align:center;padding:0 3px}
+.pledge-edit-row .safety-edit-question{display:grid;gap:4px}
+.pledge-edit-row .safety-edit-question strong{font-size:12px;color:#244f83}
+.pledge-edit-row .safety-edit-question span{font-size:12px;color:#3f4f61;line-height:1.5}
+.pledge-document-card .document-card-actions,.warranty-report-card .document-card-actions{margin-top:2px}
+.warranty-filled-name{display:inline-block;min-width:34mm;margin:0 2mm;text-align:center;font-weight:700}
+@media (max-width:760px){.document-preview-mode{align-items:flex-start;display:grid;grid-template-columns:1fr}.document-preview-mode .button{margin-left:0;width:100%}}

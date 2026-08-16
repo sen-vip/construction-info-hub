@@ -27,7 +27,7 @@
     },
     privateContractPledge: {
       key:'privateContractPledge', label:'수의계약 통합서약서', outputTitle:'수 의 계 약 통 합 서 약 서', stage:'계약', version:'2026.05 수정', pages:2, owner:'vendor',
-      description:'수의계약 관련 각서·청렴·안전·개인정보 동의를 통합한 서약서',
+      description:'수의계약 관련 각서·청렴·안전·개인정보 동의를 통합한 서약서. 예·아니오를 미리 선택하거나 빈 양식으로 출력할 수 있습니다.',
       required:['schoolName','projectName','contractDate','vendorName','businessNumber','vendorAddress','vendorPhone','representative']
     },
     startReport: {
@@ -82,7 +82,7 @@
     },
     warrantyInspectionReport: {
       key:'warrantyInspectionReport', label:'하자검사조서', outputTitle:'하  자  검  사  조  서', stage:'하자', version:'2026.05 수정', pages:1, owner:'agency',
-      description:'완료공사의 하자(만료)검사 결과를 기록하는 기관용 조서',
+      description:'완료공사의 하자(만료)검사 결과를 기록하는 기관용 조서. 검사자·입회자는 입력값 또는 공란 출력 중 선택할 수 있습니다.',
       required:['projectName','vendorName','representative','workType','currentContractAmount','startDate','actualCompletionDate','defectEndDate','warrantyInspectionDate']
     },
     warrantyLedger: {
@@ -155,8 +155,9 @@
     return `[${isLetter?'✓':' '}] 각서   [${isBond?'✓':' '}] 보증서`;
   }
 
-  function plainChoice() { return '[ ] 예   [ ] 아니오'; }
-  function plainChoiceWithNone() { return '[ ] 예   [ ] 아니오\n[ ] 해당없음'; }
+  function choiceBox(status, target) { return status === target ? '[✓]' : '[ ]'; }
+  function plainChoice(status = '') { return `${choiceBox(status,'yes')} 예   ${choiceBox(status,'no')} 아니오`; }
+  function plainChoiceWithNone(status = '') { return `${choiceBox(status,'yes')} 예   ${choiceBox(status,'no')} 아니오\n${choiceBox(status,'na')} 해당없음`; }
 
   function renderStandardContract(ctx) {
     const { p, school, h } = common(ctx);
@@ -228,9 +229,7 @@
     </article>`];
   }
 
-  function pledgeRows(p, h) {
-    const yesNo = plainChoice();
-    const yesNoNone = plainChoiceWithNone();
+  function pledgeRows(p, h, answers = {}) {
     const q = [
       '발주기관의 소속 고위공직자, 배우자, 고위공직자의 직계존속·비속 또는 생계를 같이하는 배우자의 직계존속·비속에 해당하는가?',
       '계약 업무를 법령상·사실상 담당하는 공직자, 배우자, 공직자의 직계존속·비속 또는 생계를 같이하는 배우자의 직계존속·비속에 해당하는가?',
@@ -241,28 +240,31 @@
       '앞의 어느 하나에 해당하는 사람이 대표자인 법인 또는 단체에 해당하는가?',
       '앞의 어느 하나에 해당하는 사람과 특수한 관계의 사업자에 해당하는가?'
     ];
+    const a = key => answers?.[key] || '';
     return `
-      <tr><td>1</td><th>계약일반조건</th><td>상기 본인(법인)은 「지방자치단체 입찰 및 계약 집행기준」 제9장 계약 일반조건을 준수합니다.</td><td>${yesNo}</td></tr>
-      <tr><td>2</td><th>수의계약 각서</th><td>귀 기관과 수의계약을 체결함에 있어서 [붙임1] 수의계약 배제사유 중 어느 사유에도 해당되지 않으며 차후에 이러한 사실이 발견된 경우 계약의 해제·해지 및 부정당업자 제재 처분을 받아도 하등의 이유를 제기하지 않겠습니다.<br><b>[붙임1] 수의계약 배제사유 1부</b></td><td>${yesNo}<br>[ ] 해당없음</td></tr>
-      <tr class="pledge-conflict"><td rowspan="8">3</td><th rowspan="8">수의계약</th><td>① ${h.e(q[0])}</td><td>${yesNoNone}</td></tr>
-      ${q.slice(1).map((text,i)=>`<tr class="pledge-conflict"><td>${'②③④⑤⑥⑦⑧'[i]} ${h.e(text)}</td><td>${yesNoNone}</td></tr>`).join('')}
+      <tr><td>1</td><th>계약일반조건</th><td>상기 본인(법인)은 「지방자치단체 입찰 및 계약 집행기준」 제9장 계약 일반조건을 준수합니다.</td><td>${plainChoice(a('generalConditions'))}</td></tr>
+      <tr><td>2</td><th>수의계약 각서</th><td>귀 기관과 수의계약을 체결함에 있어서 [붙임1] 수의계약 배제사유 중 어느 사유에도 해당되지 않으며 차후에 이러한 사실이 발견된 경우 계약의 해제·해지 및 부정당업자 제재 처분을 받아도 하등의 이유를 제기하지 않겠습니다.<br><b>[붙임1] 수의계약 배제사유 1부</b></td><td>${plainChoiceWithNone(a('privateContractExclusion'))}</td></tr>
+      <tr class="pledge-conflict"><td rowspan="8">3</td><th rowspan="8">수의계약</th><td>① ${h.e(q[0])}</td><td>${plainChoiceWithNone(a('conflict1'))}</td></tr>
+      ${q.slice(1).map((text,i)=>`<tr class="pledge-conflict"><td>${'②③④⑤⑥⑦⑧'[i]} ${h.e(text)}</td><td>${plainChoiceWithNone(a(`conflict${i+2}`))}</td></tr>`).join('')}
       <tr><td colspan="2"></td><td>「공직자의 이해충돌 방지법」 제12조에 따른 수의계약 체결 제한에 대하여 위와 같이 확인합니다. 만약 위 사항이 사실과 다른 경우에는 어떠한 처벌이나 불이익도 감수할 것을 서약합니다.</td><td></td></tr>
-      <tr><td>4</td><th>계약보증금</th><td>계약서의 의무를 이행하지 못하여 계약보증금을 귀 기관에 귀속시켜야 할 사유가 발생하면 「지방자치단체를 당사자로 하는 계약에 관한 법률」 제15조제3항에 따라 즉시 해당하는 금액을 현금으로 납부하겠습니다.</td><td>${yesNo}<br>${h.e(sealChoice(p.contractSecurityType))}</td></tr>
-      <tr><td>5</td><th>청렴계약</th><td>임직원과 대리인은 발주기관에서 시행하는 공사 등의 입찰·낙찰, 계약체결, 감독, 검사 또는 계약이행 과정에 참여하면서 금품·향응 등을 제공 또는 약속하거나 수수하지 않고, 불공정한 행위와 알선·청탁을 하지 않겠습니다.</td><td>${yesNo}</td></tr>
-      <tr><td>6</td><th>조세포탈 여부 확인 서약서</th><td>「지방자치단체를 당사자로 하는 계약에 관한 법률」 제31조의5에 따른 조세포탈 등을 한 자가 아님을 서약하며, 해당 사실이 발견된 때에는 계약 해제·해지 및 관련 제재 처분을 감수하겠습니다.</td><td>${yesNo}</td></tr>
-      <tr><td>7</td><th>하자보수</th><td>「지방자치단체를 당사자로 하는 계약에 관한 법률 시행령」 제71조에 따라 하자보수보증금을 귀 학교(기관)에 귀속시켜야 할 사유가 발생하면 즉시 해당하는 금액을 현금으로 납부하겠습니다.</td><td>${yesNo}<br>${h.e(sealChoice(p.defectSecurityType))}</td></tr>
-      <tr><td>8</td><th>[공사] 전기·수도 사용료 납부 확인</th><td>우리 업체는 학교(기관)의 전기 및 수도를 사용한 경우 관련 기준에 의한 계산식으로 전기료 및 수도료를 학교회계(교육비특별회계)에 세입조치하고 이의를 제기하지 않겠습니다.</td><td>${yesNoNone}</td></tr>
-      <tr><td>9</td><th>안전 및 보건 확보 의무 준수</th><td>「산업안전보건법」 및 「중대재해 처벌 등에 관한 법률」 등 관련 법규에 따라 종사자의 안전·보건상 유해요인 또는 위험을 방지하기 위한 의무사항을 이행하겠습니다.<br>① 안전·보건 관계법령상 의무사항 이행 ② 유해·위험요인 신고 시 신속한 개선 ③ 작업 전 안전대책 수립 ④ 중대산업재해 발생 시 선보고 후 사고처리</td><td>${yesNoNone}</td></tr>
-      <tr><td>10</td><th>개인정보이용·수집 동의</th><td>「개인정보 보호법」 제15조, 제22조에 따라 개인정보를 수집 및 이용하는 것에 동의합니다.<br><span class="pledge-mini">항목: 대표자명, 주소, 생년월일, (휴대)전화번호, 계좌번호, 이메일 / 목적: 계약업무 진행 / 보유·이용기간: 계약체결일로부터 5년</span></td><td>${yesNo}</td></tr>
+      <tr><td>4</td><th>계약보증금</th><td>계약서의 의무를 이행하지 못하여 계약보증금을 귀 기관에 귀속시켜야 할 사유가 발생하면 「지방자치단체를 당사자로 하는 계약에 관한 법률」 제15조제3항에 따라 즉시 해당하는 금액을 현금으로 납부하겠습니다.</td><td>${plainChoice(a('contractSecurity'))}<br>${h.e(sealChoice(p.contractSecurityType))}</td></tr>
+      <tr><td>5</td><th>청렴계약</th><td>임직원과 대리인은 발주기관에서 시행하는 공사 등의 입찰·낙찰, 계약체결, 감독, 검사 또는 계약이행 과정에 참여하면서 금품·향응 등을 제공 또는 약속하거나 수수하지 않고, 불공정한 행위와 알선·청탁을 하지 않겠습니다.</td><td>${plainChoice(a('integrity'))}</td></tr>
+      <tr><td>6</td><th>조세포탈 여부 확인 서약서</th><td>「지방자치단체를 당사자로 하는 계약에 관한 법률」 제31조의5에 따른 조세포탈 등을 한 자가 아님을 서약하며, 해당 사실이 발견된 때에는 계약 해제·해지 및 관련 제재 처분을 감수하겠습니다.</td><td>${plainChoice(a('taxEvasion'))}</td></tr>
+      <tr><td>7</td><th>하자보수</th><td>「지방자치단체를 당사자로 하는 계약에 관한 법률 시행령」 제71조에 따라 하자보수보증금을 귀 학교(기관)에 귀속시켜야 할 사유가 발생하면 즉시 해당하는 금액을 현금으로 납부하겠습니다.</td><td>${plainChoice(a('defectRepair'))}<br>${h.e(sealChoice(p.defectSecurityType))}</td></tr>
+      <tr><td>8</td><th>[공사] 전기·수도 사용료 납부 확인</th><td>우리 업체는 학교(기관)의 전기 및 수도를 사용한 경우 관련 기준에 의한 계산식으로 전기료 및 수도료를 학교회계(교육비특별회계)에 세입조치하고 이의를 제기하지 않겠습니다.</td><td>${plainChoiceWithNone(a('utility'))}</td></tr>
+      <tr><td>9</td><th>안전 및 보건 확보 의무 준수</th><td>「산업안전보건법」 및 「중대재해 처벌 등에 관한 법률」 등 관련 법규에 따라 종사자의 안전·보건상 유해요인 또는 위험을 방지하기 위한 의무사항을 이행하겠습니다.<br>① 안전·보건 관계법령상 의무사항 이행 ② 유해·위험요인 신고 시 신속한 개선 ③ 작업 전 안전대책 수립 ④ 중대산업재해 발생 시 선보고 후 사고처리</td><td>${plainChoiceWithNone(a('safetyHealth'))}</td></tr>
+      <tr><td>10</td><th>개인정보이용·수집 동의</th><td>「개인정보 보호법」 제15조, 제22조에 따라 개인정보를 수집 및 이용하는 것에 동의합니다.<br><span class="pledge-mini">항목: 대표자명, 주소, 생년월일, (휴대)전화번호, 계좌번호, 이메일 / 목적: 계약업무 진행 / 보유·이용기간: 계약체결일로부터 5년</span></td><td>${plainChoice(a('privacy'))}</td></tr>
       <tr><td>11</td><th>기타 사항</th><td>법령, 예규 등 각종 규정은 개정될 수 있으며, 최신 규정을 따름</td><td></td></tr>`;
   }
 
   function renderPrivateContractPledge(ctx) {
     const { p, school, h } = common(ctx);
+    const blank = !!ctx.renderOptions?.blankPledge;
+    const answers = blank ? {} : (p.privateContractPledge?.results || {});
     const page1 = `<article class="paper-a4 admin-document private-contract-pledge pledge-page-one document-print-page">
       <h1 class="pledge-title">수의계약 통합서약서</h1>
       <table class="pledge-summary"><tbody><tr><th>계약명</th><td colspan="3">${h.e(p.projectName)}</td></tr><tr><th>발주기관</th><td colspan="3">${h.e(school.name)}</td></tr><tr><th>업체명</th><td>${h.e(p.vendorName)}</td><th>대표자</th><td>${h.e(p.representative)}</td></tr><tr><th>사업자등록번호</th><td>${h.e(h.businessNumber(p.businessNumber))}</td><th>연락처</th><td>${h.e(p.vendorPhone)}</td></tr><tr><th>주소</th><td colspan="3">${h.e(p.vendorAddress)}</td></tr></tbody></table>
-      <table class="pledge-table"><thead><tr><th>순</th><th>구분</th><th>이행 내용</th><th>세부내용</th></tr></thead><tbody>${pledgeRows(p,h)}</tbody></table>
+      <table class="pledge-table"><thead><tr><th>순</th><th>구분</th><th>이행 내용</th><th>세부내용</th></tr></thead><tbody>${pledgeRows(p,h,answers)}</tbody></table>
       <div class="pledge-sign"><p>${h.e(h.formatKoreanDate(p.contractDate))}</p><p><span>업 체 명 :</span>${h.e(p.vendorName)}<span>대 표 자 :</span>${h.e(h.representativeWithSeal(p.representative))}</p></div>
       <p class="pledge-recipient">${h.e(h.recipientFor(school.name))}</p>
     </article>`;
@@ -531,8 +533,11 @@
 
   function renderWarrantyInspection(ctx) {
     const { p, h } = common(ctx);
-    const inspectorPosition = ctx.value('warrantyInspectorPosition');
-    const witnessPosition = ctx.value('warrantyWitnessPosition');
+    const useSignatories = !!ctx.renderOptions?.useWarrantySignatories;
+    const inspectorPosition = useSignatories ? ctx.value('warrantyInspectorPosition') : '';
+    const inspectorName = useSignatories ? ctx.value('warrantyInspectorName') : '';
+    const witnessPosition = useSignatories ? ctx.value('warrantyWitnessPosition') : '';
+    const witnessName = useSignatories ? ctx.value('warrantyWitnessName') : '';
     const date = ctx.value('warrantyInspectionDate');
     const issue = ctx.value('warrantyIssueDetails');
     const actions = ctx.value('warrantyActions');
@@ -557,8 +562,8 @@
       <p class="warranty-statement">위와 같이 하자(만료)검사를 필하였음.</p>
       <p class="record-date">${h.e(h.formatKoreanDate(date))}</p>
       <div class="warranty-signatures">
-        <div><span>검 사 자 :</span><span>직위 ${h.e(inspectorPosition || '')}</span><strong class="warranty-name-sign">성명 <span class="warranty-name-space" aria-hidden="true"></span> (인)</strong></div>
-        <div><span>입 회 자 :</span><span>직위 ${h.e(witnessPosition || '')}</span><strong class="warranty-name-sign">성명 <span class="warranty-name-space" aria-hidden="true"></span> (인)</strong></div>
+        <div><span>검 사 자 :</span><span>직위 ${h.e(inspectorPosition || '')}</span><strong class="warranty-name-sign">성명 ${inspectorName?`<span class="warranty-filled-name">${h.e(inspectorName)}</span>`:`<span class="warranty-name-space" aria-hidden="true"></span>`} (인)</strong></div>
+        <div><span>입 회 자 :</span><span>직위 ${h.e(witnessPosition || '')}</span><strong class="warranty-name-sign">성명 ${witnessName?`<span class="warranty-filled-name">${h.e(witnessName)}</span>`:`<span class="warranty-name-space" aria-hidden="true"></span>`} (인)</strong></div>
       </div>
     </article>`];
   }

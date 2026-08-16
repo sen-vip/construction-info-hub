@@ -184,6 +184,7 @@
       warrantyItems: Array.isArray(seed.warrantyItems) ? seed.warrantyItems : [],
       workCharacteristics: seed.workCharacteristics && typeof seed.workCharacteristics === 'object' ? { fall:false, electrical:false, confined:false, industrial:false, ...seed.workCharacteristics } : { fall:false, electrical:false, confined:false, industrial:false },
       safetyChecklists: seed.safetyChecklists && typeof seed.safetyChecklists === 'object' ? { ...seed.safetyChecklists } : {},
+      privateContractPledge: seed.privateContractPledge && typeof seed.privateContractPledge === 'object' ? { ...seed.privateContractPledge, results:{ ...(seed.privateContractPledge.results || {}) } } : { results:{} },
       selectedDocuments: Array.isArray(seed.selectedDocuments) ? seed.selectedDocuments : [],
       utilityCost: seed.utilityCost && typeof seed.utilityCost === 'object' ? { ...seed.utilityCost } : {
         directMaterialCost: '', directLaborCost: '', facilityUse: '수도광열비·전력비', electricCost: '', waterHeatCost: '', total: '', calculatedAt: ''

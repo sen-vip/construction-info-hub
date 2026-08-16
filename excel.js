@@ -201,7 +201,7 @@
     const projects = [];
     const last = maxRow(cells);
     const headerRow = findAuditHeaderRow(cells);
-    if (!headerRow) return { type: 'audit', label: '학교 공사 이력 현황', projects, ignored: 0 };
+    if (!headerRow) return { type: 'audit', label: '공사관리대장', projects, ignored: 0 };
     for (let r = headerRow + 1; r <= last; r++) {
       const row = rowMap(cells, r);
       const projectName = cleanText(row.C);
@@ -243,7 +243,7 @@
         sourceUpdatedAt: new Date().toISOString()
       });
     }
-    return { type: 'audit', label: '학교 공사 이력 현황', projects, ignored: 0 };
+    return { type: 'audit', label: '공사관리대장', projects, ignored: 0 };
   }
 
   function parseEdufine(cells) {
@@ -307,7 +307,7 @@
     const isEdufine = cleanText(cells.get('A3')) === '계약번호' && cleanText(cells.get('E3')) === '계약명';
     if (isAudit) return parseAudit(cells);
     if (isEdufine) return parseEdufine(cells);
-    throw new Error('지원하는 엑셀 형식을 찾지 못했습니다. 학교 공사 이력 현황 또는 K-에듀파인 자료관리목록인지 확인해주세요.');
+    throw new Error('지원하는 엑셀 형식을 찾지 못했습니다. 공사관리대장 또는 K-에듀파인 자료관리목록인지 확인해주세요.');
   }
 
   function projectToAuditRow(p, index) {
@@ -390,7 +390,7 @@
     let buffer = options.templateBuffer || null;
     if (!buffer) {
       const response = await fetch('./assets/audit-template.xlsx', { cache: 'no-store' });
-      if (!response.ok) throw new Error('학교 공사 이력 현황 템플릿을 불러오지 못했습니다.');
+      if (!response.ok) throw new Error('공사관리대장 템플릿을 불러오지 못했습니다.');
       buffer = await response.arrayBuffer();
     }
     const zip = await JSZipLib.loadAsync(buffer);
@@ -403,11 +403,11 @@
     }
     const templateCells = parseSheetCells(xml, shared);
     const headerRow = findAuditHeaderRow(templateCells);
-    if (!headerRow) throw new Error('학교 공사 이력 현황 템플릿의 헤더를 찾지 못했습니다.');
+    if (!headerRow) throw new Error('공사관리대장 템플릿의 헤더를 찾지 못했습니다.');
     const dataRow = headerRow + 1;
     const templateRowRe = new RegExp(`<(?:[A-Za-z_][\\w.-]*:)?row\\b[^>]*r="${dataRow}"[^>]*>[\\s\\S]*?<\\/(?:[A-Za-z_][\\w.-]*:)?row>`);
     const templateRow = templateRowRe.exec(xml)?.[0];
-    if (!templateRow) throw new Error('학교 공사 이력 현황 템플릿의 데이터 행을 찾지 못했습니다.');
+    if (!templateRow) throw new Error('공사관리대장 템플릿의 데이터 행을 찾지 못했습니다.');
     const styles = cellStyleMap(templateRow, dataRow);
     const xmlPrefix = xmlPrefixFromTemplate(templateRow);
     const rowTag = rowTagFromTemplate(templateRow);
@@ -451,7 +451,7 @@
     });
     if (options.returnUint8Array) return output;
     const suffix = options.year ? `_${options.year}` : '';
-    downloadBlob(output, `학교 공사 이력 현황${suffix}.xlsx`);
+    downloadBlob(output, `공사관리대장${suffix}.xlsx`);
     return output;
   }
 
