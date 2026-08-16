@@ -1190,6 +1190,8 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .warranty-signatures,.warranty-signatures * { font-weight: 400 !important; }
 .warranty-signature-label { white-space: nowrap; }
 .warranty-signature-content { min-height: 1.6em; white-space: normal; }
+.warranty-signature-content.is-blank { display: flex; align-items: baseline; min-width: 0; }
+.warranty-signature-content.is-blank .warranty-seal { margin-left: 85mm; }
 .warranty-seal { display: inline-block; margin-left: 5mm; white-space: nowrap; }
 
 /* 하자검사대장 */
@@ -1467,3 +1469,5 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .reset-projects-toolbar:hover { background:#fff5f5 !important; border-color:#e8bdbd !important; }
 
 /* v0.4.3.9 — 하자검사조서 원클릭 양식 정렬: 검사자=행정실장, 직위/성명 표제 제거, 굵은 글씨 해제 */
+
+/* v0.4.3.10 — 하자검사조서 기본값: 학교명 제거, 검사자=행정실장 역할 우선, 공란 수기공간 확대 */

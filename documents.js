@@ -549,12 +549,19 @@
     // 원클릭 엑셀 양식 기준: 검사자는 학교의 행정실장으로 표시하고,
     // 출력물에는 '직위'·'성명'이라는 별도 표제어를 넣지 않는다.
     const inspectorPosition = (useEntered || useDefault) ? '행정실장' : '';
+    const roleText = value => String(value || '').trim();
+    const isAdminManager = value => /^행정실장(?:\s|$)/.test(roleText(value));
+    const defaultAdminManagerSource = [p.witness, school.witness, p.inspector, school.inspector].find(isAdminManager) || '';
     const inspectorName = useEntered
       ? cleanPersonName(ctx.value('warrantyInspectorName'), '행정실장')
-      : (useDefault ? cleanPersonName(p.inspector || school.inspector || '', '행정실장') : '');
+      : (useDefault ? cleanPersonName(defaultAdminManagerSource, '행정실장') : '');
+    const defaultWitnessSource = [p.witness, school.witness].find(value => {
+      const text = roleText(value);
+      return text && !isAdminManager(text) && cleanPersonName(text) !== inspectorName;
+    }) || '';
     const witnessName = useEntered
       ? cleanPersonName(ctx.value('warrantyWitnessName'))
-      : (useDefault ? cleanPersonName(p.witness || school.witness || '') : '');
+      : (useDefault ? cleanPersonName(defaultWitnessSource) : '');
     const date = ctx.value('warrantyInspectionDate');
     const issue = ctx.value('warrantyIssueDetails');
     const actions = ctx.value('warrantyActions');
@@ -579,8 +586,8 @@
       <p class="warranty-statement">위와 같이 하자(만료)검사를 필하였음.</p>
       <p class="record-date">${h.e(h.formatKoreanDate(date))}</p>
       <div class="warranty-signatures">
-        <div><span class="warranty-signature-label">검 사 자 :</span><span class="warranty-signature-content">${signatoryMode==='blank'?'':`${school.name?`${h.e(school.name)} `:''}${h.e(inspectorPosition)}${inspectorName?` ${h.e(inspectorName)}`:''}`} <span class="warranty-seal">(인)</span></span></div>
-        <div><span class="warranty-signature-label">입 회 자 :</span><span class="warranty-signature-content">${signatoryMode==='blank'?'':`${witnessName?h.e(witnessName):''}`} <span class="warranty-seal">(인)</span></span></div>
+        <div><span class="warranty-signature-label">검 사 자 :</span><span class="warranty-signature-content ${signatoryMode==='blank'?'is-blank':''}">${signatoryMode==='blank'?'':`${h.e(inspectorPosition)}${inspectorName?` ${h.e(inspectorName)}`:''}`}<span class="warranty-seal">(인)</span></span></div>
+        <div><span class="warranty-signature-label">입 회 자 :</span><span class="warranty-signature-content ${signatoryMode==='blank'?'is-blank':''}">${signatoryMode==='blank'?'':`${witnessName?h.e(witnessName):''}`}<span class="warranty-seal">(인)</span></span></div>
       </div>
     </article>`];
   }
