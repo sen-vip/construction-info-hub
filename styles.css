@@ -1371,3 +1371,9 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .pledge-document-card .document-card-actions,.warranty-report-card .document-card-actions{margin-top:2px}
 .warranty-filled-name{display:inline-block;min-width:34mm;margin:0 2mm;text-align:center;font-weight:700}
 @media (max-width:760px){.document-preview-mode{align-items:flex-start;display:grid;grid-template-columns:1fr}.document-preview-mode .button{margin-left:0;width:100%}}
+
+/* v0.4.3.6 — 하자검사조서 3-way 출력 / 배제사유 보완 / 업체 체크리스트 출력 복구 */
+.pledge-reasons-full{display:grid;gap:8px;margin:18px 0 0;padding:0;font-size:12px;line-height:1.48}
+.pledge-reason-item{padding:7px 10px;border-bottom:1px solid #d9dee7;white-space:normal}
+.pledge-reason-item:last-child{border-bottom:0}
+.warranty-preview-mode .preview-mode-hint{flex-basis:100%;font-size:12px;color:#667085;margin-top:4px}

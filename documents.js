@@ -269,18 +269,18 @@
       <p class="pledge-recipient">${h.e(h.recipientFor(school.name))}</p>
     </article>`;
     const reasons = [
-      '견적서 제출 마감일 현재 부도·파산·해산·영업정지 등이 확정된 경우. 다만 법원의 회생절차개시결정이 있는 경우 수의계약 체결 가능',
-      '입찰참가자격 제한기간 중에 있는 자(관련 법령상 예외에 해당되는 경우 제외)',
-      '견적서 제출 마감일을 기준으로 관련 법령에 따라 부실이행, 담합행위, 입찰·계약 서류의 허위·위조 제출, 입찰·낙찰·계약이행 관련 뇌물 제공으로 부정당업자 제재 처분을 받고 그 종료일로부터 3개월이 지나지 아니한 자',
-      '공사 또는 기술용역의 경우 기술자 보유현황이 관련법령에 따른 업종등록 기준에 미달하는 자',
-      '견적서 제출 마감일 기준 최근 3개월 이내에 해당 지방자치단체의 입찰·계약 및 그 이행과 관련하여 10일 이상 지연배상금 부과, 정당한 이행명령 거부, 불법하도급, 반복 하자보수 또는 물의를 일으키는 등 신용이 떨어져 계약 체결이 곤란하다고 판단되는 자',
-      '견적서 제출 마감일 기준 최근 3개월 이내에 해당 지방자치단체와의 계약 및 그 이행과 관련하여 정당한 이유 없이 계약에 응하지 아니하거나 포기서를 제출한 사실이 있는 자',
-      '수의계약 체결일 현재 지방자치단체의 장 또는 지방의회의원과 관련하여 법에서 정한 수의계약 제한 사유에 해당하는 자',
-      '발주기관이 제한한 자격요건 등을 충족하지 아니한 자',
-      '그 밖에 계약담당자가 계약이행능력이 없다고 판단되는 명백한 증거가 있는 자',
-      '특별재난지역 재난복구공사(용역)의 경우 관련 기준에서 정한 동시 계약 건수 등의 배제사유에 해당하는 자'
+      '① 견적서 제출 마감일 현재 부도·파산·해산·영업정지 등이 확정된 경우. 다만 법원의 회생절차개시결정이 있는 경우에는 수의계약 체결 가능',
+      '② 입찰참가자격 제한기간 중에 있는 자(「지방계약법」 제31조제5항에 해당되는 경우 예외)',
+      '③ 견적서 제출 마감일을 기준으로 「지방계약법」 제31조 또는 다른 법령에 따라 부실이행, 담합행위, 입찰·계약 서류의 허위·위조 제출, 입찰·낙찰·계약이행 관련 뇌물 제공으로 부정당업자 제재 처분을 받고 그 종료일로부터 3개월이 지나지 아니한 자(법 제31조제5항에 해당되는 경우 예외)',
+      '④ 공사 또는 기술용역의 경우 기술자 보유현황이 관련 법령에 따른 업종등록 기준에 미달하는 자\n※ 기술자 보유현황 심사는 낙찰자결정기준의 관련 기술인력 평가방법을 준용하며, 이 경우 입찰공고일은 안내공고일, 적격심사서류 제출마감일은 견적서 제출마감일로 봄',
+      '⑤ 견적서 제출 마감일 기준 최근 3개월 이내에 해당 지방자치단체의 입찰·계약 및 그 이행과 관련하여 10일 이상 지연배상금 부과, 정당한 이행명령 거부, 불법하도급, 5회 이상 하자보수 또는 물의를 일으키는 등 신용이 떨어져 계약 체결이 곤란하다고 판단되는 자',
+      '⑥ 견적서 제출 마감일 기준 최근 3개월 이내에 해당 지방자치단체와의 계약 및 그 이행과 관련하여 정당한 이유 없이 계약에 응하지 아니하거나 포기서를 제출한 사실이 있는 자\n※ 정당한 이유 없이 계약을 체결하지 아니한 경우 입찰참가자격 제한에는 해당하지 않더라도 수의계약 배제사유에는 해당할 수 있음',
+      '⑦ 수의계약 체결일 현재 「지방계약법」 제33조에 해당하는 자\n1. 지방자치단체의 장 또는 지방의회의원의 배우자인 사업자(법인은 대표자)\n2. 지방자치단체의 장 또는 지방의회의원(배우자 포함)의 직계 존·비속인 사업자\n3. 지방자치단체의 장 또는 지방의회의원이 자본금 총액의 50% 이상을 소유한 자\n4. 지방자치단체의 장 또는 지방의회의원 가족(배우자, 직계 존·비속)의 합산금액이 자본금 총액의 50% 이상을 소유한 사업자\n5. 지방자치단체의 장 또는 지방의회의원 소유업체의 계열회사 등',
+      '⑧ 발주기관이 제한한 자격요건 등을 충족하지 아니한 자',
+      '⑨ 그 밖에 계약담당자가 계약이행능력이 없다고 판단되는 명백한 증거가 있는 자',
+      '⑩ 「재난 및 안전관리 기본법」에 따라 특별재난지역으로 선포된 지역의 재난복구공사(용역)의 경우, 결격여부 심사일 현재 계약금액 5천만원 이상 해당 업종 관급공사 또는 계약금액 2천만원 이상 관급용역이 3건(일시 정지 중인 계약 제외) 이상인 자. 다만 동시에 여러 건의 수의계약 체결 예정자로 선정된 경우에는 기존 계약을 포함하여 3건까지 체결 가능하며, 2인 이상 견적서 제출 수의계약에 한함'
     ];
-    const page2 = `<article class="paper-a4 admin-document private-contract-pledge pledge-page-two document-print-page"><h1 class="pledge-reasons-title">수의계약 배제 사유</h1><ol class="pledge-reasons">${reasons.map(text=>`<li>${h.e(text)}</li>`).join('')}</ol><p class="pledge-reasons-note">※ 관련 법령·예규 및 계약 집행기준이 개정될 수 있으므로 실제 계약 시 최신 기준을 확인합니다.</p></article>`;
+    const page2 = `<article class="paper-a4 admin-document private-contract-pledge pledge-page-two document-print-page"><h1 class="pledge-reasons-title">수의계약 배제 사유</h1><div class="pledge-reasons pledge-reasons-full">${reasons.map(text=>`<div class="pledge-reason-item">${h.e(text).replace(/\n/g,'<br>')}</div>`).join('')}</div><p class="pledge-reasons-note">※ 관련 법령·예규 및 계약 집행기준이 개정될 수 있으므로 실제 계약 시 최신 기준을 확인합니다.</p></article>`;
     return [page1,page2];
   }
 
@@ -532,12 +532,14 @@
   }
 
   function renderWarrantyInspection(ctx) {
-    const { p, h } = common(ctx);
-    const useSignatories = !!ctx.renderOptions?.useWarrantySignatories;
-    const inspectorPosition = useSignatories ? ctx.value('warrantyInspectorPosition') : '';
-    const inspectorName = useSignatories ? ctx.value('warrantyInspectorName') : '';
-    const witnessPosition = useSignatories ? ctx.value('warrantyWitnessPosition') : '';
-    const witnessName = useSignatories ? ctx.value('warrantyWitnessName') : '';
+    const { p, school, h } = common(ctx);
+    const signatoryMode = ctx.renderOptions?.warrantySignatoryMode || 'default';
+    const useEntered = signatoryMode === 'filled';
+    const useDefault = signatoryMode === 'default';
+    const inspectorPosition = useEntered ? ctx.value('warrantyInspectorPosition') : '';
+    const inspectorName = useEntered ? ctx.value('warrantyInspectorName') : (useDefault ? (p.inspector || school.inspector || '') : '');
+    const witnessPosition = useEntered ? ctx.value('warrantyWitnessPosition') : '';
+    const witnessName = useEntered ? ctx.value('warrantyWitnessName') : (useDefault ? (p.witness || school.witness || '') : '');
     const date = ctx.value('warrantyInspectionDate');
     const issue = ctx.value('warrantyIssueDetails');
     const actions = ctx.value('warrantyActions');
