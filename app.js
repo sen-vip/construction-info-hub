@@ -15,7 +15,7 @@
   const moreMenu = document.getElementById('moreMenu');
   const excelFileInput = document.getElementById('excelFileInput');
   const backupFileInput = document.getElementById('backupFileInput');
-  const APP_VERSION = '0.4.3.3';
+  const APP_VERSION = '0.4.3.4';
   const REFERENCE_PROGRAM = '서울시교육청 교육시설안전과 「공사서류 원클릭(간소화)프로그램」(2026.5.수정)';
 
   const state = {

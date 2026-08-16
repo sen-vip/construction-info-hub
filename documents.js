@@ -532,9 +532,7 @@
   function renderWarrantyInspection(ctx) {
     const { p, h } = common(ctx);
     const inspectorPosition = ctx.value('warrantyInspectorPosition');
-    const inspectorName = ctx.value('warrantyInspectorName') || ctx.value('warrantyInspector');
     const witnessPosition = ctx.value('warrantyWitnessPosition');
-    const witnessName = ctx.value('warrantyWitnessName') || ctx.value('warrantyWitness');
     const date = ctx.value('warrantyInspectionDate');
     const issue = ctx.value('warrantyIssueDetails');
     const actions = ctx.value('warrantyActions');
@@ -559,8 +557,8 @@
       <p class="warranty-statement">위와 같이 하자(만료)검사를 필하였음.</p>
       <p class="record-date">${h.e(h.formatKoreanDate(date))}</p>
       <div class="warranty-signatures">
-        <div><span>검 사 자 :</span><span>직위 ${h.e(inspectorPosition || '')}</span><strong class="warranty-name-sign">성명 <span class="warranty-name-blank"></span> (인)</strong></div>
-        <div><span>입 회 자 :</span><span>직위 ${h.e(witnessPosition || '')}</span><strong>성명 ${witnessName ? h.e(h.representativeWithSeal(witnessName)) : '　　　　　　　　 (인)'}</strong></div>
+        <div><span>검 사 자 :</span><span>직위 ${h.e(inspectorPosition || '')}</span><strong class="warranty-name-sign">성명 <span class="warranty-name-space" aria-hidden="true"></span> (인)</strong></div>
+        <div><span>입 회 자 :</span><span>직위 ${h.e(witnessPosition || '')}</span><strong class="warranty-name-sign">성명 <span class="warranty-name-space" aria-hidden="true"></span> (인)</strong></div>
       </div>
     </article>`];
   }
