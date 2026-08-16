@@ -11,11 +11,12 @@
   const modalTitle = document.getElementById('modalTitle');
   const modalEyebrow = document.getElementById('modalEyebrow');
   const modalBody = document.getElementById('modalBody');
+  const modalAlertRegion = document.getElementById('modalAlertRegion');
   const modalActions = document.getElementById('modalActions');
   const moreMenu = document.getElementById('moreMenu');
   const excelFileInput = document.getElementById('excelFileInput');
   const backupFileInput = document.getElementById('backupFileInput');
-  const APP_VERSION = '0.4.3.6';
+  const APP_VERSION = '0.4.3.7';
   const REFERENCE_PROGRAM = '서울시교육청 교육시설안전과 「공사서류 원클릭(간소화)프로그램」(2026.5.수정)';
 
   const state = {
@@ -193,6 +194,19 @@
   }
 
   function showToast(message, type = '') {
+    if (modal?.open && modalAlertRegion) {
+      const div = document.createElement('div');
+      div.className = `modal-inline-alert ${type}`.trim();
+      div.textContent = message;
+      modalAlertRegion.replaceChildren(div);
+      modalAlertRegion.hidden = false;
+      modalAlertRegion.scrollIntoView({ block:'nearest' });
+      window.setTimeout(() => {
+        if (div.isConnected) div.remove();
+        if (!modalAlertRegion.children.length) modalAlertRegion.hidden = true;
+      }, 4200);
+      return;
+    }
     const region = document.getElementById('toastRegion');
     const div = document.createElement('div');
     div.className = `toast ${type}`.trim();
@@ -201,20 +215,72 @@
     setTimeout(() => div.remove(), 3200);
   }
 
+  function clearModalAlert() {
+    if (!modalAlertRegion) return;
+    modalAlertRegion.replaceChildren();
+    modalAlertRegion.hidden = true;
+  }
+
   function openModal({ title, eyebrow = '', body = '', actions = '', wide = false }) {
     modal.classList.toggle('wide-modal', !!wide);
     modalTitle.textContent = title;
     modalEyebrow.textContent = eyebrow;
+    clearModalAlert();
     modalBody.innerHTML = body;
     modalActions.innerHTML = actions;
     if (!modal.open) modal.showModal();
   }
 
-  function closeModal() { if (modal.open) modal.close(); }
+  function closeModal() {
+    clearModalAlert();
+    if (modal.open) modal.close();
+  }
 
   function openExcelPicker(mode = 'auto') {
     state.importMode = mode;
     excelFileInput.click();
+  }
+
+  function openExcelDropModal(mode) {
+    const isEdufine = mode === 'edufine';
+    const title = isEdufine ? '에듀파인 자료 불러오기' : '공사관리대장 불러오기';
+    const expected = isEdufine ? '자료관리목록.xlsx' : '공사관리대장.xlsx';
+    const guide = isEdufine
+      ? `<div class="import-path-guide"><strong>다운로드 경로</strong><span>에듀파인 <b>›</b> 학교회계 <b>›</b> 계약관리 <b>›</b> 계약자료관리 <b>›</b> 자료관리</span></div>`
+      : `<div class="import-path-guide"><strong>불러올 파일</strong><span>공사관리대장.xlsx</span></div>`;
+    openModal({
+      eyebrow:'엑셀 불러오기 · 드래그앤드롭',
+      title,
+      body:`<div class="notice"><strong>${expected}를 이 창에 끌어다 놓을 수 있습니다.</strong><br>파일은 서버로 전송하지 않고 이 브라우저에서만 읽습니다.</div>${guide}
+        <div class="excel-drop-zone" id="excelDropZone" tabindex="0" role="button" aria-label="${expected} 드래그앤드롭 영역">
+          <div class="excel-drop-icon">↧</div>
+          <strong>${expected}를 여기에 놓으세요</strong>
+          <span>또는 아래 파일 선택 버튼을 사용하세요.</span>
+        </div>`,
+      actions:`<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="selectExcelFromDropBtn">파일 선택</button>`
+    });
+    const zone = modalBody.querySelector('#excelDropZone');
+    const acceptFile = file => {
+      if (!file) return;
+      if (!/\.xlsx$/i.test(file.name || '')) {
+        showToast('xlsx 파일만 불러올 수 있습니다.','warn');
+        return;
+      }
+      state.importMode = mode;
+      handleExcelFile(file);
+    };
+    const setDrag = active => zone?.classList.toggle('drag-active', !!active);
+    zone?.addEventListener('click',()=>openExcelPicker(mode));
+    zone?.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();openExcelPicker(mode);} });
+    zone?.addEventListener('dragenter',ev=>{ev.preventDefault();setDrag(true);});
+    zone?.addEventListener('dragover',ev=>{ev.preventDefault();setDrag(true);});
+    zone?.addEventListener('dragleave',ev=>{ if(!zone.contains(ev.relatedTarget)) setDrag(false); });
+    zone?.addEventListener('drop',ev=>{
+      ev.preventDefault(); setDrag(false);
+      acceptFile(ev.dataTransfer?.files?.[0] || null);
+    });
+    modalActions.querySelector('[data-modal-close]')?.addEventListener('click',closeModal);
+    modalActions.querySelector('#selectExcelFromDropBtn')?.addEventListener('click',()=>openExcelPicker(mode));
   }
 
   function normalizeProjectData(project) {
@@ -295,7 +361,7 @@
         </button>
         <button class="start-card" type="button" data-start-edufine>
           <span class="start-step">3</span>
-          <span class="start-copy"><strong>에듀파인으로 정보 업데이트</strong><small>자료관리목록.xlsx에서 계약·준공·지출 정보를 찾아 기존 공사를 보완합니다.</small></span>
+          <span class="start-copy"><strong>에듀파인으로 정보 업데이트</strong><small>자료관리목록.xlsx로 기존 공사를 보완합니다.<br>학교회계 › 계약관리 › 계약자료관리 › 자료관리</small></span>
           <span class="start-arrow">›</span>
         </button>
       </section>
@@ -334,8 +400,8 @@
     main.querySelectorAll('[data-filter]').forEach(btn => btn.addEventListener('click', () => { state.filter = btn.dataset.filter; renderDashboard(); }));
     main.querySelectorAll('[data-project-id]').forEach(row => row.addEventListener('click', () => openProject(row.dataset.projectId)));
     main.querySelector('[data-start-new]')?.addEventListener('click', openNewProjectModal);
-    main.querySelector('[data-start-history]')?.addEventListener('click', () => openExcelPicker('history'));
-    main.querySelector('[data-start-edufine]')?.addEventListener('click', () => openExcelPicker('edufine'));
+    main.querySelector('[data-start-history]')?.addEventListener('click', () => openExcelDropModal('history'));
+    main.querySelector('[data-start-edufine]')?.addEventListener('click', () => openExcelDropModal('edufine'));
   }
 
   function projectRowHtml(p) {
@@ -580,7 +646,6 @@
     main.querySelectorAll('[data-doc-open]').forEach(btn => btn.addEventListener('click', () => openDocumentPreview(btn.dataset.docOpen, {mode:btn.dataset.previewMode || ''})));
     main.querySelectorAll('[data-doc-print]').forEach(btn => btn.addEventListener('click', () => printDocumentDirect(btn.dataset.docPrint, {mode:btn.dataset.previewMode || ''})));
     main.querySelectorAll('[data-pledge-edit]').forEach(btn => btn.addEventListener('click', () => openPrivateContractPledgeModal()));
-    main.querySelectorAll('[data-warranty-report-edit]').forEach(btn => btn.addEventListener('click', () => openWarrantyInspectionModal(activeWarrantyInspection(p), false)));
     bindDocumentBatchControls(p);
     main.querySelectorAll('[data-jump-section]').forEach(btn => btn.addEventListener('click', () => jumpToSection(btn.dataset.jumpSection)));
     main.querySelectorAll('[data-change-delete]').forEach(btn => btn.addEventListener('click', () => confirmDeleteContractChange(btn.dataset.changeDelete)));
@@ -750,7 +815,7 @@
     const source=vendorForm?'업체 작성·제출 / 기관 확인':'기관 점검·자체 보관';
     const statusTitle=complete?'✓ 작성 완료':(vendorForm?'빈 양식 출력 가능':'점검결과 입력 필요');
     const statusDesc=saved?.date?`최근 점검 ${e(formatDate(saved.date))}`:(vendorForm?'업체가 직접 점검·작성할 수 있도록 체크하지 않은 원본 양식도 출력할 수 있습니다.':'원본 체크리스트 항목을 웹에서 입력합니다.');
-    const signatureHint = mustComplete ? `<div class="safety-signature-hint"><strong>점검자 서명 안내</strong><span>인쇄할 때 마우스·터치·펜으로 점검자 서명을 직접 넣을 수 있습니다. 서명은 현재 출력에만 사용되며 저장되지 않습니다.</span></div>` : '';
+    const signatureHint = `<div class="safety-signature-hint"><strong>점검자 서명 안내</strong><span>작성본을 인쇄할 때 마우스·터치·펜으로 점검자 서명을 직접 넣거나, 서명 없이 출력할 수 있습니다. 서명은 현재 출력에만 사용되며 저장되지 않습니다.</span></div>`;
     return `<article class="document-card safety-document-card ${complete||vendorForm?'ready':'needs-info'} ${batchSelected?'selected':''}" data-document-card="${e(type)}"><div class="document-card-top"><label class="document-select"><input type="checkbox" data-doc-select="${e(type)}" ${batchSelected?'checked':''}><span>선택</span></label><div><span class="document-stage">${e(source)}</span><span class="document-version">양식 ${e(def.version)}</span></div></div><h3>${e(def.label)}</h3><p>${e(def.description)}</p><div class="document-requirement ${complete||vendorForm?'ready':''}"><strong>${e(statusTitle)}</strong><span>${statusDesc}</span></div>${signatureHint}<div class="document-card-actions"><button class="button ${complete?'secondary':'primary'}" type="button" data-safety-edit="${e(type)}">${complete?'작성내용 수정':'체크리스트 작성'}</button>${(complete||vendorForm)?`<button class="button ghost" type="button" data-doc-open="${e(type)}">${complete?'미리보기':'빈 양식 미리보기'}</button><button class="button ${complete?'primary':'secondary'}" type="button" data-doc-print="${e(type)}">${complete?'인쇄 / PDF':'빈 양식 인쇄'}</button>`:''}</div><button class="my-doc-toggle ${selected?'active':''}" type="button" data-my-doc-toggle="${e(type)}">${selected?'✓ 내 서류':'＋ 내 서류'}</button></article>`;
   }
 
@@ -759,7 +824,7 @@
     const saved=safetyChecklistFor(p,type)||{}; const results=saved.results||{}; const agency=def.owner==='agency';
     const defaultInspector=saved.inspector || (agency?(p.supervisor||state.school?.supervisor||''):'');
     const rows=def.items.map((item,i)=>{const key=String(i+1),v=results[key]||'';return `<div class="safety-edit-row"><div class="safety-edit-number">${i+1}</div><div class="safety-edit-question">${e(item)}</div><div class="safety-edit-options"><label><input type="radio" name="safety_${i}" value="yes" ${v==='yes'?'checked':''}> 예</label><label><input type="radio" name="safety_${i}" value="no" ${v==='no'?'checked':''}> 아니요</label><label><input type="radio" name="safety_${i}" value="na" ${v==='na'?'checked':''}> 해당없음</label></div></div>`;}).join('');
-    const signatureNotice = agency ? '<div class="safety-signature-edit-note"><strong>출력 시 점검자 서명을 넣을 수 있습니다.</strong><span>저장된 점검자 이름 옆에 인쇄 직전 마우스·터치·펜으로 서명하며, 서명 이미지는 저장하지 않습니다.</span></div>' : '';
+    const signatureNotice = '<div class="safety-signature-edit-note"><strong>출력 시 점검자 서명을 넣을 수 있습니다.</strong><span>작성한 체크리스트는 인쇄 직전 마우스·터치·펜으로 서명하거나 서명 없이 출력할 수 있으며, 서명 이미지는 저장하지 않습니다.</span></div>';
     openModal({eyebrow:`안전·보건 · ${agency?'기관 점검':'업체 작성·기관 확인'}`,title:def.label,wide:true,body:`<div class="notice"><strong>${e(def.subtitle)}</strong><br>${e(REFERENCE_PROGRAM)}의 점검항목을 기준으로 작성합니다.</div>${signatureNotice}<div class="modal-grid safety-meta-edit" style="margin-top:16px">${modalDateField('safetyChecklistDate','점검일',saved.date||p.startDate||p.contractDate||'')}${modalField('safetyChecklistInspector',agency?'점검자':'점검자 직접 입력',defaultInspector)}${agency?'':'<div class="field full"><span class="hint">회사 대표자가 아니라 실제 점검한 사람의 이름을 입력합니다.</span></div>'}<div class="field full"><label for="safetyChecklistNotes">비고</label><input id="safetyChecklistNotes" value="${e(saved.notes||'')}"></div></div><div class="safety-edit-list">${rows}</div>${def.footer?`<p class="safety-edit-footer">※ ${e(def.footer)}</p>`:''}`,actions:`<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="saveSafetyChecklistBtn">저장${afterSave?'하고 계속':''}</button>`});
     initDateInputs(modalBody); modalActions.querySelector('[data-modal-close]').addEventListener('click',closeModal); modalActions.querySelector('#saveSafetyChecklistBtn').addEventListener('click',()=>saveSafetyChecklist(type,afterSave));
   }
@@ -834,7 +899,7 @@
     const statusText = hasDefaults
       ? '기본값·공란·직접 입력값 중 원하는 방식으로 미리보기·출력할 수 있습니다.'
       : (hasSignatories?'공란 또는 직접 입력값으로 미리보기·출력할 수 있습니다.':'검사자·입회자는 공란으로 출력할 수 있고 필요하면 직접 입력할 수 있습니다.');
-    return `<article class="document-card warranty-report-card ${missing.length?'needs-info':'ready'} ${checked?'selected':''}" data-document-card="${e(type)}"><div class="document-card-top"><label class="document-select"><input type="checkbox" data-doc-select="${e(type)}" ${checked?'checked':''}><span>선택</span></label><div><span class="document-stage">행정기관 작성·관리</span><span class="document-version">양식 ${e(def.version)}</span></div></div><h3>${e(def.label)}</h3><p>${e(def.description)}</p>${!record?`<div class="document-requirement"><strong>검사내용 입력 필요</strong><span>검사일·검사결과를 먼저 입력하고, 검사자·입회자는 기본값/공란/직접 입력값으로 출력할 수 있습니다.</span></div>`:(missing.length?`<div class="document-requirement"><strong>추가 입력 ${missing.length}개</strong><span>${e(labels.slice(0,3).join(' · '))}${labels.length>3?' 외':''}</span></div>`:`<div class="document-requirement ready"><strong>✓ 하자검사 기록 있음</strong><span>${e(statusText)}</span></div>`)}<div class="document-card-actions"><button class="button secondary" type="button" data-warranty-report-edit>${record?'검사내용·서명자 수정':'하자검사조서 작성'}</button><button class="button ghost" type="button" data-doc-open="${e(type)}" data-preview-mode="default">미리보기</button><button class="button primary" type="button" data-doc-print="${e(type)}" data-preview-mode="default">인쇄 / PDF</button></div><button class="my-doc-toggle ${inMyDocs?'active':''}" type="button" data-my-doc-toggle="${e(type)}">${inMyDocs?'✓ 내 서류':'＋ 내 서류'}</button></article>`;
+    return `<article class="document-card warranty-report-card ${missing.length?'needs-info':'ready'} ${checked?'selected':''}" data-document-card="${e(type)}"><div class="document-card-top"><label class="document-select"><input type="checkbox" data-doc-select="${e(type)}" ${checked?'checked':''}><span>선택</span></label><div><span class="document-stage">행정기관 작성·관리</span><span class="document-version">양식 ${e(def.version)}</span></div></div><h3>${e(def.label)}</h3><p>${e(def.description)}</p>${!record?`<div class="document-requirement"><strong>검사내용 입력 필요</strong><span>검사일·검사결과를 먼저 입력하고, 검사자·입회자는 기본값/공란/직접 입력값으로 출력할 수 있습니다.</span></div>`:(missing.length?`<div class="document-requirement"><strong>추가 입력 ${missing.length}개</strong><span>${e(labels.slice(0,3).join(' · '))}${labels.length>3?' 외':''}</span></div>`:`<div class="document-requirement ready"><strong>✓ 하자검사 기록 있음</strong><span>${e(statusText)}</span></div>`)}<div class="document-card-actions"><button class="button ghost" type="button" data-doc-open="${e(type)}" data-preview-mode="default">미리보기</button><button class="button primary" type="button" data-doc-print="${e(type)}" data-preview-mode="default">인쇄 / PDF</button></div><button class="my-doc-toggle ${inMyDocs?'active':''}" type="button" data-my-doc-toggle="${e(type)}">${inMyDocs?'✓ 내 서류':'＋ 내 서류'}</button></article>`;
   }
 
   function documentCardHtml(type, p) {
@@ -1134,6 +1199,9 @@
     if (type === 'warrantyInspectionReport') {
       renderOptions = {...renderOptions,...warrantyPreviewRenderOptions(p,previewOptions.mode || 'default')};
     }
+    if (type === 'utilityPaymentPledge') {
+      renderOptions.utilitySiteManager = String(p.siteManager || '');
+    }
 
     const previewModeControls = () => {
       if (type === 'privateContractPledge') {
@@ -1147,11 +1215,14 @@
         const mode=renderOptions.warrantySignatoryMode || 'default';
         return `<div class="document-preview-mode warranty-preview-mode"><strong>검사자·입회자 출력</strong><label><input type="radio" name="previewMode" value="default" ${mode==='default'?'checked':''}> 기본값</label><label><input type="radio" name="previewMode" value="blank" ${mode==='blank'?'checked':''}> 공란 출력</label><label><input type="radio" name="previewMode" value="filled" ${mode==='filled'?'checked':''} ${hasSignatories?'':'disabled'}> 입력값 출력</label><button class="button ghost small" type="button" id="editWarrantyReportBtn">입력값 수정</button>${hasDefaults?'':`<span class="preview-mode-hint">학교 기본정보에 검사자·입회자 기본값이 없으면 기본값 모드도 성명은 공란으로 표시됩니다.</span>`}</div>`;
       }
+      if (type === 'utilityPaymentPledge') {
+        return `<div class="document-preview-mode utility-site-manager-preview"><strong>현장대리인 <span>선택</span></strong><input id="previewUtilitySiteManager" value="${e(renderOptions.utilitySiteManager || '')}" placeholder="입력하지 않아도 출력 가능"><button class="button secondary small" type="button" id="applyUtilitySiteManagerBtn">입력값 적용·저장</button><button class="button ghost small" type="button" id="blankUtilitySiteManagerBtn">이번 출력은 공란</button></div>`;
+      }
       return '';
     };
 
     const paintPreview = () => {
-      modalBody.innerHTML=`<div class="doc-preview-note">실제 출력될 A4 모습을 확인하세요. ${type==='privateContractPledge'?'체크값을 넣은 작성본과 빈 양식을 선택할 수 있습니다.':type==='warrantyInspectionReport'?'검사자·입회자는 기본값 / 공란 출력 / 입력값 출력 중에서 선택할 수 있습니다.':'수정이 필요하면 닫고 공사정보에서 고치면 모든 서류에 함께 반영됩니다.'}</div>${previewModeControls()}<div class="doc-preview-scroll">${documentMarkup(type,p,renderOptions)}</div>`;
+      modalBody.innerHTML=`<div class="doc-preview-note">실제 출력될 A4 모습을 확인하세요. ${type==='privateContractPledge'?'체크값을 넣은 작성본과 빈 양식을 선택할 수 있습니다.':type==='warrantyInspectionReport'?'검사자·입회자는 기본값 / 공란 출력 / 입력값 출력 중에서 선택할 수 있습니다.':type==='utilityPaymentPledge'?'현장대리인은 선택 입력이며, 입력하지 않아도 (인)만 남긴 공란으로 출력할 수 있습니다.':'수정이 필요하면 닫고 공사정보에서 고치면 모든 서류에 함께 반영됩니다.'}</div>${previewModeControls()}<div class="doc-preview-scroll">${documentMarkup(type,p,renderOptions)}</div>`;
       modalBody.querySelectorAll('input[name="previewMode"]').forEach(input=>input.addEventListener('change',()=>{
         if(type==='privateContractPledge')renderOptions.blankPledge=input.value==='blank';
         if(type==='warrantyInspectionReport')renderOptions.warrantySignatoryMode=input.value;
@@ -1159,6 +1230,19 @@
       }));
       modalBody.querySelector('#editPreviewPledgeBtn')?.addEventListener('click',()=>{closeModal();openPrivateContractPledgeModal(true);});
       modalBody.querySelector('#editWarrantyReportBtn')?.addEventListener('click',()=>{const record=activeWarrantyInspection(p);closeModal();openWarrantyInspectionModal(record,false);});
+      modalBody.querySelector('#applyUtilitySiteManagerBtn')?.addEventListener('click',async()=>{
+        const value=modalBody.querySelector('#previewUtilitySiteManager')?.value?.trim() || '';
+        renderOptions.utilitySiteManager=value;
+        p.siteManager=value;
+        p.updatedAt=new Date().toISOString();
+        await DB.put('projects',p);
+        showToast(value?'현장대리인 입력값을 공사정보에 저장했습니다.':'현장대리인을 공란으로 저장했습니다.');
+        paintPreview();
+      });
+      modalBody.querySelector('#blankUtilitySiteManagerBtn')?.addEventListener('click',()=>{
+        renderOptions.utilitySiteManager='';
+        paintPreview();
+      });
     };
 
     openModal({eyebrow:`${def.stage} 서류 · 양식 ${def.version}`,title:`${def.label} 미리보기`,wide:true,body:'',actions:`<button class="button secondary" type="button" data-modal-close>닫기</button><button class="button primary" type="button" id="printDocumentBtn">인쇄 / PDF 저장</button>`});
@@ -1623,13 +1707,13 @@
   }
 
   function openChecklistSignatureModal(types, p, onContinue) {
-    const targets = [...new Set(types)].filter(type => type === 'safetyGeneral' && safetyChecklistComplete(p,type));
+    const targets = [...new Set(types)].filter(type => isSafetyDocument(type) && safetyChecklistComplete(p,type));
     if (!targets.length) { onContinue({}); return; }
     const checklistSummary = targets.map(type => {
       const saved = safetyChecklistFor(p,type) || {};
       return `<li><strong>${e(DOCUMENT_DEFINITIONS[type]?.label || type)}</strong><span>점검자 ${e(saved.inspector || '미입력')}</span></li>`;
     }).join('');
-    const applyTargetText = targets.length > 1 ? `작성 완료된 체크리스트 ${targets.length}종에 같은 서명이 적용됩니다.` : '현재 체크리스트의 점검자 서명란에 적용됩니다.';
+    const applyTargetText = targets.length > 1 ? `작성 완료된 체크리스트 ${targets.length}종에 같은 서명이 적용됩니다.` : '현재 체크리스트의 점검자 서명란에 적용됩니다. 서명 없이 출력할 수도 있습니다.';
     openModal({
       eyebrow:'출력 전 확인', title:'점검자 서명', wide:true,
       body:`<div class="signature-print-notice"><strong>서명은 이번 출력에만 사용됩니다.</strong><span>${e(applyTargetText)} 마우스·터치·펜으로 서명하세요. 브라우저 저장소와 백업파일에는 저장하지 않습니다.</span></div>
@@ -2643,7 +2727,7 @@
       body:`<div class="notice"><strong>핵심 원칙</strong><br>같은 공사정보는 한 번 입력하고 다시 입력하지 않습니다.</div>
       <div style="display:grid;gap:16px;margin-top:18px;font-size:14px">
         <div><strong>1. 공사를 여러 건 저장</strong><p class="muted">전기·건축·체육관 공사를 동시에 등록해도 각 공사는 독립적으로 자동저장됩니다.</p></div>
-        <div><strong>2. 공사관리대장 재사용</strong><p class="muted">공사관리대장.xlsx를 불러오면 여러 공사를 한꺼번에 등록하고 기존 공사의 빈 정보를 보완합니다.</p></div><div><strong>3. 에듀파인으로 업데이트</strong><p class="muted">자료관리목록.xlsx를 다시 내려받아 올리면 계약·준공·지출 단계에서 새로 생긴 값만 기존 공사에 보완합니다. 다른 값은 자동 덮어쓰지 않습니다.</p></div>
+        <div><strong>2. 공사관리대장 재사용</strong><p class="muted">공사관리대장.xlsx를 불러오면 여러 공사를 한꺼번에 등록하고 기존 공사의 빈 정보를 보완합니다.</p></div><div><strong>3. 에듀파인으로 업데이트</strong><p class="muted">에듀파인 &gt; 학교회계 &gt; 계약관리 &gt; 계약자료관리 &gt; 자료관리에서 자료관리목록.xlsx를 내려받아 드래그앤드롭하면 계약·준공·지출 단계에서 새로 생긴 값만 기존 공사에 보완합니다. 다른 값은 자동 덮어쓰지 않습니다.</p></div>
         <div><strong>4. 업체 재사용</strong><p class="muted">업체명·대표자·사업자번호·주소·전화·면허를 업체 보관함에 저장해 다음 공사에서 다시 고를 수 있습니다.</p></div>
         <div><strong>5. 공사서류 만들기</strong><p class="muted">공사 상세의 「서류」 탭에서 행정기관 작성·관리 서류를 먼저 확인할 수 있습니다. 공사대장·하자검사조서·하자대장과 기존 계약·착공·준공·지출서류를 같은 공사정보로 만들고 묶음 인쇄할 수 있습니다. 하자검사조서는 검사자·입회자를 입력해 출력하거나 공란으로 출력할 수 있습니다.</p></div>
         <div><strong>6. 계약서류 세트</strong><p class="muted">공사도급표준계약서·승낙사항·사용인감계·수의계약 통합서약서를 한 번에 선택할 수 있습니다. 수의계약 통합서약서는 예·아니오·해당없음을 미리 선택해 작성본으로 출력하거나, 체크하지 않은 빈 양식으로도 2페이지 출력할 수 있습니다.</p></div>

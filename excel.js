@@ -389,7 +389,8 @@
   async function exportAuditWorkbook(projects, options = {}) {
     let buffer = options.templateBuffer || null;
     if (!buffer) {
-      const response = await fetch('./assets/audit-template.xlsx', { cache: 'no-store' });
+      const templateUrl = new URL('./assets/공사관리대장.xlsx', document.baseURI || window.location.href);
+      const response = await fetch(templateUrl.href, { cache: 'no-store' });
       if (!response.ok) throw new Error('공사관리대장 템플릿을 불러오지 못했습니다.');
       buffer = await response.arrayBuffer();
     }

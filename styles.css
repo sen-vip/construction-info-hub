@@ -1377,3 +1377,52 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .pledge-reason-item{padding:7px 10px;border-bottom:1px solid #d9dee7;white-space:normal}
 .pledge-reason-item:last-child{border-bottom:0}
 .warranty-preview-mode .preview-mode-hint{flex-basis:100%;font-size:12px;color:#667085;margin-top:4px}
+
+
+/* v0.4.3.7 — drag & drop import / modal alert / checklist signature expansion */
+.modal-alert-region[hidden] { display:none; }
+.modal-alert-region { flex:none; padding:10px 22px 0; background:#fff; }
+.modal-inline-alert {
+  padding:10px 12px; border-radius:10px; background:#263447; color:#fff;
+  font-size:13px; font-weight:700; line-height:1.45; box-shadow:0 8px 20px rgba(18,28,45,.12);
+}
+.modal-inline-alert.warn { background:#8a5d18; }
+.modal-inline-alert.danger { background:#9c3a3a; }
+
+.import-path-guide {
+  margin:14px 0; padding:12px 14px; border:1px solid #cbdcf2; border-radius:12px;
+  background:#f4f8fd; display:grid; gap:5px;
+}
+.import-path-guide strong { font-size:12px; color:#335a89; }
+.import-path-guide span { font-size:13px; color:#1e3a5f; font-weight:700; line-height:1.5; }
+.import-path-guide b { padding:0 4px; color:#7b8da5; }
+
+.excel-drop-zone {
+  min-height:190px; padding:24px; border:2px dashed #b9c9dd; border-radius:16px;
+  background:#fbfdff; display:grid; place-items:center; align-content:center; gap:8px;
+  text-align:center; cursor:pointer; transition:.16s ease;
+}
+.excel-drop-zone:hover, .excel-drop-zone:focus-visible, .excel-drop-zone.drag-active {
+  outline:none; border-color:var(--primary); background:var(--primary-soft);
+  box-shadow:0 0 0 4px rgba(67,112,167,.08);
+}
+.excel-drop-icon { font-size:30px; line-height:1; color:var(--primary); }
+.excel-drop-zone strong { font-size:15px; }
+.excel-drop-zone span { color:var(--muted); font-size:12px; }
+
+.utility-site-manager-preview {
+  grid-template-columns:auto minmax(180px,1fr) auto auto;
+  align-items:center;
+}
+.utility-site-manager-preview strong span { color:var(--muted); font-size:11px; font-weight:600; }
+.utility-site-manager-preview input {
+  min-height:36px; padding:7px 10px; border:1px solid var(--line); border-radius:8px; font:inherit;
+}
+.private-contract-pledge .pledge-conflict-confirm td {
+  padding:9px 10px; text-align:left; font-size:10px; line-height:1.55; background:#fafbfd;
+}
+@media (max-width:700px) {
+  .utility-site-manager-preview { grid-template-columns:1fr; align-items:stretch; }
+  .utility-site-manager-preview .button { width:100%; }
+}
+.utility-site-manager-preview input#previewUtilitySiteManager { width:100%; height:36px; margin:0; accent-color:auto; }

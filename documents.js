@@ -82,7 +82,7 @@
     },
     warrantyInspectionReport: {
       key:'warrantyInspectionReport', label:'하자검사조서', outputTitle:'하  자  검  사  조  서', stage:'하자', version:'2026.05 수정', pages:1, owner:'agency',
-      description:'완료공사의 하자(만료)검사 결과를 기록하는 기관용 조서. 검사자·입회자는 입력값 또는 공란 출력 중 선택할 수 있습니다.',
+      description:'완료공사의 하자(만료)검사 결과를 기록하는 기관용 조서. 미리보기에서 검사자·입회자를 기본값·공란·입력값 중 선택하고 수정할 수 있습니다.',
       required:['projectName','vendorName','representative','workType','currentContractAmount','startDate','actualCompletionDate','defectEndDate','warrantyInspectionDate']
     },
     warrantyLedger: {
@@ -244,9 +244,9 @@
     return `
       <tr><td>1</td><th>계약일반조건</th><td>상기 본인(법인)은 「지방자치단체 입찰 및 계약 집행기준」 제9장 계약 일반조건을 준수합니다.</td><td>${plainChoice(a('generalConditions'))}</td></tr>
       <tr><td>2</td><th>수의계약 각서</th><td>귀 기관과 수의계약을 체결함에 있어서 [붙임1] 수의계약 배제사유 중 어느 사유에도 해당되지 않으며 차후에 이러한 사실이 발견된 경우 계약의 해제·해지 및 부정당업자 제재 처분을 받아도 하등의 이유를 제기하지 않겠습니다.<br><b>[붙임1] 수의계약 배제사유 1부</b></td><td>${plainChoiceWithNone(a('privateContractExclusion'))}</td></tr>
-      <tr class="pledge-conflict"><td rowspan="8">3</td><th rowspan="8">수의계약</th><td>① ${h.e(q[0])}</td><td>${plainChoiceWithNone(a('conflict1'))}</td></tr>
+      <tr class="pledge-conflict"><td rowspan="9">3</td><th rowspan="9">수의계약<br>체결 제한<br>여부 확인서</th><td>① ${h.e(q[0])}</td><td>${plainChoiceWithNone(a('conflict1'))}</td></tr>
       ${q.slice(1).map((text,i)=>`<tr class="pledge-conflict"><td>${'②③④⑤⑥⑦⑧'[i]} ${h.e(text)}</td><td>${plainChoiceWithNone(a(`conflict${i+2}`))}</td></tr>`).join('')}
-      <tr><td colspan="2"></td><td>「공직자의 이해충돌 방지법」 제12조에 따른 수의계약 체결 제한에 대하여 위와 같이 확인합니다. 만약 위 사항이 사실과 다른 경우에는 어떠한 처벌이나 불이익도 감수할 것을 서약합니다.</td><td></td></tr>
+      <tr class="pledge-conflict-confirm"><td colspan="2">「공직자의 이해충돌 방지법」 제12조에 따른 수의계약 체결 제한에 대하여 위와 같이 확인합니다. 만약 위 사항이 사실과 다른 경우에는 어떠한 처벌이나 불이익도 감수할 것을 서약합니다.</td></tr>
       <tr><td>4</td><th>계약보증금</th><td>계약서의 의무를 이행하지 못하여 계약보증금을 귀 기관에 귀속시켜야 할 사유가 발생하면 「지방자치단체를 당사자로 하는 계약에 관한 법률」 제15조제3항에 따라 즉시 해당하는 금액을 현금으로 납부하겠습니다.</td><td>${plainChoice(a('contractSecurity'))}<br>${h.e(sealChoice(p.contractSecurityType))}</td></tr>
       <tr><td>5</td><th>청렴계약</th><td>임직원과 대리인은 발주기관에서 시행하는 공사 등의 입찰·낙찰, 계약체결, 감독, 검사 또는 계약이행 과정에 참여하면서 금품·향응 등을 제공 또는 약속하거나 수수하지 않고, 불공정한 행위와 알선·청탁을 하지 않겠습니다.</td><td>${plainChoice(a('integrity'))}</td></tr>
       <tr><td>6</td><th>조세포탈 여부 확인 서약서</th><td>「지방자치단체를 당사자로 하는 계약에 관한 법률」 제31조의5에 따른 조세포탈 등을 한 자가 아님을 서약하며, 해당 사실이 발견된 때에는 계약 해제·해지 및 관련 제재 처분을 감수하겠습니다.</td><td>${plainChoice(a('taxEvasion'))}</td></tr>
@@ -305,6 +305,8 @@
 
   function renderUtilityPaymentPledge(ctx) {
     const { p, school, h } = common(ctx);
+    const hasSiteManagerOverride = Object.prototype.hasOwnProperty.call(ctx.renderOptions || {}, 'utilitySiteManager');
+    const siteManager = hasSiteManagerOverride ? ctx.renderOptions.utilitySiteManager : (p.siteManager || '');
     return [`<article class="paper-a4 admin-document vendor-form-page utility-payment-pledge document-print-page">
       <h1 class="vendor-form-title spaced-title">각&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;서</h1>
       <p class="vendor-form-intro">당사는 발주처인 ${h.e(school.name || '')}와 계약체결하여 시공 예정인 아래 공사 건에 대하여 귀 기관의 수도·전력을 사용할 경우에는 대한건설협회 완성공사원가분석 경비율에 의한 계산식으로 수도광열비·전력비 요금을 귀 기관에 세입조치하고 이에 대하여 이의를 제기하지 않을 것을 확약합니다.</p>
@@ -319,7 +321,7 @@
         <div class="signature-heading">계약자</div>
         <div class="utility-signature-line utility-company-line"><span>업&nbsp;&nbsp;체&nbsp;&nbsp;명 :</span><strong>${h.e(p.vendorName)}</strong></div>
         <div class="utility-signature-line"><span>대&nbsp;&nbsp;표&nbsp;&nbsp;자 :</span><strong class="utility-signature-name">${h.e(p.representative || '')}</strong><em class="utility-signature-seal">(인)</em></div>
-        <div class="utility-signature-line"><span>현장대리인 :</span><strong class="utility-signature-name">${h.e(p.siteManager || '')}</strong><em class="utility-signature-seal">(인)</em></div>
+        <div class="utility-signature-line"><span>현장대리인 :</span><strong class="utility-signature-name">${h.e(siteManager)}</strong><em class="utility-signature-seal">(인)</em></div>
       </div>
       <p class="doc-recipient">${h.e(h.recipientFor(school.name))}</p>
     </article>`];
