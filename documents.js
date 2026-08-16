@@ -586,8 +586,8 @@
       <p class="warranty-statement">위와 같이 하자(만료)검사를 필하였음.</p>
       <p class="record-date">${h.e(h.formatKoreanDate(date))}</p>
       <div class="warranty-signatures">
-        <div><span class="warranty-signature-label">검 사 자 :</span><span class="warranty-signature-content ${signatoryMode==='blank'?'is-blank':''}">${signatoryMode==='blank'?'':`${h.e(inspectorPosition)}${inspectorName?` ${h.e(inspectorName)}`:''}`}<span class="warranty-seal">(인)</span></span></div>
-        <div><span class="warranty-signature-label">입 회 자 :</span><span class="warranty-signature-content ${signatoryMode==='blank'?'is-blank':''}">${signatoryMode==='blank'?'':`${witnessName?h.e(witnessName):''}`}<span class="warranty-seal">(인)</span></span></div>
+        <div><span class="warranty-signature-label">검 사 자 :</span><span class="warranty-signature-content"><span class="warranty-signature-name">${signatoryMode==='blank'?'':`${h.e(inspectorPosition)}${inspectorName?` ${h.e(inspectorName)}`:''}`}</span><span class="warranty-seal">(인)</span></span></div>
+        <div><span class="warranty-signature-label">입 회 자 :</span><span class="warranty-signature-content"><span class="warranty-signature-name">${signatoryMode==='blank'?'':`${witnessName?h.e(witnessName):''}`}</span><span class="warranty-seal">(인)</span></span></div>
       </div>
     </article>`];
   }

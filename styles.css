@@ -220,7 +220,8 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .empty-actions { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
 
 .detail-head { display: flex; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
-.back-button { border: 0; background: transparent; padding: 0; margin-bottom: 12px; color: var(--muted); cursor: pointer; font-weight: 700; font-size: 13px; }
+.back-button { border: 1px solid #d7e0eb; background: #fff; padding: 8px 12px; margin-bottom: 14px; color: #445469; cursor: pointer; font-weight: 700; font-size: 14px; border-radius: 9px; line-height: 1.2; }
+.back-button:hover { background: #f5f8fc; border-color: #c3d0df; color: var(--text); }
 .current-project h1 { margin: 0; font-size: 28px; letter-spacing: -.6px; }
 .current-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 7px; color: var(--muted); font-size: 13px; }
 .save-state { display: flex; align-items: center; gap: 7px; min-width: 130px; justify-content: flex-end; color: var(--muted); font-size: 12px; }
@@ -1189,10 +1190,9 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .warranty-signatures > div { display: grid; grid-template-columns: 28mm minmax(0,1fr); gap: 4mm; align-items: baseline; }
 .warranty-signatures,.warranty-signatures * { font-weight: 400 !important; }
 .warranty-signature-label { white-space: nowrap; }
-.warranty-signature-content { min-height: 1.6em; white-space: normal; }
-.warranty-signature-content.is-blank { display: flex; align-items: baseline; min-width: 0; }
-.warranty-signature-content.is-blank .warranty-seal { margin-left: 85mm; }
-.warranty-seal { display: inline-block; margin-left: 5mm; white-space: nowrap; }
+.warranty-signature-content { display: grid; grid-template-columns: minmax(0,1fr) 14mm; align-items: baseline; min-height: 1.6em; width: 100%; white-space: normal; }
+.warranty-signature-name { min-width: 0; padding-right: 4mm; }
+.warranty-seal { display: block; width: 14mm; text-align: center; white-space: nowrap; }
 
 /* 하자검사대장 */
 .warranty-ledger { display: block; padding: 10mm 9mm 9mm; font-family: "Malgun Gothic","맑은 고딕",Arial,sans-serif; font-size: 8.7pt; line-height: 1.25; }
@@ -1471,3 +1471,6 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 /* v0.4.3.9 — 하자검사조서 원클릭 양식 정렬: 검사자=행정실장, 직위/성명 표제 제거, 굵은 글씨 해제 */
 
 /* v0.4.3.10 — 하자검사조서 기본값: 학교명 제거, 검사자=행정실장 역할 우선, 공란 수기공간 확대 */
+
+
+/* v0.4.3.11 — 하자검사조서 서명란: 성명 영역과 (인) 영역 분리·고정 / 목록 돌아가기 버튼 확대 / favicon 추가 */
