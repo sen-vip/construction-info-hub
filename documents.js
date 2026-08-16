@@ -538,10 +538,23 @@
     const signatoryMode = ctx.renderOptions?.warrantySignatoryMode || 'default';
     const useEntered = signatoryMode === 'filled';
     const useDefault = signatoryMode === 'default';
-    const inspectorPosition = useEntered ? ctx.value('warrantyInspectorPosition') : '';
-    const inspectorName = useEntered ? ctx.value('warrantyInspectorName') : (useDefault ? (p.inspector || school.inspector || '') : '');
-    const witnessPosition = useEntered ? ctx.value('warrantyWitnessPosition') : '';
-    const witnessName = useEntered ? ctx.value('warrantyWitnessName') : (useDefault ? (p.witness || school.witness || '') : '');
+    const cleanPersonName = (value, fixedTitle = '') => {
+      let text = String(value || '').trim();
+      if (!text) return '';
+      if (school.name && text.startsWith(String(school.name))) text = text.slice(String(school.name).length).trim();
+      text = text.replace(/^직위\s*/,'').replace(/^성명\s*/,'');
+      if (fixedTitle) text = text.replace(new RegExp(`^${fixedTitle}\\s*`), '');
+      return text.trim();
+    };
+    // 원클릭 엑셀 양식 기준: 검사자는 학교의 행정실장으로 표시하고,
+    // 출력물에는 '직위'·'성명'이라는 별도 표제어를 넣지 않는다.
+    const inspectorPosition = (useEntered || useDefault) ? '행정실장' : '';
+    const inspectorName = useEntered
+      ? cleanPersonName(ctx.value('warrantyInspectorName'), '행정실장')
+      : (useDefault ? cleanPersonName(p.inspector || school.inspector || '', '행정실장') : '');
+    const witnessName = useEntered
+      ? cleanPersonName(ctx.value('warrantyWitnessName'))
+      : (useDefault ? cleanPersonName(p.witness || school.witness || '') : '');
     const date = ctx.value('warrantyInspectionDate');
     const issue = ctx.value('warrantyIssueDetails');
     const actions = ctx.value('warrantyActions');
@@ -566,8 +579,8 @@
       <p class="warranty-statement">위와 같이 하자(만료)검사를 필하였음.</p>
       <p class="record-date">${h.e(h.formatKoreanDate(date))}</p>
       <div class="warranty-signatures">
-        <div><span>검 사 자 :</span><span>직위 ${h.e(inspectorPosition || '')}</span><strong class="warranty-name-sign">성명 ${inspectorName?`<span class="warranty-filled-name">${h.e(inspectorName)}</span>`:`<span class="warranty-name-space" aria-hidden="true"></span>`} (인)</strong></div>
-        <div><span>입 회 자 :</span><span>직위 ${h.e(witnessPosition || '')}</span><strong class="warranty-name-sign">성명 ${witnessName?`<span class="warranty-filled-name">${h.e(witnessName)}</span>`:`<span class="warranty-name-space" aria-hidden="true"></span>`} (인)</strong></div>
+        <div><span class="warranty-signature-label">검 사 자 :</span><span class="warranty-signature-content">${signatoryMode==='blank'?'':`${school.name?`${h.e(school.name)} `:''}${h.e(inspectorPosition)}${inspectorName?` ${h.e(inspectorName)}`:''}`} <span class="warranty-seal">(인)</span></span></div>
+        <div><span class="warranty-signature-label">입 회 자 :</span><span class="warranty-signature-content">${signatoryMode==='blank'?'':`${witnessName?h.e(witnessName):''}`} <span class="warranty-seal">(인)</span></span></div>
       </div>
     </article>`];
   }

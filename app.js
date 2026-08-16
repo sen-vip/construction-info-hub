@@ -16,7 +16,7 @@
   const moreMenu = document.getElementById('moreMenu');
   const excelFileInput = document.getElementById('excelFileInput');
   const backupFileInput = document.getElementById('backupFileInput');
-  const APP_VERSION = '0.4.3.8';
+  const APP_VERSION = '0.4.3.9';
   const REFERENCE_PROGRAM = '서울시교육청 교육시설안전과 「공사서류 원클릭(간소화)프로그램」(2026.5.수정)';
 
   const state = {
@@ -1286,7 +1286,7 @@
       }
       if (type === 'warrantyInspectionReport') {
         const record=activeWarrantyInspection(p);
-        const hasSignatories=!!(record&&[record.inspectorPosition,record.inspectorName,record.witnessPosition,record.witnessName].some(Boolean));
+        const hasSignatories=!!(record&&[record.inspectorName,record.witnessName].some(Boolean));
         const hasDefaults=!!([p?.inspector,state.school?.inspector,p?.witness,state.school?.witness].some(Boolean));
         const mode=renderOptions.warrantySignatoryMode || 'default';
         return `<div class="document-preview-mode warranty-preview-mode"><strong>검사자·입회자 출력</strong><label><input type="radio" name="previewMode" value="default" ${mode==='default'?'checked':''}> 기본값</label><label><input type="radio" name="previewMode" value="blank" ${mode==='blank'?'checked':''}> 공란 출력</label><label><input type="radio" name="previewMode" value="filled" ${mode==='filled'?'checked':''} ${hasSignatories?'':'disabled'}> 입력값 출력</label><button class="button ghost small" type="button" id="editWarrantyReportBtn">입력값 수정</button>${hasDefaults?'':`<span class="preview-mode-hint">학교 기본정보에 검사자·입회자 기본값이 없으면 기본값 모드도 성명은 공란으로 표시됩니다.</span>`}</div>`;
@@ -2023,18 +2023,14 @@
     const p = currentProject();
     if (!p) return;
     const current = record || {};
-    const inspectorPosition = current.inspectorPosition || '';
-    const inspectorName = current.inspectorName || current.inspector || '';
-    const witnessPosition = current.witnessPosition || '';
+    const inspectorName = current.inspectorName || String(current.inspector || '').replace(/^행정실장\s*/, '').trim();
     const witnessName = current.witnessName || current.witness || '';
     openModal({
       eyebrow:'행정기관 하자관리', title:record ? '하자검사 기록 수정' : '하자검사 기록 추가',
-      body:`<div class="notice"><strong>최종 하자검사 당시 검사자·입회자를 직접 입력할 수 있습니다.</strong><br>입력값은 검사기록에 저장되며, 미리보기에서 ‘기본값 / 공란 출력 / 입력값 출력’ 중 원하는 방식을 선택할 수 있습니다.</div><div class="modal-grid" style="margin-top:16px">
+      body:`<div class="notice"><strong>하자검사조서의 검사자는 행정실장 기준으로 출력합니다.</strong><br>검사자·입회자 성명만 필요할 때 입력하세요. 미리보기에서 ‘기본값 / 공란 출력 / 입력값 출력’ 중 원하는 방식을 선택할 수 있습니다.</div><div class="modal-grid" style="margin-top:16px">
         ${modalDateField('warrantyDate','검사일',current.date || '')}
-        <div class="field"><label for="warrantyInspectorPositionInput">검사자 직위 <span class="label-optional">선택</span></label><input id="warrantyInspectorPositionInput" value="${e(inspectorPosition)}" placeholder="예: 행정실장"></div>
-        <div class="field"><label for="warrantyInspectorNameInput">검사자 성명 <span class="label-optional">선택</span></label><input id="warrantyInspectorNameInput" value="${e(inspectorName)}" placeholder="출력 후 기재할 경우 비워두세요"></div>
-        <div class="field"><label for="warrantyWitnessPositionInput">입회자 직위 <span class="label-optional">선택</span></label><input id="warrantyWitnessPositionInput" value="${e(witnessPosition)}"></div>
-        <div class="field"><label for="warrantyWitnessNameInput">입회자 성명 <span class="label-optional">선택</span></label><input id="warrantyWitnessNameInput" value="${e(witnessName)}"></div>
+        <div class="field"><label for="warrantyInspectorNameInput">검사자 성명 <span class="label-optional">선택</span></label><input id="warrantyInspectorNameInput" value="${e(inspectorName)}" placeholder="행정실장 성명"></div>
+        <div class="field"><label for="warrantyWitnessNameInput">입회자 성명 <span class="label-optional">선택</span></label><input id="warrantyWitnessNameInput" value="${e(witnessName)}" placeholder="비워두어도 됩니다"></div>
         <div class="field"><label for="warrantyHasDefect">하자 유무</label><select id="warrantyHasDefect"><option value="">선택</option><option value="no" ${current.hasDefect==='no'?'selected':''}>이상 없음</option><option value="yes" ${current.hasDefect==='yes'?'selected':''}>하자 있음</option></select></div>
         <div class="field full"><label for="warrantyResult">검사결과</label><textarea id="warrantyResult">${e(current.result || '')}</textarea></div>
         <div class="field full"><label for="warrantyIssueDetails">하자발생내용</label><textarea id="warrantyIssueDetails">${e(current.issueDetails || '')}</textarea></div>
@@ -2056,9 +2052,9 @@
     const list = Array.isArray(p.warrantyInspections) ? [...p.warrantyInspections] : [];
     const existingIndex = recordId ? list.findIndex(x=>x.id===recordId) : -1;
     const base = existingIndex >= 0 ? list[existingIndex] : {};
-    const inspectorPosition = modalBody.querySelector('#warrantyInspectorPositionInput')?.value?.trim() || '';
+    const inspectorPosition = '행정실장';
     const inspectorName = modalBody.querySelector('#warrantyInspectorNameInput')?.value?.trim() || '';
-    const witnessPosition = modalBody.querySelector('#warrantyWitnessPositionInput')?.value?.trim() || '';
+    const witnessPosition = '';
     const witnessName = modalBody.querySelector('#warrantyWitnessNameInput')?.value?.trim() || '';
     const next = {
       ...base,

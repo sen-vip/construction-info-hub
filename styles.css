@@ -1177,16 +1177,20 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 
 /* 하자검사조서 */
 .warranty-inspection-report { display: block; padding: 13mm 15mm 10mm; font-family: "Malgun Gothic","맑은 고딕",Arial,sans-serif; }
-.warranty-inspection-report .doc-title { margin: 3mm 0 12mm; font-size: 27pt; }
+.warranty-inspection-report .doc-title { margin: 3mm 0 12mm; font-size: 27pt; font-weight: 400; }
 .warranty-inspection-table { font-size: 10.8pt; }
+.warranty-inspection-table th,.warranty-inspection-table td { font-weight: 400; }
 .warranty-inspection-table th { width: 28mm; }
 .warranty-inspection-table th,.warranty-inspection-table td { padding: 2.1mm 2.5mm; }
 .warranty-inspection-table .warranty-large-row th,.warranty-inspection-table .warranty-large-row td { height: 23mm; vertical-align: top; white-space: pre-wrap; }
 .warranty-statement { margin: 12mm 0 0 5mm; font-size: 12pt; }
 .warranty-inspection-report .record-date { margin-top: 11mm; text-align: center; font-size: 12pt; }
-.warranty-signatures { display: grid; gap: 8mm; margin: 15mm 0 0 28mm; width: 142mm; font-size: 11.5pt; }
-.warranty-signatures > div { display: grid; grid-template-columns: 26mm 42mm minmax(0,1fr); gap: 4mm; align-items: center; }
-.warranty-signatures strong { font-weight: 400; }
+.warranty-signatures { display: grid; gap: 8mm; margin: 15mm 0 0 10mm; width: 164mm; font-size: 11.5pt; font-weight: 400; }
+.warranty-signatures > div { display: grid; grid-template-columns: 28mm minmax(0,1fr); gap: 4mm; align-items: baseline; }
+.warranty-signatures,.warranty-signatures * { font-weight: 400 !important; }
+.warranty-signature-label { white-space: nowrap; }
+.warranty-signature-content { min-height: 1.6em; white-space: normal; }
+.warranty-seal { display: inline-block; margin-left: 5mm; white-space: nowrap; }
 
 /* 하자검사대장 */
 .warranty-ledger { display: block; padding: 10mm 9mm 9mm; font-family: "Malgun Gothic","맑은 고딕",Arial,sans-serif; font-size: 8.7pt; line-height: 1.25; }
@@ -1461,3 +1465,5 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 
 .reset-projects-toolbar { color:var(--danger); border-color:#efd5d5; }
 .reset-projects-toolbar:hover { background:#fff5f5 !important; border-color:#e8bdbd !important; }
+
+/* v0.4.3.9 — 하자검사조서 원클릭 양식 정렬: 검사자=행정실장, 직위/성명 표제 제거, 굵은 글씨 해제 */
