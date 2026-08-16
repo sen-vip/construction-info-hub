@@ -1310,3 +1310,49 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .warranty-inspection-table .wi-period-end{border-left:0!important}
 .warranty-inspection-table .wi-work-type{text-align:center}
 .warranty-signatures strong{min-height:1.4em}
+
+/* v0.4.3.3 — 수도광열비 검산성 / 하자서류 공란 출력 */
+.utility-basis-summary{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1.2fr);gap:8px;align-items:stretch;margin-bottom:12px}
+.utility-basis-summary>div{display:grid;gap:4px;padding:10px 12px;border:1px solid #e0e7ef;border-radius:10px;background:#fff}
+.utility-basis-summary>i{align-self:center;font-style:normal;font-weight:800;color:#708095}
+.utility-basis-summary span{font-size:11px;color:var(--muted)}
+.utility-basis-summary strong{font-size:14px}
+.utility-basis-summary .utility-basis-total{border-color:#b9d0ec;background:#f2f7fd}
+
+.utility-cost-sheet{font-size:8.7pt;line-height:1.22;padding:8.5mm 10mm 7.5mm}
+.utility-print-project{margin-bottom:2.6mm;font-size:9.5pt}
+.utility-cost-sheet>h1{margin:2.3mm 0 2mm;font-size:11.5pt}
+.utility-print-rate-table{font-size:7.4pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.utility-print-rate-table th,.utility-print-rate-table td{padding:1mm .6mm}
+.utility-print-rate-table thead tr:first-child th{height:5.5mm}
+.utility-print-rate-table thead tr:nth-child(2) th{height:7.2mm}
+.utility-print-rate-table .utility-rate-selected{font-weight:800;color:#173f6d;background:#eaf3ff;border-color:#4c78a8}
+.utility-print-notes{display:flex;flex-wrap:wrap;gap:1.4mm 5mm;margin:1.7mm 0 2.5mm;font-size:6.8pt;color:#4f5d6d}
+.utility-print-notes p{margin:0}
+.utility-print-basis{display:grid;grid-template-columns:minmax(0,1fr) 7mm minmax(0,1fr) 7mm minmax(0,1.25fr);gap:1.6mm;align-items:stretch;margin-bottom:2mm}
+.utility-print-basis>div{display:grid;gap:.8mm;padding:2.1mm 2.8mm;border:.25mm solid #9ba7b5;border-radius:1.5mm;background:#fff}
+.utility-print-basis>i{display:grid;place-items:center;font-style:normal;font-size:12pt;font-weight:700;color:#536274}
+.utility-print-basis span{font-size:7.4pt;color:#475569}
+.utility-print-basis strong{font-size:10pt}
+.utility-print-basis .utility-basis-emphasis{background:#f2f7fd;border-color:#5d83ae;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.utility-print-contract-meta{display:flex;gap:7mm;align-items:center;padding:1.6mm 2.6mm;margin-bottom:2.2mm;border-top:.2mm solid #c7ced7;border-bottom:.2mm solid #c7ced7;font-size:7.4pt}
+.utility-print-contract-meta span{white-space:nowrap}
+.utility-print-formulas{display:grid;gap:2.2mm;margin-top:0}
+.utility-calc-block{border:.25mm solid #78889a;border-radius:1.7mm;overflow:hidden;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.utility-calc-block.disabled{color:#7a8794;background:#fafafa}
+.utility-calc-head{display:flex;align-items:center;justify-content:space-between;padding:1.8mm 2.7mm;background:#f5f7fa;border-bottom:.2mm solid #cfd6df}
+.utility-calc-head strong{font-size:9pt}.utility-calc-head b{font-size:10.5pt}
+.utility-rate-flow{display:grid;grid-template-columns:1fr 5mm 1fr 5mm 1fr 5mm .9fr 10mm .95fr;gap:1mm;align-items:center;padding:1.7mm 2.5mm 1.4mm}
+.utility-rate-flow>div{display:grid;gap:.4mm;text-align:center;padding:1.2mm 1mm;border:.2mm solid #d3d9e1;border-radius:1.2mm}
+.utility-rate-flow small{font-size:6.4pt;color:#5d6b7a}.utility-rate-flow strong{font-size:8.4pt}
+.utility-rate-flow>i{font-style:normal;text-align:center;font-weight:700;color:#596777;font-size:8pt}
+.utility-rate-flow .utility-average-rate{border-color:#5d83ae;background:#eef5fd}
+.utility-cost-flow{display:flex;justify-content:flex-end;align-items:center;gap:2.5mm;padding:0 2.7mm 1.8mm;font-size:7.5pt}
+.utility-cost-flow i{font-style:normal;color:#64748b}.utility-cost-flow strong{font-size:8.3pt}
+.utility-print-total{margin-top:2.5mm;padding:2mm 4mm;border-top:.4mm double #555;gap:9mm;font-size:11pt}
+.utility-print-footnote{margin-top:1.7mm;font-size:6.5pt}
+
+.warranty-name-sign{display:flex;align-items:center;white-space:nowrap}
+.warranty-name-blank{display:inline-block;width:34mm;height:1.2em;margin:0 2mm;border-bottom:.2mm solid #777}
+
+@media (max-width:720px){.utility-basis-summary{grid-template-columns:1fr}.utility-basis-summary>i{display:none}}

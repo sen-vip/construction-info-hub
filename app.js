@@ -15,7 +15,7 @@
   const moreMenu = document.getElementById('moreMenu');
   const excelFileInput = document.getElementById('excelFileInput');
   const backupFileInput = document.getElementById('backupFileInput');
-  const APP_VERSION = '0.4.3.2';
+  const APP_VERSION = '0.4.3.3';
   const REFERENCE_PROGRAM = '서울시교육청 교육시설안전과 「공사서류 원클릭(간소화)프로그램」(2026.5.수정)';
 
   const state = {
@@ -500,7 +500,7 @@
           ], currentOpen.payment)}
 
           ${workflowSectionHtml('defect','하자','세부공종별 하자담보기간을 추천·관리하고 검사이력을 누적합니다.',step.defect,[
-            field('defectSecurityType','하자보증서 / 각서',p.defectSecurityType),
+            field('defectSecurityType','하자보증방법',p.defectSecurityType),
             field('defectSecurityRate','하자보증률 (%)',p.defectSecurityRate,'number'),
             moneyField('defectSecurityAmount','하자보증금액',p.defectSecurityAmount),
             `<div class="field full warranty-management-block">
@@ -1237,23 +1237,30 @@
     const work=UTILITY_RATES_2024.work[workCategory] || UTILITY_RATES_2024.work['건축'];
     const duration=UTILITY_RATES_2024.duration[durationCategory] || UTILITY_RATES_2024.duration['6이하'];
     const size=utilitySizeRate(contractAmount);
-    const average=(kind)=>(Number(work[kind])+Number(duration[kind])+Number(size[kind]))/3/100;
+    const rateSum=(kind)=>Number(work[kind])+Number(duration[kind])+Number(size[kind]);
+    const averagePercent=(kind)=>rateSum(kind)/3;
+    const rawCost=(kind)=>base*(averagePercent(kind)/100);
     const allowElectric=facilityUse!=='수도광열비';
     const allowWater=facilityUse!=='전력비';
-    const electric=allowElectric?roundDown10(base*average('electric')):0;
-    const water=allowWater?roundDown10(base*average('water')):0;
+    const electricRaw=allowElectric?rawCost('electric'):0;
+    const waterRaw=allowWater?rawCost('water'):0;
+    const electric=allowElectric?roundDown10(electricRaw):0;
+    const water=allowWater?roundDown10(waterRaw):0;
     return {
       electricCost:electric, waterHeatCost:water, total:electric+water, sizeLabel:size.label,
+      directMaterialCost:Number(directMaterialCost||0), directLaborCost:Number(directLaborCost||0),
       baseCost:base, contractAmountExVat:Number(contractAmount||0)/1.1,
       workElectricRate:Number(work.electric), durationElectricRate:Number(duration.electric), sizeElectricRate:Number(size.electric),
       workWaterRate:Number(work.water), durationWaterRate:Number(duration.water), sizeWaterRate:Number(size.water),
+      electricRateSum:rateSum('electric'), electricAverageRate:averagePercent('electric'), electricRawCost:electricRaw,
+      waterRateSum:rateSum('water'), waterAverageRate:averagePercent('water'), waterRawCost:waterRaw,
       allowElectric, allowWater
     };
   }
 
   function utilityResultHtml(result) {
     if (!result) return '<div class="utility-result-empty">금액을 입력하고 계산해주세요.</div>';
-    return `<div class="utility-result-grid"><div><span>전력비</span><strong>${e(formatMoney(result.electricCost))}</strong></div><div><span>수도광열비</span><strong>${e(formatMoney(result.waterHeatCost))}</strong></div><div class="utility-total"><span>공제금액 합계</span><strong>${e(formatMoney(result.total))}</strong></div></div><p class="utility-rate-note">공사규모 구간 · ${e(result.sizeLabel)}</p>`;
+    return `<div class="utility-basis-summary"><div><span>직접재료비 · 직재</span><strong>${e(formatMoney(result.directMaterialCost))}</strong></div><i>+</i><div><span>직접노무비 · 직노</span><strong>${e(formatMoney(result.directLaborCost))}</strong></div><i>=</i><div class="utility-basis-total"><span>계산기준금액 · 직재+직노</span><strong>${e(formatMoney(result.baseCost))}</strong></div></div><div class="utility-result-grid"><div><span>전력비</span><strong>${e(formatMoney(result.electricCost))}</strong></div><div><span>수도광열비</span><strong>${e(formatMoney(result.waterHeatCost))}</strong></div><div class="utility-total"><span>공제금액 합계</span><strong>${e(formatMoney(result.total))}</strong></div></div><p class="utility-rate-note">계산기준금액(직재 + 직노) ${e(formatMoney(result.baseCost))} · 공사규모 ${e(result.sizeLabel)}</p>`;
   }
 
   function utilityInputsFromModal(p) {
@@ -1272,7 +1279,11 @@
     const u=p.utilityCost||{};
     const workCategory=u.workCategory||utilityWorkCategory(p.workType);
     const durationCategory=u.durationCategory||utilityDurationCategory(p);
-    const existing=meaningful(u.total)?{electricCost:Number(u.electricCost||0),waterHeatCost:Number(u.waterHeatCost||0),total:Number(u.total||0),sizeLabel:utilitySizeRate(p.currentContractAmount).label}:null;
+    const existing=meaningful(u.total)?calculateUtilityCost({
+      directMaterialCost:u.directMaterialCost, directLaborCost:u.directLaborCost,
+      facilityUse:u.facilityUse || '수도광열비·전력비', workCategory, durationCategory,
+      contractAmount:Number(p.currentContractAmount||0)
+    }):null;
     openModal({eyebrow:'행정기관 계산도구 · 2024 완성공사 원가통계',title:'전력비·수도광열비 계산',wide:true,
       body:`<div class="notice"><strong>원본 「수도전기료계산식」의 산식을 웹으로 옮겼습니다.</strong><br>전기·통신·소방·전문공사는 건축요율을 적용하고, 공사기간과 계약금액 구간은 현재 공사정보에서 자동 판단합니다.</div><div class="modal-grid utility-input-grid" style="margin-top:16px">
         <div class="field"><label>공사종류 요율</label><select id="utilityWorkCategory">${['건축','토목','산업설비','조경'].map(x=>`<option ${x===workCategory?'selected':''}>${x}</option>`).join('')}</select></div>
@@ -1304,45 +1315,63 @@
     if (applyDeduction) { closeModal(); renderProjectDetail(); }
   }
 
-  function utilityRateTableHtml() {
+  function utilityRateTableHtml(inputs, result) {
     const work = UTILITY_RATES_2024.work;
     const duration = UTILITY_RATES_2024.duration;
     const size = UTILITY_RATES_2024.size;
     const pct = value => Number(value || 0).toFixed(3).replace(/0+$/,'').replace(/\.$/,'');
+    const selected = value => value ? ' class="utility-rate-selected"' : '';
+    const workDefs = [['건축','건축'],['토목','토목'],['산업설비','산업설비'],['조경','조경']];
+    const durationDefs = [['6이하','6개월이하'],['6초과12이하','6~12개월'],['12초과36이하','12~36개월'],['36초과','36개월초과']];
     return `<table class="utility-print-rate-table"><thead>
       <tr><th rowspan="2">구분</th><th colspan="4">공사종류별</th><th colspan="4">공사기간별</th><th colspan="5">공사규모별</th></tr>
-      <tr><th>건축</th><th>토목</th><th>산업설비</th><th>조경</th><th>6개월이하</th><th>6~12개월</th><th>12~36개월</th><th>36개월초과</th><th>5억미만</th><th>5~30억</th><th>30~50억</th><th>50~300억</th><th>300~1,000억</th></tr>
+      <tr>${workDefs.map(([key,label])=>`<th${selected(inputs?.workCategory===key)}>${label}</th>`).join('')}${durationDefs.map(([key,label])=>`<th${selected(inputs?.durationCategory===key)}>${label}</th>`).join('')}${size.map(x=>`<th${selected(result?.sizeLabel===x.label)}>${x.label}</th>`).join('')}</tr>
     </thead><tbody>
-      <tr><th>전력비</th><td>${pct(work['건축'].electric)}</td><td>${pct(work['토목'].electric)}</td><td>${pct(work['산업설비'].electric)}</td><td>${pct(work['조경'].electric)}</td><td>${pct(duration['6이하'].electric)}</td><td>${pct(duration['6초과12이하'].electric)}</td><td>${pct(duration['12초과36이하'].electric)}</td><td>${pct(duration['36초과'].electric)}</td>${size.map(x=>`<td>${pct(x.electric)}</td>`).join('')}</tr>
-      <tr><th>수도광열비</th><td>${pct(work['건축'].water)}</td><td>${pct(work['토목'].water)}</td><td>${pct(work['산업설비'].water)}</td><td>${pct(work['조경'].water)}</td><td>${pct(duration['6이하'].water)}</td><td>${pct(duration['6초과12이하'].water)}</td><td>${pct(duration['12초과36이하'].water)}</td><td>${pct(duration['36초과'].water)}</td>${size.map(x=>`<td>${pct(x.water)}</td>`).join('')}</tr>
+      <tr><th>전력비</th>${workDefs.map(([key])=>`<td${selected(inputs?.workCategory===key)}>${pct(work[key].electric)}</td>`).join('')}${durationDefs.map(([key])=>`<td${selected(inputs?.durationCategory===key)}>${pct(duration[key].electric)}</td>`).join('')}${size.map(x=>`<td${selected(result?.sizeLabel===x.label)}>${pct(x.electric)}</td>`).join('')}</tr>
+      <tr><th>수도광열비</th>${workDefs.map(([key])=>`<td${selected(inputs?.workCategory===key)}>${pct(work[key].water)}</td>`).join('')}${durationDefs.map(([key])=>`<td${selected(inputs?.durationCategory===key)}>${pct(duration[key].water)}</td>`).join('')}${size.map(x=>`<td${selected(result?.sizeLabel===x.label)}>${pct(x.water)}</td>`).join('')}</tr>
     </tbody></table>`;
   }
 
   function utilityCalculationPrintMarkup(p, inputs, result) {
     const won = value => Number(value || 0).toLocaleString('ko-KR');
+    const wonDecimal = value => Number(value || 0).toLocaleString('ko-KR',{minimumFractionDigits:0,maximumFractionDigits:2});
     const pct = value => `${Number(value || 0).toFixed(3).replace(/0+$/,'').replace(/\.$/,'')}%`;
-    const formula = (label, enabled, workRate, durationRate, sizeRate, amount) => enabled
-      ? `<div class="utility-print-formula"><strong>${label}</strong><span>= (${won(inputs.directMaterialCost)} + ${won(inputs.directLaborCost)}) × ((${pct(workRate)} + ${pct(durationRate)} + ${pct(sizeRate)}) / 3)</span><b>= ${won(amount)} 원</b></div>`
-      : `<div class="utility-print-formula disabled"><strong>${label}</strong><span>적용 제외</span><b>= 0 원</b></div>`;
+    const pctAvg = value => `${Number(value || 0).toFixed(6).replace(/0+$/,'').replace(/\.$/,'')}%`;
+    const durationLabel = ({'6이하':'6개월 이하','6초과12이하':'6~12개월','12초과36이하':'12~36개월','36초과':'36개월 초과'})[inputs.durationCategory] || inputs.durationCategory;
+    const formula = (label, enabled, workRate, durationRate, sizeRate, rateSum, averageRate, rawAmount, amount) => enabled
+      ? `<section class="utility-calc-block">
+          <div class="utility-calc-head"><strong>${label}</strong><b>${won(amount)} 원</b></div>
+          <div class="utility-rate-flow">
+            <div><small>공사종류 · ${e(inputs.workCategory)}</small><strong>${pct(workRate)}</strong></div><i>+</i>
+            <div><small>공사기간 · ${e(durationLabel)}</small><strong>${pct(durationRate)}</strong></div><i>+</i>
+            <div><small>공사규모 · ${e(result.sizeLabel)}</small><strong>${pct(sizeRate)}</strong></div><i>=</i>
+            <div><small>요율 합계</small><strong>${pct(rateSum)}</strong></div><i>÷ 3</i>
+            <div class="utility-average-rate"><small>평균요율</small><strong>${pctAvg(averageRate)}</strong></div>
+          </div>
+          <div class="utility-cost-flow"><span><b>직재 + 직노</b> ${won(result.baseCost)}원</span><i>×</i><span>평균요율 ${pctAvg(averageRate)}</span><i>=</i><span>${wonDecimal(rawAmount)}원</span><i>→</i><strong>10원 미만 절사&nbsp; ${won(amount)}원</strong></div>
+        </section>`
+      : `<section class="utility-calc-block disabled"><div class="utility-calc-head"><strong>${label}</strong><b>적용 제외</b></div></section>`;
     return `<article class="paper-a4-landscape utility-cost-sheet document-print-page">
       <div class="utility-print-project"><strong>[공사명]</strong><span>${e(p.projectName || '')}</span></div>
       <h1>□ 2024년도 기준 완성공사 원가통계(경비율)</h1>
-      ${utilityRateTableHtml()}
+      ${utilityRateTableHtml(inputs,result)}
       <div class="utility-print-notes">
-        <p>※ 공사종류에서 전기·통신·소방·전문공사는 건축요율 적용</p>
-        <p>※ 공사규모 금액은 공사 계약금액 기준(부가세 제외)</p>
+        <p>※ 파란 표시: 이번 공사에 실제 적용된 공사종류·기간·규모 구간</p>
+        <p>※ 전기·통신·소방·전문공사는 건축요율 적용 / 공사규모는 부가세 제외 계약금액 기준</p>
         <p>※ 출처: 대한건설협회 「2024년 완성공사원가분석」 기준</p>
       </div>
       <h1>□ 전력비·수도광열비 계산식</h1>
-      <table class="utility-print-inputs"><tbody>
-        <tr><th>공사종류</th><td>${e(inputs.workCategory)}</td><th>공사기간</th><td>${e(inputs.durationCategory)}</td><th>공사규모</th><td>${e(result.sizeLabel)}</td><th>시설사용</th><td>${e(inputs.facilityUse)}</td></tr>
-        <tr><th>계약금액</th><td>${won(inputs.contractAmount)} 원</td><th>직접재료비</th><td>${won(inputs.directMaterialCost)} 원</td><th>직접노무비</th><td>${won(inputs.directLaborCost)} 원</td><th>부가세 제외 계약금액</th><td>${won(result.contractAmountExVat)} 원</td></tr>
-      </tbody></table>
-      <div class="utility-print-formulas">
-        ${formula('1. 전력비', result.allowElectric, result.workElectricRate, result.durationElectricRate, result.sizeElectricRate, result.electricCost)}
-        ${formula('2. 수도광열비', result.allowWater, result.workWaterRate, result.durationWaterRate, result.sizeWaterRate, result.waterHeatCost)}
+      <div class="utility-print-basis">
+        <div><span>직접재료비 <b>(직재)</b></span><strong>${won(inputs.directMaterialCost)} 원</strong></div><i>+</i>
+        <div><span>직접노무비 <b>(직노)</b></span><strong>${won(inputs.directLaborCost)} 원</strong></div><i>=</i>
+        <div class="utility-basis-emphasis"><span>계산기준금액 <b>(직재 + 직노)</b></span><strong>${won(result.baseCost)} 원</strong></div>
       </div>
-      <div class="utility-print-total"><span>합 계 :</span><strong>${won(result.total)} 원</strong></div>
+      <div class="utility-print-contract-meta"><span>계약금액 <b>${won(inputs.contractAmount)}원</b></span><span>부가세 제외 <b>${won(result.contractAmountExVat)}원</b></span><span>공사규모 <b>${e(result.sizeLabel)}</b></span><span>시설사용 <b>${e(inputs.facilityUse)}</b></span></div>
+      <div class="utility-print-formulas">
+        ${formula('1. 전력비', result.allowElectric, result.workElectricRate, result.durationElectricRate, result.sizeElectricRate, result.electricRateSum, result.electricAverageRate, result.electricRawCost, result.electricCost)}
+        ${formula('2. 수도광열비', result.allowWater, result.workWaterRate, result.durationWaterRate, result.sizeWaterRate, result.waterRateSum, result.waterAverageRate, result.waterRawCost, result.waterHeatCost)}
+      </div>
+      <div class="utility-print-total"><span>공제금액 합계</span><strong>${won(result.total)} 원</strong></div>
       <p class="utility-print-footnote">공사정보 허브에 저장된 공사정보와 입력한 직접재료비·직접노무비를 기준으로 계산</p>
     </article>`;
   }

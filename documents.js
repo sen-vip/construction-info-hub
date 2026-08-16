@@ -118,7 +118,7 @@
     completionInspectionDate:'준공검사일', settlementAmount:'준공정산금액', settlementReductionReason:'준공 감액 사유', priorPaymentAmount:'기지급액', deductionAmount:'공제금액',
     vendorName:'업체명', businessNumber:'사업자등록번호', vendorAddress:'사업장 주소', vendorPhone:'업체 전화번호', representative:'대표자',
     contractSecurityAmount:'계약보증금액', delayPenaltyRate:'지연배상금률', priceAdjustmentMethod:'물가변동 계약금액 조정방법',
-    defectSecurityRate:'하자보증률', defectSecurityAmount:'하자보증금액', defectPeriodYears:'하자담보기간(년)', defectStartDate:'하자 시작일', defectEndDate:'하자 종료일',
+    defectSecurityType:'하자보증방법', defectSecurityRate:'하자보증률', defectSecurityAmount:'하자보증금액', defectPeriodYears:'하자담보기간(년)', defectStartDate:'하자 시작일', defectEndDate:'하자 종료일',
     siteManager:'현장대리인', supervisor:'공사감독', inspector:'검사자', witness:'준공검사 입회자', bankName:'은행명', accountNumber:'계좌번호', accountHolder:'예금주명',
     warrantyInspectionDate:'하자검사일', warrantyInspector:'하자검사자', warrantyInspectorPosition:'하자검사자 직위', warrantyInspectorName:'하자검사자 성명', warrantyWitness:'하자검사 입회자', warrantyWitnessPosition:'하자검사 입회자 직위', warrantyWitnessName:'하자검사 입회자 성명', warrantyInspectionResult:'검사결과', warrantyIssueDetails:'하자발생내용', warrantyActions:'처리사항', warrantyNotes:'기타참고사항'
   
@@ -559,7 +559,7 @@
       <p class="warranty-statement">위와 같이 하자(만료)검사를 필하였음.</p>
       <p class="record-date">${h.e(h.formatKoreanDate(date))}</p>
       <div class="warranty-signatures">
-        <div><span>검 사 자 :</span><span>직위 ${h.e(inspectorPosition || '')}</span><strong>성명 ${inspectorName ? h.e(h.representativeWithSeal(inspectorName)) : '　　　　　　　　 (인)'}</strong></div>
+        <div><span>검 사 자 :</span><span>직위 ${h.e(inspectorPosition || '')}</span><strong class="warranty-name-sign">성명 <span class="warranty-name-blank"></span> (인)</strong></div>
         <div><span>입 회 자 :</span><span>직위 ${h.e(witnessPosition || '')}</span><strong>성명 ${witnessName ? h.e(h.representativeWithSeal(witnessName)) : '　　　　　　　　 (인)'}</strong></div>
       </div>
     </article>`];
@@ -582,7 +582,7 @@
       ${warrantyItems.length?`<h2>2. 하자담보 공종</h2><table class="warranty-ledger-items"><thead><tr><th>세부공종</th><th>기간</th><th>시작일</th><th>종료일</th></tr></thead><tbody>${warrantyItems.map(x=>`<tr><td>${h.e(x.subcategory||x.category||'')}</td><td>${x.years?h.e(String(x.years))+'년':''}</td><td>${h.e(h.formatKoreanDate(x.startDate))}</td><td>${h.e(h.formatKoreanDate(x.endDate))}</td></tr>`).join('')}</tbody></table>`:''}
       <h2>${warrantyItems.length?'3':'2'}. 정기 하자검사 내역${chunks.length>1?` (${pageIndex+1}/${chunks.length})`:''}</h2>
       <table class="warranty-ledger-list"><thead><tr><th>하자검사<br>년 월 일</th><th>하자검사 내용 및 조치사항</th><th>하자검사자</th><th>결재</th></tr></thead><tbody>
-        ${(items.length?items:[null]).map(x=>`<tr><td>${x?h.e(h.formatKoreanDate(x.date)):''}</td><td>${x?h.e([x.result,x.issueDetails,x.actions].filter(Boolean).join(' / ')):''}</td><td>${x?h.e(x.inspector||''):''}</td><td></td></tr>`).join('')}
+        ${(items.length?items:[null]).map(x=>`<tr><td>${x?h.e(h.formatKoreanDate(x.date)):''}</td><td>${x?h.e([x.result,x.issueDetails,x.actions].filter(Boolean).join(' / ')):''}</td><td></td><td></td></tr>`).join('')}
         ${Array.from({length:Math.max(0,5-items.length)},()=>`<tr><td></td><td></td><td></td><td></td></tr>`).join('')}
       </tbody></table>
     </article>`);
