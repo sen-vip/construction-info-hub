@@ -243,7 +243,7 @@
     const a = key => answers?.[key] || '';
     return `
       <tr><td>1</td><th>계약일반조건</th><td>상기 본인(법인)은 「지방자치단체 입찰 및 계약 집행기준」 제9장 계약 일반조건을 준수합니다.</td><td>${plainChoice(a('generalConditions'))}</td></tr>
-      <tr><td>2</td><th>수의계약 각서</th><td>귀 기관과 수의계약을 체결함에 있어서 [붙임1] 수의계약 배제사유 중 어느 사유에도 해당되지 않으며 차후에 이러한 사실이 발견된 경우 계약의 해제·해지 및 부정당업자 제재 처분을 받아도 하등의 이유를 제기하지 않겠습니다.<br><b>[붙임1] 수의계약 배제사유 1부</b></td><td>${plainChoiceWithNone(a('privateContractExclusion'))}</td></tr>
+      <tr><td>2</td><th>수의계약 각서</th><td>귀 기관과 수의계약을 체결함에 있어서 [붙임 1] 수의계약 배제사유 중 어느 사유에도 해당되지 않으며 차후에 이러한 사실이 발견된 경우 계약의 해제·해지 및 부정당업자 제재 처분을 받아도 하등의 이유를 제기하지 않겠습니다.<br><b>[붙임 1] 수의계약 배제사유 1부</b></td><td>${plainChoiceWithNone(a('privateContractExclusion'))}</td></tr>
       <tr class="pledge-conflict"><td rowspan="9">3</td><th rowspan="9">수의계약<br>체결 제한<br>여부 확인서</th><td>① ${h.e(q[0])}</td><td>${plainChoiceWithNone(a('conflict1'))}</td></tr>
       ${q.slice(1).map((text,i)=>`<tr class="pledge-conflict"><td>${'②③④⑤⑥⑦⑧'[i]} ${h.e(text)}</td><td>${plainChoiceWithNone(a(`conflict${i+2}`))}</td></tr>`).join('')}
       <tr class="pledge-conflict-confirm"><td colspan="2">「공직자의 이해충돌 방지법」 제12조에 따른 수의계약 체결 제한에 대하여 위와 같이 확인합니다. 만약 위 사항이 사실과 다른 경우에는 어떠한 처벌이나 불이익도 감수할 것을 서약합니다.</td></tr>
@@ -280,7 +280,7 @@
       '⑨ 그 밖에 계약담당자가 계약이행능력이 없다고 판단되는 명백한 증거가 있는 자',
       '⑩ 「재난 및 안전관리 기본법」에 따라 특별재난지역으로 선포된 지역의 재난복구공사(용역)의 경우, 결격여부 심사일 현재 계약금액 5천만원 이상 해당 업종 관급공사 또는 계약금액 2천만원 이상 관급용역이 3건(일시 정지 중인 계약 제외) 이상인 자. 다만 동시에 여러 건의 수의계약 체결 예정자로 선정된 경우에는 기존 계약을 포함하여 3건까지 체결 가능하며, 2인 이상 견적서 제출 수의계약에 한함'
     ];
-    const page2 = `<article class="paper-a4 admin-document private-contract-pledge pledge-page-two document-print-page"><h1 class="pledge-reasons-title">수의계약 배제 사유</h1><div class="pledge-reasons pledge-reasons-full">${reasons.map(text=>`<div class="pledge-reason-item">${h.e(text).replace(/\n/g,'<br>')}</div>`).join('')}</div><p class="pledge-reasons-note">※ 관련 법령·예규 및 계약 집행기준이 개정될 수 있으므로 실제 계약 시 최신 기준을 확인합니다.</p></article>`;
+    const page2 = `<article class="paper-a4 admin-document private-contract-pledge pledge-page-two document-print-page"><div class="pledge-attachment-label">[붙임 1]</div><h1 class="pledge-reasons-title">수의계약 배제 사유</h1><div class="pledge-reasons pledge-reasons-full">${reasons.map(text=>`<div class="pledge-reason-item">${h.e(text).replace(/\n/g,'<br>')}</div>`).join('')}</div><p class="pledge-reasons-note">※ 관련 법령·예규 및 계약 집행기준이 개정될 수 있으므로 실제 계약 시 최신 기준을 확인합니다.</p></article>`;
     return [page1,page2];
   }
 
@@ -529,7 +529,7 @@
         <tr><th>종료일</th><td colspan="3">${h.e(h.formatKoreanDate(p.defectEndDate))}</td><th>공정</th><td colspan="2">1</td><th>입회자</th><td colspan="2">${h.e(ctx.value('witness') || '')}</td></tr>
         <tr><th>보증금</th><td colspan="2">${h.e(h.moneyNumberText(ctx.value('defectSecurityAmount')))}</td><td>${h.e(p.defectSecurityType || '')}</td><th>설계자</th><td colspan="5">${h.e(p.designer || '')}</td></tr>
       </tbody></table>
-      <div class="ledger-note">※ 공사정보 허브에 저장된 공사정보를 기준으로 자동 작성</div>
+      <div class="ledger-note">※ 공사서류 작성지원에 저장된 공사정보를 기준으로 자동 작성</div>
     </article>`];
   }
 

@@ -245,7 +245,7 @@
 
   async function importBackup(data) {
     if (!data || data.app !== 'construction-info-hub' || !Array.isArray(data.projects)) {
-      throw new Error('공사정보 허브 백업파일이 아닙니다.');
+      throw new Error('공사서류 작성지원 백업파일이 아닙니다.');
     }
     await Promise.all([
       replaceAll('projects', data.projects || []),
