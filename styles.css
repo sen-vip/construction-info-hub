@@ -596,16 +596,16 @@ input:focus, select:focus, textarea:focus { border-color: #7191bd; box-shadow: 0
 .oneclick-gap-panel { margin: 18px 24px; border: 1px solid #d8e2ee; border-radius: 14px; background: #fbfcfe; overflow: hidden; }
 .oneclick-gap-panel summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 15px 16px; cursor: pointer; list-style-position: inside; }
 .oneclick-gap-panel summary > span { display: inline-grid; gap: 2px; }
-.oneclick-gap-panel summary strong { font-size: 14px; }
-.oneclick-gap-panel summary small { color: var(--muted); font-size: 11px; font-weight: 400; }
-.oneclick-gap-panel summary em { flex: none; padding: 4px 8px; border-radius: 999px; background: var(--primary-soft); color: var(--primary-strong); font-size: 10px; font-style: normal; font-weight: 800; }
+.oneclick-gap-panel summary strong { font-size: 16px; }
+.oneclick-gap-panel summary small { color: var(--muted); font-size: 13px; line-height: 1.45; font-weight: 400; }
+.oneclick-gap-panel summary em { flex: none; padding: 5px 9px; border-radius: 999px; background: var(--primary-soft); color: var(--primary-strong); font-size: 11.5px; font-style: normal; font-weight: 800; }
 .oneclick-gap-body { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 0 16px 14px; }
 .oneclick-gap-body > div { padding: 13px 14px; border: 1px solid #e2e8f0; border-radius: 11px; background: #fff; }
-.oneclick-gap-body h3 { margin: 0 0 8px; font-size: 13px; }
-.oneclick-gap-body ul { display: grid; gap: 5px; margin: 0; padding-left: 18px; color: #52647a; font-size: 12px; }
-.oneclick-gap-body li span { color: var(--warn); font-size: 10px; font-weight: 800; }
-.oneclick-gap-note { margin: 0; padding: 11px 16px; border-top: 1px solid #e5eaf0; background: #fff; color: var(--muted); font-size: 11px; }
-.document-footnote { margin: 8px 24px 24px; padding: 12px 14px; border-radius: 10px; background: var(--surface-soft); color: var(--muted); font-size: 11px; }
+.oneclick-gap-body h3 { margin: 0 0 9px; font-size: 15px; }
+.oneclick-gap-body ul { display: grid; gap: 7px; margin: 0; padding-left: 20px; color: #52647a; font-size: 14px; line-height: 1.5; }
+.oneclick-gap-body li span { color: var(--warn); font-size: 11.5px; font-weight: 800; }
+.oneclick-gap-note { margin: 0; padding: 13px 16px; border-top: 1px solid #e5eaf0; background: #fff; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.document-footnote { margin: 8px 24px 24px; padding: 13px 15px; border-radius: 10px; background: var(--surface-soft); color: var(--muted); font-size: 13px; line-height: 1.5; }
 
 .signature-print-notice { display: grid; gap: 3px; padding: 13px 14px; border: 1px solid #cfe0d7; border-radius: 12px; background: var(--success-soft); }
 .signature-print-notice strong { color: var(--success); }
@@ -1753,3 +1753,5 @@ input, select, textarea { font-size:15px; }
 .preview-inline-missing-fields .hint { font-size:11px; line-height:1.4; }
 .preview-inline-missing-fields .money-input-wrap { width:100%; }
 .preview-inline-missing-fields .money-korean { font-size:11px; }
+
+/* v0.5.1.2 — 행정실 서류 6칸을 실제 업무 흐름순으로 재배치 / 원클릭 별도 확인 영역 가독성 확대 */
