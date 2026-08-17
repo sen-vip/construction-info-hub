@@ -187,7 +187,7 @@
         <tr><th>현 장</th><td colspan="5">${h.e(school.name)}</td></tr>
         <tr><th>지체상금률</th><td colspan="5">${h.e(p.delayPenaltyRate)}</td></tr>
         <tr><th class="small-label">물가변동계약금액<br>조정방법</th><td colspan="5">${h.e(p.priceAdjustmentMethod)}</td></tr>
-        <tr><th>착공 연월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.plannedStartDate))}</td><th>준공 연월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionDueDate))}</td></tr>
+        <tr><th>착공연월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.plannedStartDate))}</td><th>준공연월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionDueDate))}</td></tr>
         <tr><th>기타사항</th><td colspan="5"></td></tr>
       </tbody></table>
       <div class="contract-defect-caption">하자담보책임(복합공종의 경우 공종별 구분 기재)</div>
@@ -293,8 +293,8 @@
       ${h.documentFacts([
         ['1. 공 사 명 :',h.e(p.projectName)],
         ['2. 계 약 금 액 :',h.e(h.documentMoney(p.currentContractAmount))],
-        ['3. 계약 연월일 :',h.e(h.formatKoreanDate(p.contractDate))],
-        ['4. 착공 연월일 :',h.e(h.formatKoreanDate(p.startDate))],
+        ['3. 계약연월일 :',h.e(h.formatKoreanDate(p.contractDate))],
+        ['4. 착공연월일 :',h.e(h.formatKoreanDate(p.startDate))],
         ['5. 준 공 기 한 :',h.e(h.formatKoreanDate(p.completionDueDate))]
       ])}
       <div class="doc-attachments"><span>붙&nbsp;&nbsp;&nbsp;&nbsp;임 :</span><ol><li>현장대리인계(재직증명서, 건설기술경력증수첩 사본)</li><li>공사예정공정표</li><li>공사도급내역서</li></ol></div>
@@ -531,7 +531,6 @@
         <tr><th>종료일</th><td colspan="3">${h.e(h.formatKoreanDate(p.defectEndDate))}</td><th>공정</th><td colspan="2">1</td><th>입회자</th><td colspan="2">${h.e(ctx.value('witness') || '')}</td></tr>
         <tr><th>보증금</th><td colspan="2">${h.e(h.moneyNumberText(ctx.value('defectSecurityAmount')))}</td><td>${h.e(p.defectSecurityType || '')}</td><th>설계자</th><td colspan="5">${h.e(p.designer || '')}</td></tr>
       </tbody></table>
-      <div class="ledger-note">※ 공사서류 작성지원에 저장된 공사정보를 기준으로 자동 작성</div>
     </article>`];
   }
 
@@ -604,8 +603,8 @@
       <h2>1. 공사내역</h2>
       <table class="warranty-ledger-info"><tbody>
         <tr><th>공사명</th><td colspan="3">${h.e(p.projectName)}</td><th>계약금액</th><td colspan="2">${h.e(h.moneyNumberText(p.currentContractAmount))}</td><th>하자보증금</th><td colspan="2">${h.e(h.moneyNumberText(ctx.value('defectSecurityAmount')))}</td></tr>
-        <tr><th>설계자</th><td colspan="3">${h.e(p.designer || '')}</td><th>계약 연월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.contractDate))}</td><th>준공기한</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionDueDate))}</td></tr>
-        <tr><th>도급자</th><td colspan="3">${h.e(p.vendorName)}</td><th>착공 연월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.startDate))}</td><th>준공 연월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td></tr>
+        <tr><th>설계자</th><td colspan="3">${h.e(p.designer || '')}</td><th>계약연월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.contractDate))}</td><th>준공기한</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionDueDate))}</td></tr>
+        <tr><th>도급자</th><td colspan="3">${h.e(p.vendorName)}</td><th>착공연월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.startDate))}</td><th>준공연월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td></tr>
         <tr><th>감독관</th><td colspan="3">${h.e(ctx.value('supervisor') || '')}</td><th>준공검사일</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionInspectionDate))}</td><th>하자보증기간</th><td colspan="2">${h.e(h.formatKoreanDate(p.defectStartDate))} ~ ${h.e(h.formatKoreanDate(p.defectEndDate))}</td></tr>
       </tbody></table>
       ${warrantyItems.length?`<h2>2. 하자담보 공종</h2><table class="warranty-ledger-items"><thead><tr><th>세부공종</th><th>기간</th><th>시작일</th><th>종료일</th></tr></thead><tbody>${warrantyItems.map(x=>`<tr><td>${h.e(x.subcategory||x.category||'')}</td><td>${x.years?h.e(String(x.years))+'년':''}</td><td>${h.e(h.formatKoreanDate(x.startDate))}</td><td>${h.e(h.formatKoreanDate(x.endDate))}</td></tr>`).join('')}</tbody></table>`:''}

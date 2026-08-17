@@ -16,7 +16,7 @@
   const moreMenu = document.getElementById('moreMenu');
   const excelFileInput = document.getElementById('excelFileInput');
   const backupFileInput = document.getElementById('backupFileInput');
-  const APP_VERSION = '0.5.1.4';
+  const APP_VERSION = '0.5.1.6';
   const REFERENCE_PROGRAM = '서울시교육청 교육시설안전과 「공사서류 원클릭(간소화)프로그램」(2026.5.수정)';
 
   const state = {
@@ -1061,9 +1061,12 @@
         <div class="document-subgroup"><h4>준공·지출</h4><div class="document-grid simplified-document-grid">${documentCardHtml('completionReport',p)}${documentCardHtml('completionInspectionRequest',p)}${documentCardHtml('defectSecurityDeposit',p)}${documentCardHtml('completionSettlementAgreement',p)}${documentCardHtml('paymentRequest',p)}</div></div>
       </div>
 
-      <div class="document-group safety-document-group"><div class="document-group-title"><strong>안전·보건 체크리스트</strong><span>작성본 또는 업체 전달용 빈 양식을 필요한 방식으로 준비합니다.</span></div><div class="document-grid simplified-document-grid">${documentCardHtml('safetyGeneral',p)}${documentCardHtml('safetyFall',p)}${documentCardHtml('safetyElectrical',p)}${documentCardHtml('safetyConfined',p)}${documentCardHtml('safetyIndustrial',p)}</div>
-        <details class="secondary-feature-details"><summary>공종·작업특성에 맞는 체크리스트 추천 보기</summary>${safetyRecommendationsHtml(p)}</details>
-      </div>
+      <details class="document-group safety-document-group safety-collapsible-group">
+        <summary class="safety-document-summary"><span class="safety-summary-copy"><strong>안전·보건 체크리스트</strong><small>작성본 또는 업체 전달용 빈 양식을 필요한 방식으로 준비합니다.</small></span><span class="safety-summary-meta"><em>5종</em><span class="safety-summary-toggle" aria-hidden="true"></span></span></summary>
+        <div class="safety-document-body"><div class="document-grid simplified-document-grid">${documentCardHtml('safetyGeneral',p)}${documentCardHtml('safetyFall',p)}${documentCardHtml('safetyElectrical',p)}${documentCardHtml('safetyConfined',p)}${documentCardHtml('safetyIndustrial',p)}</div>
+          <details class="secondary-feature-details"><summary>공종·작업특성에 맞는 체크리스트 추천 보기</summary>${safetyRecommendationsHtml(p)}</details>
+        </div>
+      </details>
 
       <details class="batch-output-details" ${selected.length?'open':''}>
         <summary><span><strong>여러 서류를 한 번에 출력</strong><small>필요할 때만 열어 서류를 선택하거나 세트를 사용합니다.</small></span><em id="batchOutputCount">${selected.length?`${selected.length}종 선택`:'선택 안 함'}</em></summary>
