@@ -120,6 +120,8 @@
     contractSecurityAmount:'계약보증금액', delayPenaltyRate:'지연배상금률', priceAdjustmentMethod:'물가변동 계약금액 조정방법',
     defectSecurityType:'하자보증방법', defectSecurityRate:'하자보증률', defectSecurityAmount:'하자보증금액', defectPeriodYears:'하자담보기간(년)', defectStartDate:'하자 시작일', defectEndDate:'하자 종료일',
     siteManager:'현장대리인', supervisor:'공사감독', inspector:'검사자', witness:'준공검사 입회자', bankName:'은행명', accountNumber:'계좌번호', accountHolder:'예금주명',
+    contractMethod:'계약방법', contractSecurityType:'계약보증방법', fundingSource:'재원', paymentDate:'지출일', paymentAmount:'지급금액', designer:'설계자',
+    budgetPolicyProject:'정책사업', budgetUnitProject:'단위사업', budgetDetailProject:'세부사업', budgetDetailItem:'세부항목', costStatisticsItem:'원가통계목', budgetCalculationDetails:'산출내역',
     warrantyInspectionDate:'하자검사일', warrantyInspector:'하자검사자', warrantyInspectorPosition:'하자검사자 직위', warrantyInspectorName:'하자검사자 성명', warrantyWitness:'하자검사 입회자', warrantyWitnessPosition:'하자검사 입회자 직위', warrantyWitnessName:'하자검사 입회자 성명', warrantyInspectionResult:'검사결과', warrantyIssueDetails:'하자발생내용', warrantyActions:'처리사항', warrantyNotes:'기타참고사항'
   
   };
@@ -185,7 +187,7 @@
         <tr><th>현 장</th><td colspan="5">${h.e(school.name)}</td></tr>
         <tr><th>지체상금률</th><td colspan="5">${h.e(p.delayPenaltyRate)}</td></tr>
         <tr><th class="small-label">물가변동계약금액<br>조정방법</th><td colspan="5">${h.e(p.priceAdjustmentMethod)}</td></tr>
-        <tr><th>착공연월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.plannedStartDate))}</td><th>준공연월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionDueDate))}</td></tr>
+        <tr><th>착공 연월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.plannedStartDate))}</td><th>준공 연월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionDueDate))}</td></tr>
         <tr><th>기타사항</th><td colspan="5"></td></tr>
       </tbody></table>
       <div class="contract-defect-caption">하자담보책임(복합공종의 경우 공종별 구분 기재)</div>
@@ -291,8 +293,8 @@
       ${h.documentFacts([
         ['1. 공 사 명 :',h.e(p.projectName)],
         ['2. 계 약 금 액 :',h.e(h.documentMoney(p.currentContractAmount))],
-        ['3. 계약연월일 :',h.e(h.formatKoreanDate(p.contractDate))],
-        ['4. 착공연월일 :',h.e(h.formatKoreanDate(p.startDate))],
+        ['3. 계약 연월일 :',h.e(h.formatKoreanDate(p.contractDate))],
+        ['4. 착공 연월일 :',h.e(h.formatKoreanDate(p.startDate))],
         ['5. 준 공 기 한 :',h.e(h.formatKoreanDate(p.completionDueDate))]
       ])}
       <div class="doc-attachments"><span>붙&nbsp;&nbsp;&nbsp;&nbsp;임 :</span><ol><li>현장대리인계(재직증명서, 건설기술경력증수첩 사본)</li><li>공사예정공정표</li><li>공사도급내역서</li></ol></div>
@@ -520,7 +522,7 @@
 
         <tr><th>계약내용</th><th colspan="2">계약보증금</th><td colspan="3">${h.e(h.moneyNumberText(ctx.value('contractSecurityAmount')))}</td><td colspan="2">${h.e(p.contractSecurityType || '')}</td><th>재원</th><td colspan="3">${h.e(p.fundingSource || '')}</td></tr>
 
-        <tr><th rowspan="4">공정</th><th>구분</th><th colspan="2">계약상 년월일</th><th colspan="2">실제 년월일</th><th rowspan="4">지급내역</th><th>구분</th><th colspan="2">년월일</th><th colspan="2">지급금액</th></tr>
+        <tr><th rowspan="4">공정</th><th>구분</th><th colspan="2">계약상 연월일</th><th colspan="2">실제 연월일</th><th rowspan="4">지급내역</th><th>구분</th><th colspan="2">연월일</th><th colspan="2">지급금액</th></tr>
         <tr><th>착공</th><td colspan="2">${h.e(h.formatKoreanDate(p.plannedStartDate || p.startDate))}</td><td colspan="2">${h.e(h.formatKoreanDate(p.startDate))}</td><th>선급금</th><td colspan="2"></td><td colspan="2">${h.e(h.moneyNumberText(p.priorPaymentAmount))}</td></tr>
         <tr><th>준공</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionDueDate))}</td><td colspan="2">${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td><th>준공금</th><td colspan="2">${h.e(h.formatKoreanDate(p.paymentDate))}</td><td colspan="2">${h.e(h.moneyNumberText(p.paymentAmount || p.settlementAmount))}</td></tr>
         <tr><th>준공정산금</th><td colspan="4">${h.e(h.moneyNumberText(p.settlementAmount))}</td><th>잔액</th><td colspan="4">${h.e(h.moneyNumberText(Math.max(0, Number(p.currentContractAmount||0)-Number(p.paymentAmount||0))))}</td></tr>
@@ -602,8 +604,8 @@
       <h2>1. 공사내역</h2>
       <table class="warranty-ledger-info"><tbody>
         <tr><th>공사명</th><td colspan="3">${h.e(p.projectName)}</td><th>계약금액</th><td colspan="2">${h.e(h.moneyNumberText(p.currentContractAmount))}</td><th>하자보증금</th><td colspan="2">${h.e(h.moneyNumberText(ctx.value('defectSecurityAmount')))}</td></tr>
-        <tr><th>설계자</th><td colspan="3">${h.e(p.designer || '')}</td><th>계약년월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.contractDate))}</td><th>준공기한</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionDueDate))}</td></tr>
-        <tr><th>도급자</th><td colspan="3">${h.e(p.vendorName)}</td><th>착공년월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.startDate))}</td><th>준공년월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td></tr>
+        <tr><th>설계자</th><td colspan="3">${h.e(p.designer || '')}</td><th>계약 연월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.contractDate))}</td><th>준공기한</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionDueDate))}</td></tr>
+        <tr><th>도급자</th><td colspan="3">${h.e(p.vendorName)}</td><th>착공 연월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.startDate))}</td><th>준공 연월일</th><td colspan="2">${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td></tr>
         <tr><th>감독관</th><td colspan="3">${h.e(ctx.value('supervisor') || '')}</td><th>준공검사일</th><td colspan="2">${h.e(h.formatKoreanDate(p.completionInspectionDate))}</td><th>하자보증기간</th><td colspan="2">${h.e(h.formatKoreanDate(p.defectStartDate))} ~ ${h.e(h.formatKoreanDate(p.defectEndDate))}</td></tr>
       </tbody></table>
       ${warrantyItems.length?`<h2>2. 하자담보 공종</h2><table class="warranty-ledger-items"><thead><tr><th>세부공종</th><th>기간</th><th>시작일</th><th>종료일</th></tr></thead><tbody>${warrantyItems.map(x=>`<tr><td>${h.e(x.subcategory||x.category||'')}</td><td>${x.years?h.e(String(x.years))+'년':''}</td><td>${h.e(h.formatKoreanDate(x.startDate))}</td><td>${h.e(h.formatKoreanDate(x.endDate))}</td></tr>`).join('')}</tbody></table>`:''}
@@ -637,8 +639,11 @@
     const header = isAgency
       ? `<div class="safety-meta"><div><strong>■ 학교(기관)명:</strong><span>${h.e(school.name || '')}</span></div><div><strong>■ 점 검 자:</strong><span>${h.e(inspector)}</span>${signatureMarkup}</div><div><strong>■ 점검 일자:</strong><span>${h.e(h.formatKoreanDate(date))}</span></div></div>`
       : `<div class="safety-meta"><div><strong>■ 공사 업체명:</strong><span>${h.e(p.vendorName || '')}</span></div><div><strong>■ 점 검 자:</strong><span>${h.e(inspector)}</span>${signatureMarkup}</div><div><strong>■ 점검 일자:</strong><span>${h.e(h.formatKoreanDate(date))}</span></div></div>`;
-    const rows = def.items.map((item,i)=>{ const status=results[String(i+1)] || ''; return `<tr><td>${i+1}</td><td>${h.e(item)}</td><td>${checklistMark(status,'yes')}</td><td>${checklistMark(status,'no')}</td><td>${checklistMark(status,'na')}</td></tr>`; }).join('');
-    const page1 = `<article class="paper-a4 admin-document safety-checklist ${h.e(type)} document-print-page"><h1>${h.e(type==='safetyGeneral'?'공사(용역) 안전·보건 체크리스트(공통)':def.label)}</h1><p class="safety-subtitle">[ ${h.e(def.subtitle)} ]</p>${header}<table class="safety-check-table"><thead><tr><th>번호</th><th>점 검 내 용</th><th>예</th><th>아니요</th><th>해당없음</th></tr></thead><tbody>${rows}</tbody></table><p class="safety-footer">※ ${h.e(def.footer || '')}</p>${saved.notes?`<div class="safety-written-note"><strong>비고</strong><span>${h.e(saved.notes)}</span></div>`:''}${isAgency?`<div class="safety-vendor-confirm"><h2>공사(용역)업체 확인·서약서</h2><p>학교(기관)로부터 위 점검항목에 대하여 안내(주지)받았으며, 공사(용역) 전 과정에 걸쳐 참여하는 근로자에게 안전보건교육을 실시하고 필요한 개인보호구를 지급 및 착용하며 작업 시 안전수칙을 준수할 것을 서약합니다.</p><div><span>소속(회사) :</span><span>${h.e(p.vendorName||'')}</span></div><div><span>공사업체 책임자 :</span><span>${h.e(saved.contractorResponsible||'')} (서명)</span></div></div>`:''}</article>`;
+    const related=saved.relatedChecklistResults||{};
+    const relatedLabels=[['fall','추락재해 예방 체크리스트'],['electrical','감전재해 예방 체크리스트'],['confined','밀폐공간 질식재해예방 체크리스트'],['industrial','일반 산업재해 예방 체크리스트']];
+    const relatedTable=isAgency?`<table class="safety-related-print"><thead><tr><th>점검 체크리스트</th><th>해당여부(O, X)</th></tr></thead><tbody>${relatedLabels.map(([key,label])=>`<tr><td>${h.e(label)}</td><td>${related[key]==='o'?'O':related[key]==='x'?'X':''}</td></tr>`).join('')}</tbody></table><p class="safety-related-note">※ 공사업체의 경우 자율점검관리를 위해 ‘사업장 자체 점검표’ 제공</p>`:'';
+    const rows = def.items.map((item,i)=>{ const status=results[String(i+1)] || ''; const extra=isAgency&&i===5?relatedTable:''; return `<tr><td>${i+1}</td><td>${h.e(item).replace(/\n/g,'<br>')}${extra}</td><td>${checklistMark(status,'yes')}</td><td>${checklistMark(status,'no')}</td><td>${checklistMark(status,'na')}</td></tr>`; }).join('');
+    const page1 = `<article class="paper-a4 admin-document safety-checklist ${h.e(type)} document-print-page"><h1>${h.e(type==='safetyGeneral'?'공사(용역) 안전·보건 체크리스트(공통)':def.label)}</h1><p class="safety-subtitle">[ ${h.e(def.subtitle)} ]</p>${header}<table class="safety-check-table"><thead><tr><th>번호</th><th>점 검 내 용</th><th>예</th><th>아니요</th><th>해당없음</th></tr></thead><tbody>${rows}</tbody></table><p class="safety-footer">※ ${h.e(def.footer || '')}</p>${saved.notes?`<div class="safety-written-note"><strong>비고</strong><span>${h.e(saved.notes)}</span></div>`:''}</article>`;
     if (type !== 'safetyFall' || !(def.notes||[]).length) return [page1];
     const page2 = `<article class="paper-a4 admin-document safety-reference-page document-print-page"><h1>안전보건 점검사항 및 조치사항(예시)</h1><ol>${def.notes.map(x=>`<li>${h.e(x)}</li>`).join('')}</ol><div class="safety-risk-note"><strong>위험공종 안전관리 담당자 안내</strong><p>2m 이상 고소작업, 1.5m 이상 굴착·가설공사, 철골 구조물 공사, 2m 이상 외부도장 공사, 승강기 설치공사는 위험작업 전 공사감독자에게 작업계획 제출·검토·확인이 필요합니다.</p></div></article>`;
     return [page1,page2];
