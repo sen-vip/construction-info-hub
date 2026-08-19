@@ -71,12 +71,12 @@
       required:['schoolName','projectName','currentContractAmount','settlementAmount','settlementReductionReason','actualCompletionDate','vendorName','vendorAddress','representative']
     },
     paymentRequest: {
-      key:'paymentRequest', label:'대금청구서', outputTitle:'대 금 청 구 서', stage:'지출', version:'2026.05 수정', pages:1, owner:'vendor',
+      key:'paymentRequest', label:'대금청구서', outputTitle:'대 금 청 구 서', stage:'준공', version:'2026.05 수정', pages:1, owner:'vendor',
       description:'준공 후 계약대금을 지정계좌로 청구하는 서류',
       required:['schoolName','projectName','currentContractAmount','settlementAmount','priorPaymentAmount','deductionAmount','completionInspectionDate','vendorName','vendorAddress','representative','bankName','accountNumber','accountHolder']
     },
     constructionLedger: {
-      key:'constructionLedger', label:'공사대장', outputTitle:'공  사  대  장', stage:'관리', version:'2026.05 수정', pages:1, owner:'agency',
+      key:'constructionLedger', label:'공사대장', outputTitle:'공  사  대  장', stage:'준공', version:'2026.05 수정', pages:1, owner:'agency',
       description:'개별 공사의 계약·공정·지급·검사·하자 내용을 한 장에 관리하는 기관용 대장',
       required:['projectName','vendorName','currentContractAmount','contractMethod','contractDate','startDate','completionDueDate']
     },
@@ -91,23 +91,23 @@
       required:['projectName','vendorName','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','defectStartDate','defectEndDate']
     },
     safetyGeneral: {
-      key:'safetyGeneral', label:'안전·보건 체크리스트', outputTitle:'공사(용역) 안전·보건 체크리스트(공통)', stage:'안전·보건', version:'2026.05 수정', pages:1, owner:'agency',
+      key:'safetyGeneral', label:'안전·보건 체크리스트', outputTitle:'공사(용역) 안전·보건 체크리스트(공통)', stage:'착공', version:'2026.05 수정', pages:1, owner:'agency',
       description:'기관(학교)에서 점검하고 업체에서 확인하여 자체 보관하는 공통 체크리스트', required:['schoolName','projectName','vendorName']
     },
     safetyFall: {
-      key:'safetyFall', label:'추락재해 예방 체크리스트', outputTitle:'추락재해 예방 체크리스트', stage:'안전·보건', version:'2026.05 수정', pages:2, owner:'vendor',
+      key:'safetyFall', label:'추락재해 예방 체크리스트', outputTitle:'추락재해 예방 체크리스트', stage:'착공', version:'2026.05 수정', pages:2, owner:'vendor',
       description:'추락위험 작업 시 공사업체가 작성·제출하고 기관이 확인하는 체크리스트', required:['projectName','vendorName']
     },
     safetyElectrical: {
-      key:'safetyElectrical', label:'감전재해 예방 체크리스트', outputTitle:'전기공사 감전재해 예방 체크리스트', stage:'안전·보건', version:'2026.05 수정', pages:1, owner:'vendor',
+      key:'safetyElectrical', label:'감전재해 예방 체크리스트', outputTitle:'전기공사 감전재해 예방 체크리스트', stage:'착공', version:'2026.05 수정', pages:1, owner:'vendor',
       description:'감전위험 작업 시 공사(용역)업체가 작성·제출하고 기관이 확인하는 체크리스트', required:['projectName','vendorName']
     },
     safetyConfined: {
-      key:'safetyConfined', label:'밀폐공간 질식재해예방 체크리스트', outputTitle:'밀폐공간 질식재해예방 체크리스트', stage:'안전·보건', version:'2026.05 수정', pages:1, owner:'vendor',
+      key:'safetyConfined', label:'밀폐공간 질식재해예방 체크리스트', outputTitle:'밀폐공간 질식재해예방 체크리스트', stage:'착공', version:'2026.05 수정', pages:1, owner:'vendor',
       description:'밀폐공간 작업 시 공사(용역)업체가 작성·제출하고 기관이 확인하는 체크리스트', required:['projectName','vendorName']
     },
     safetyIndustrial: {
-      key:'safetyIndustrial', label:'일반 산업재해 예방 체크리스트', outputTitle:'일반 산업재해 예방 체크리스트', stage:'안전·보건', version:'2026.05 수정', pages:1, owner:'vendor',
+      key:'safetyIndustrial', label:'일반 산업재해 예방 체크리스트', outputTitle:'일반 산업재해 예방 체크리스트', stage:'착공', version:'2026.05 수정', pages:1, owner:'vendor',
       description:'일반 산업재해 우려 작업 시 공사(용역)업체가 작성·제출하고 기관이 확인하는 체크리스트', required:['projectName','vendorName']
     }
   };
@@ -128,16 +128,16 @@
 
   const PRINT_ORDER = [
     'standardContract','acceptanceTerms','useSealForm','privateContractPledge',
-    'startReport','utilityPaymentPledge','completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord','defectSecurityDeposit','completionSettlementAgreement','paymentRequest',
-    'constructionLedger','safetyGeneral','safetyFall','safetyElectrical','safetyConfined','safetyIndustrial','warrantyInspectionReport','warrantyLedger'
+    'startReport','utilityPaymentPledge','safetyGeneral','safetyFall','safetyElectrical','safetyConfined','safetyIndustrial',
+    'completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord','constructionLedger','defectSecurityDeposit','completionSettlementAgreement','paymentRequest',
+    'warrantyInspectionReport','warrantyLedger'
   ];
 
   const SETS = {
     contract: { label:'계약서류 4종', types:['standardContract','acceptanceTerms','useSealForm','privateContractPledge'] },
-    start: { label:'착공서류', types:['startReport','utilityPaymentPledge'] },
-    completion: { label:'준공서류', types:['completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord','defectSecurityDeposit','completionSettlementAgreement'] },
-    payment: { label:'지출서류', types:['paymentRequest'] },
-    agencyManagement: { label:'행정기관 관리서류', types:['constructionLedger','supervisionReport','completionInspectionRecord','safetyGeneral','warrantyInspectionReport','warrantyLedger'] },
+    start: { label:'착공서류', types:['startReport','utilityPaymentPledge','safetyGeneral'] },
+    completion: { label:'준공서류', types:['completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord','constructionLedger','defectSecurityDeposit','completionSettlementAgreement','paymentRequest'] },
+    agencyManagement: { label:'행정실 서류', types:['constructionLedger','supervisionReport','completionInspectionRecord','safetyGeneral','warrantyInspectionReport','warrantyLedger'] },
     safety: { label:'안전·보건 서류', types:['safetyGeneral','safetyFall','safetyElectrical','safetyConfined','safetyIndustrial'] },
     all: { label:'전체 21종', types:[...PRINT_ORDER] }
   };

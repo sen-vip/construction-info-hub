@@ -16,7 +16,7 @@
   const moreMenu = document.getElementById('moreMenu');
   const excelFileInput = document.getElementById('excelFileInput');
   const backupFileInput = document.getElementById('backupFileInput');
-  const APP_VERSION = '0.5.1.6';
+  const APP_VERSION = '0.6.2';
   const REFERENCE_PROGRAM = '서울시교육청 교육시설안전과 「공사서류 원클릭(간소화)프로그램」(2026.5.수정)';
 
   const state = {
@@ -33,7 +33,8 @@
     detailTab: 'documents',
     selectedDocuments: new Set(),
     selectionProjectId: null,
-    activeWarrantyInspectionId: null
+    activeWarrantyInspectionId: null,
+    documentOwnerFilter: (() => { try { return localStorage.getItem('constructionHubDocumentOwnerFilter') === 'agency' ? 'agency' : 'all'; } catch { return 'all'; } })()
   };
 
   const FIELDS_FOR_IMPORT = [
@@ -189,8 +190,7 @@
     const steps = [
       { key:'contract', label:'계약', done:!!p.contractDate, active:current==='contract_prep', stateText:'지금 입력', summary:p.contractDate ? `계약일 ${formatDate(p.contractDate)}` : '계약정보 입력' },
       { key:'start', label:'착공', done:!!p.startDate, active:current==='start_wait', stateText:'지금 입력', summary:p.startDate ? `착공일 ${formatDate(p.startDate)}` : '착공정보 대기' },
-      { key:'completion', label:'준공', done:!!p.actualCompletionDate && !!(p.completionInspectionDate || p.completionInspectionRecordDate || p.paymentDate), active:['active','inspection_wait'].includes(current), stateText:current==='active'?'공사 진행 중':'지금 입력', summary:p.actualCompletionDate ? `준공일 ${formatDate(p.actualCompletionDate)}` : '공사 진행 중' },
-      { key:'payment', label:'지출', done:!!p.paymentDate, active:current==='payment_wait', stateText:'지금 입력', summary:p.paymentDate ? `지출일 ${formatDate(p.paymentDate)}` : '준공 후 입력' },
+      { key:'completion', label:'준공', done:!!p.paymentDate, active:['active','inspection_wait','payment_wait'].includes(current), stateText:current==='active'?'공사 진행 중':current==='payment_wait'?'지급 확인':'지금 입력', summary:p.paymentDate ? `지출일 ${formatDate(p.paymentDate)}` : (p.actualCompletionDate ? `준공일 ${formatDate(p.actualCompletionDate)}` : '공사 진행 중') },
       { key:'defect', label:'하자', done:!!p.defectStartDate && !!p.defectEndDate, active:!!p.paymentDate && !(p.defectStartDate && p.defectEndDate), stateText:'확인', summary:p.defectEndDate ? `종료 ${formatDate(p.defectEndDate)}` : '해당 시 관리' }
     ];
     return steps.map(step => ({ ...step, future: !step.done && !step.active }));
@@ -258,8 +258,9 @@
   }
 
   function openExcelDropModal(mode) {
-    const isEdufine = mode === 'edufine';
-    const title = isEdufine ? '에듀파인 자료 불러오기' : '공사관리대장 불러오기';
+    const isEdufine = mode === 'edufine' || mode === 'edufine-new';
+    const isNewFlow = mode === 'edufine-new';
+    const title = isNewFlow ? '자료관리목록에서 공사 불러오기' : isEdufine ? '에듀파인 자료 불러오기' : '공사관리대장 불러오기';
     const expected = isEdufine ? '자료관리목록.xlsx' : '공사관리대장.xlsx';
     const guide = isEdufine
       ? `<div class="import-path-guide"><strong>다운로드 경로</strong><span>에듀파인 <b>›</b> 학교회계 <b>›</b> 계약관리 <b>›</b> 계약자료관리 <b>›</b> 자료관리</span></div>`
@@ -267,7 +268,7 @@
     openModal({
       eyebrow:'엑셀 불러오기 · 드래그앤드롭',
       title,
-      body:`<div class="notice"><strong>${expected}를 이 창에 끌어다 놓을 수 있습니다.</strong><br>파일은 서버로 전송하지 않고 이 브라우저에서만 읽습니다.</div>${guide}
+      body:`${isNewFlow ? `<div class="import-flow-steps compact"><span class="active"><b>1</b> 공사 불러오기</span><i>›</i><span><b>2</b> 정보 확인</span><i>›</i><span><b>3</b> 서류 작성</span></div>` : ''}<div class="notice"><strong>${expected}를 이 창에 끌어다 놓을 수 있습니다.</strong><br>${isNewFlow ? '원인행위까지 처리한 뒤 내려받은 파일이면 됩니다. ' : ''}파일은 서버로 전송하지 않고 이 브라우저에서만 읽습니다.</div>${guide}
         <div class="excel-drop-zone" id="excelDropZone" tabindex="0" role="button" aria-label="${expected} 드래그앤드롭 영역">
           <div class="excel-drop-icon">↧</div>
           <strong>${expected}를 여기에 놓으세요</strong>
@@ -355,34 +356,35 @@
     }
 
     main.innerHTML = `
-      <section class="hero document-output-hero">
+      <section class="hero document-output-hero import-first-hero">
         <div>
-          <p class="eyebrow">행정실 공사서류 작성·출력</p>
-          <h1>출력할 공사를 선택하세요</h1>
-          <p>${state.school.name ? `${e(state.school.name)} · ` : ''}공사를 열면 필요한 서류가 바로 보입니다. 공통정보는 한 번만 입력하고 여러 서류에 재사용합니다.</p>
-          <div class="security-note"><span class="security-dot"></span>브라우저 자동저장 · 입력 데이터 서버 미전송</div>
+          <p class="eyebrow">공사정보 시작하기</p>
+          <h1>에듀파인에 입력한 공사정보를 다시 입력하지 마세요</h1>
+          <p>${state.school.name ? `${e(state.school.name)} · ` : ''}원인행위 후 내려받은 자료관리목록에서 공사를 선택하면 계약정보를 먼저 채우고, 부족한 항목만 이어서 입력할 수 있습니다.</p>
+          <div class="security-note"><span class="security-dot"></span>엑셀은 이 브라우저에서만 읽음 · 서버 미전송</div>
         </div>
       </section>
 
-      <section class="start-grid" aria-label="공사 시작 방법">
-        <button class="start-card primary-start" type="button" data-start-new>
-          <span class="start-step">＋</span>
-          <span class="start-copy"><strong>새 공사 시작</strong><small>공사명부터 등록하고 필요한 정보만 이어서 입력합니다.</small></span>
-          <span class="start-arrow">›</span>
-        </button>
-        <button class="start-card" type="button" data-start-history>
+      <section class="start-grid start-grid-060" aria-label="공사 시작 방법">
+        <button class="start-card primary-start recommended-start" type="button" data-start-edufine-new>
           <span class="start-step">↧</span>
-          <span class="start-copy"><strong>공사관리대장 불러오기</strong><small>기존 공사 여러 건을 한꺼번에 가져와 바로 서류를 확인합니다.</small></span>
+          <span class="start-copy"><span class="start-recommend">추천</span><strong>자료관리목록 불러오기</strong><small>에듀파인 원인행위 후 내려받은 자료관리목록.xlsx에서 공사를 골라 자동으로 시작합니다.</small></span>
           <span class="start-arrow">›</span>
         </button>
-        <button class="start-card" type="button" data-start-edufine>
-          <span class="start-step">↻</span>
-          <span class="start-copy"><strong>에듀파인 자료로 보완</strong><small>자료관리목록.xlsx의 계약·준공·지출 정보를 기존 공사에 반영합니다.</small></span>
+        <button class="start-card" type="button" data-start-new>
+          <span class="start-step">＋</span>
+          <span class="start-copy"><strong>직접 입력하기</strong><small>엑셀 없이 공사명부터 등록하고 필요한 정보만 직접 입력합니다.</small></span>
           <span class="start-arrow">›</span>
         </button>
       </section>
+      <div class="legacy-import-line">
+        <span>기존 공사자료를 가지고 있나요?</span>
+        <button type="button" data-start-history>공사관리대장.xlsx 불러오기 <b>›</b></button>
+        <button type="button" data-start-edufine>기존 공사에 에듀파인 정보 보완 <b>›</b></button>
+      </div>
 
-      <section class="panel">
+      <section class="panel recent-projects-panel">
+        <div class="recent-projects-title"><div><strong>${state.projects.length ? '최근 작업 공사' : '공사 목록'}</strong><span>${state.projects.length ? '최근 수정한 공사부터 표시합니다.' : '자료관리목록을 불러오거나 직접 공사를 등록하면 여기에 표시됩니다.'}</span></div></div>
         <div class="toolbar">
           <div class="toolbar-left">
             <div class="search-wrap"><input id="projectSearch" type="search" value="${e(state.search)}" placeholder="공사명 · 업체명 · 계약번호 검색" aria-label="공사 검색"></div>
@@ -410,6 +412,7 @@
     });
     main.querySelectorAll('[data-filter]').forEach(btn => btn.addEventListener('click', () => { state.filter = btn.dataset.filter; renderDashboard(); }));
     main.querySelectorAll('[data-project-id]').forEach(row => row.addEventListener('click', () => openProject(row.dataset.projectId)));
+    main.querySelector('[data-start-edufine-new]')?.addEventListener('click', () => openExcelDropModal('edufine-new'));
     main.querySelector('[data-start-new]')?.addEventListener('click', openNewProjectModal);
     main.querySelector('[data-start-history]')?.addEventListener('click', () => openExcelDropModal('history'));
     main.querySelector('[data-start-edufine]')?.addEventListener('click', () => openExcelDropModal('edufine'));
@@ -454,7 +457,7 @@
     return `<div class="empty-state">
       <div class="empty-icon">工</div>
       <h3>아직 등록된 공사가 없어요</h3>
-      <p>위의 세 가지 시작 방법 중 지금 가지고 있는 자료에 맞는 방법을 선택하세요.</p>
+      <p>위의 시작 방법 중 지금 가지고 있는 자료에 맞는 방법을 선택하세요.</p>
     </div>`;
   }
 
@@ -558,15 +561,12 @@
             field('siteManagerLicense','현장대리인 자격증 종류',p.siteManagerLicense)
           ], currentOpen.start)}
 
-          ${workflowSectionHtml('completion','준공','준공 및 검사 단계에서 필요한 값만 추가합니다.',step.completion,[
+          ${workflowSectionHtml('completion','준공','준공·검사·대금청구 및 지급 단계에서 필요한 값을 함께 관리합니다.',step.completion,[
             field('actualCompletionDate','실제 준공일',p.actualCompletionDate,'date'),
             field('completionInspectionDate','검사·검수일',p.completionInspectionDate,'date'),
             field('completionRequestIssueDate','준공검사원 발행일',p.completionRequestIssueDate,'date'),
             field('completionRequestDocDate','준공검사원 문서등록일',p.completionRequestDocDate,'date'),
-            field('completionInspectionRecordDate','준공검사조서 작성일',p.completionInspectionRecordDate,'date')
-          ], currentOpen.completion)}
-
-          ${workflowSectionHtml('payment','지출','준공 후 지급 단계에서 확인하는 정보입니다.',step.payment,[
+            field('completionInspectionRecordDate','준공검사조서 작성일',p.completionInspectionRecordDate,'date'),
             moneyField('settlementAmount','준공정산금액',p.settlementAmount),
             textareaField('settlementReductionReason','준공 감액 사유',p.settlementReductionReason),
             moneyField('priorPaymentAmount','기지급액',p.priorPaymentAmount),
@@ -584,7 +584,7 @@
               ${field('budgetDetailItem','세부항목',p.budgetDetailItem)}
               ${field('costStatisticsItem','원가통계목',p.costStatisticsItem)}
             </div></details></div>`
-          ], currentOpen.payment)}
+          ], currentOpen.completion)}
 
           ${workflowSectionHtml('defect','하자','세부공종별 하자담보기간을 추천·관리하고 검사이력을 누적합니다.',step.defect,[
             field('defectSecurityType','하자보증방법',p.defectSecurityType),
@@ -664,6 +664,7 @@
     document.getElementById('openDocumentsTab')?.addEventListener('click', () => { state.detailTab='documents'; renderProjectDetail(); });
     document.getElementById('jumpCurrentStage')?.addEventListener('click', () => jumpToSection(sectionForStatus(status.key)));
     main.querySelectorAll('[data-detail-tab]').forEach(btn => btn.addEventListener('click', () => { state.detailTab = btn.dataset.detailTab; renderProjectDetail(); }));
+    main.querySelectorAll('[data-doc-owner-filter]').forEach(btn => btn.addEventListener('click', () => { state.documentOwnerFilter = btn.dataset.docOwnerFilter === 'agency' ? 'agency' : 'all'; try { localStorage.setItem('constructionHubDocumentOwnerFilter', state.documentOwnerFilter); } catch {} renderProjectDetail(); }));
     main.querySelectorAll('[data-doc-open]').forEach(btn => btn.addEventListener('click', () => openDocumentPreview(btn.dataset.docOpen, {mode:btn.dataset.previewMode || ''})));
     main.querySelectorAll('[data-doc-print]').forEach(btn => btn.addEventListener('click', () => printDocumentDirect(btn.dataset.docPrint, {mode:btn.dataset.previewMode || ''})));
     main.querySelectorAll('[data-pledge-edit]').forEach(btn => btn.addEventListener('click', () => openPrivateContractPledgeModal()));
@@ -856,20 +857,35 @@
     return `<section class="my-documents-panel"><div class="document-group-title"><strong>내 서류 ${types.length}종</strong><span>이 공사에서 실제 사용하는 서류만 모아봅니다.</span></div>${types.length?`<div class="my-document-chips">${types.map(type=>`<button type="button" data-doc-open="${e(type)}"><span>${e(DOCUMENT_DEFINITIONS[type].label)}</span><em>${e(documentChipStatus(type,p))}</em></button>`).join('')}</div>`:`<div class="contract-change-empty">아직 내 서류가 없습니다. 아래 추천 또는 전체 서류에서 필요한 문서를 추가하세요.</div>`}</section>`;
   }
 
+  function documentRowStatusHtml(title, tone='ready') {
+    return `<span class="document-status-pill ${e(tone)}">${e(title)}</span>`;
+  }
+
   function safetyDocumentCardHtml(type,p){
     const def=DOCUMENT_DEFINITIONS[type];
     const saved=safetyChecklistFor(p,type);
     const complete=safetyChecklistComplete(p,type);
     const mustComplete=safetyRequiresCompletion(type);
     const vendorForm=!mustComplete;
+    const isAgency=def.owner==='agency';
     const statusTitle=complete?'작성 완료':(vendorForm?'빈 양식 가능':'작성 필요');
-    const statusDesc=saved?.date?`최근 점검 ${e(formatDate(saved.date))}`:(vendorForm?'업체에 전달할 빈 양식도 바로 확인할 수 있습니다.':'점검결과를 입력한 뒤 작성본을 미리보기합니다.');
-    return `<article class="document-card simple-document-card safety-document-card ${complete||vendorForm?'ready':'needs-info'}" data-document-card="${e(type)}">
-      <div class="simple-document-head"><h3>${e(def.label)}</h3><span class="document-status-pill ${complete?'ready':(vendorForm?'neutral':'warn')}">${e(statusTitle)}</span></div>
-      <p class="simple-document-status">${statusDesc}</p>
-      <div class="document-card-actions two-actions"><button class="button primary" type="button" data-safety-edit="${e(type)}">체크리스트 작성</button><button class="button secondary" type="button" data-doc-open="${e(type)}" data-preview-mode="blank">빈 양식 미리보기</button></div>
+    const statusTone=complete?'ready':(vendorForm?'neutral':'warn');
+    const statusDesc=saved?.date?`최근 점검 ${formatDate(saved.date)}`:(vendorForm?'업체 제출용 체크리스트':'학교 점검용 공통 체크리스트');
+    const mainAction = vendorForm
+      ? `<button class="button secondary small document-row-primary" type="button" data-doc-open="${e(type)}" data-preview-mode="blank">빈 양식</button>`
+      : `<button class="button primary small document-row-primary" type="button" data-safety-edit="${e(type)}">작성</button>`;
+    const secondaryAction = vendorForm
+      ? `<button class="document-row-text-action" type="button" data-safety-edit="${e(type)}">작성</button>`
+      : `<button class="document-row-text-action" type="button" data-doc-open="${e(type)}" data-preview-mode="blank">빈 양식</button>`;
+    return `<article class="document-row safety-document-row ${isAgency?'owner-agency':'owner-vendor'} ${complete||vendorForm?'ready':'needs-info'}" data-document-card="${e(type)}" data-document-owner="${isAgency?'agency':'vendor'}">
+      <div class="document-row-main">
+        <div class="document-row-title-line"><h4>${e(def.label)}</h4>${isAgency?'<span class="document-owner-pill">행정실</span>':''}${documentRowStatusHtml(statusTitle,statusTone)}</div>
+        <p>${e(statusDesc)}</p>
+      </div>
+      <div class="document-row-actions">${secondaryAction}${mainAction}</div>
     </article>`;
   }
+
 
   function openSafetyChecklistModal(type, afterSave=null) {
     const p=currentProject(); const def=ReferenceData?.safetyChecklists?.[type]; if(!p||!def)return;
@@ -968,12 +984,16 @@
     const missing=documentMissing(type,p);
     const answered=privateContractPledgeAnsweredCount(p);
     const total=(ReferenceData?.privateContractPledgeItems||[]).length;
-    const labels=missing.map(x=>DOCUMENT_FIELD_LABELS[x]||x);
-    const status = missing.length ? `출력 전 확인 ${missing.length}개 · ${labels.slice(0,2).join(' · ')}${labels.length>2?' 외':''}` : (answered?`선택내용 ${answered}/${total} 저장됨`:'빈 양식부터 확인 가능');
-    return `<article class="document-card simple-document-card pledge-document-card ${missing.length?'needs-info':'ready'}" data-document-card="${e(type)}">
-      <div class="simple-document-head"><h3>${e(def.label)}</h3><span class="document-status-pill ${missing.length?'warn':'ready'}">${missing.length?'정보 확인':'출력 가능'}</span></div>
-      <p class="simple-document-status">${e(status)}</p>
-      <div class="document-card-actions pledge-actions"><button class="button secondary" type="button" data-pledge-edit>${answered?'선택내용 수정':'예·아니오 선택'}</button>${answered?`<button class="button primary" type="button" data-doc-open="${e(type)}" data-preview-mode="filled">작성본 미리보기</button>`:''}<button class="button secondary" type="button" data-doc-open="${e(type)}" data-preview-mode="blank">빈 양식 미리보기</button></div>
+    const statusTitle=missing.length?'정보 확인':(answered?'작성본 있음':'빈 양식 가능');
+    const statusTone=missing.length?'warn':(answered?'ready':'neutral');
+    const status=answered?`선택 ${answered}/${total} 저장됨`:'업체가 작성하는 수의계약 통합서약서';
+    return `<article class="document-row owner-vendor ${missing.length?'needs-info':'ready'}" data-document-card="${e(type)}" data-document-owner="vendor">
+      <div class="document-row-main"><div class="document-row-title-line"><h4>${e(def.label)}</h4>${documentRowStatusHtml(statusTitle,statusTone)}</div><p>${e(status)}</p></div>
+      <div class="document-row-actions">
+        <button class="document-row-text-action" type="button" data-doc-open="${e(type)}" data-preview-mode="blank">빈 양식</button>
+        <button class="button ${answered?'secondary':'primary'} small document-row-primary" type="button" data-pledge-edit>${answered?'수정':'작성'}</button>
+        ${answered?`<button class="button primary small document-row-primary" type="button" data-doc-open="${e(type)}" data-preview-mode="filled">작성본</button>`:''}
+      </div>
     </article>`;
   }
 
@@ -981,12 +1001,12 @@
     const def=DOCUMENT_DEFINITIONS[type];
     const record=activeWarrantyInspection(p);
     const missing=documentMissing(type,p);
-    const labels=missing.map(x=>DOCUMENT_FIELD_LABELS[x]||x);
-    const status = !record ? '검사일·검사결과를 미리보기에서 입력할 수 있습니다.' : (missing.length?`출력 전 확인 ${missing.length}개 · ${labels.slice(0,2).join(' · ')}${labels.length>2?' 외':''}`:'기본값·공란·직접 입력값을 선택해 출력할 수 있습니다.');
-    return `<article class="document-card simple-document-card warranty-report-card ${missing.length?'needs-info':'ready'}" data-document-card="${e(type)}">
-      <div class="simple-document-head"><h3>${e(def.label)}</h3><span class="document-status-pill ${missing.length?'warn':'ready'}">${record?'미리보기 가능':'검사내용 입력'}</span></div>
-      <p class="simple-document-status">${e(status)}</p>
-      <button class="button primary full-button" type="button" data-doc-open="${e(type)}" data-preview-mode="default">미리보기</button>
+    const statusTitle=record?'미리보기 가능':'검사내용 입력';
+    const statusTone=missing.length?'warn':(record?'ready':'neutral');
+    const status=record?(missing.length?`출력 전 확인 ${missing.length}개`:'검사기록을 확인·출력합니다.'):'검사일·검사결과는 미리보기에서 입력할 수 있습니다.';
+    return `<article class="document-row owner-agency ${missing.length?'needs-info':'ready'}" data-document-card="${e(type)}" data-document-owner="agency">
+      <div class="document-row-main"><div class="document-row-title-line"><h4>${e(def.label)}</h4><span class="document-owner-pill">행정실</span>${documentRowStatusHtml(statusTitle,statusTone)}</div><p>${e(status)}</p></div>
+      <div class="document-row-actions"><button class="button primary small document-row-primary" type="button" data-doc-open="${e(type)}" data-preview-mode="default">미리보기</button></div>
     </article>`;
   }
 
@@ -999,29 +1019,32 @@
     const labels = missing.map(x => DOCUMENT_FIELD_LABELS[x] || x);
     const blankSiteManager = type === 'utilityPaymentPledge' && !String(p.siteManager || '').trim();
     const status = missing.length
-      ? `출력 전 확인 ${missing.length}개 · ${labels.slice(0,2).join(' · ')}${labels.length>2?' 외':''}`
-      : (blankSiteManager?'현장대리인은 공란으로도 출력할 수 있습니다.':'현재 입력정보로 바로 미리보기할 수 있습니다.');
-    return `<article class="document-card simple-document-card ${missing.length?'needs-info':'ready'}" data-document-card="${e(type)}">
-      <div class="simple-document-head"><h3>${e(def.label)}</h3><span class="document-status-pill ${missing.length?'warn':'ready'}">${missing.length?'정보 확인':'출력 가능'}</span></div>
-      <p class="simple-document-status">${e(status)}</p>
-      <button class="button ${missing.length?'secondary':'primary'} full-button" type="button" data-doc-open="${e(type)}">미리보기</button>
+      ? `확인 필요 ${labels.slice(0,2).join(' · ')}${labels.length>2?' 외':''}`
+      : (blankSiteManager?'현장대리인 공란 출력 가능':'현재 정보로 출력 가능');
+    const isAgency = def.owner === 'agency';
+    return `<article class="document-row ${isAgency?'owner-agency':'owner-vendor'} ${missing.length?'needs-info':'ready'}" data-document-card="${e(type)}" data-document-owner="${isAgency?'agency':'vendor'}">
+      <div class="document-row-main">
+        <div class="document-row-title-line"><h4>${e(def.label)}</h4>${isAgency?'<span class="document-owner-pill">행정실</span>':''}${documentRowStatusHtml(missing.length?'정보 확인':'출력 가능',missing.length?'warn':'ready')}</div>
+        <p>${e(status)}</p>
+      </div>
+      <div class="document-row-actions"><button class="button ${missing.length?'secondary':'primary'} small document-row-primary" type="button" data-doc-open="${e(type)}">미리보기</button></div>
     </article>`;
-  }
-
-  function recentPrintHistoryHtml(p) {
-    const history = Array.isArray(p.printHistory) ? p.printHistory.slice(-3).reverse() : [];
-    if (!history.length) return '';
-    return `<div class="print-history"><strong>최근 묶음 출력</strong>${history.map(item => `<span>${e(formatDateTime(item.at))} · ${e(item.labels?.join(' · ') || `${item.count || 0}종`)}</span>`).join('')}</div>`;
   }
 
   function utilityToolCardHtml(p) {
     const u = p.utilityCost || {};
     const total = Number(u.total || 0);
-    return `<article class="document-card simple-document-card utility-tool-card ${total?'ready':''}">
-      <div class="simple-document-head"><h3>전력비·수도광열비 계산</h3><span class="document-status-pill ${total?'ready':'neutral'}">${total?'계산됨':'계산 도구'}</span></div>
-      <p class="simple-document-status">${total?`현재 계산값 ${e(formatMoney(total))}`:'직접재료비·직접노무비를 넣어 계산합니다.'}</p>
-      <button class="button ${total?'secondary':'primary'} full-button" type="button" data-open-utility-calculator>${total?'계산 다시 보기':'계산하기'}</button>
+    return `<article class="document-row utility-tool-row owner-agency ${total?'ready':''}" data-document-owner="agency">
+      <div class="document-row-main"><div class="document-row-title-line"><h4>전력비·수도광열비 계산</h4><span class="document-owner-pill">행정실</span>${documentRowStatusHtml(total?'계산됨':'계산 도구',total?'ready':'neutral')}</div><p>${total?`현재 계산값 ${e(formatMoney(total))}`:'직접재료비·직접노무비를 넣어 계산합니다.'}</p></div>
+      <div class="document-row-actions"><button class="button ${total?'secondary':'primary'} small document-row-primary" type="button" data-open-utility-calculator>${total?'계산 보기':'계산하기'}</button></div>
     </article>`;
+  }
+
+
+  function recentPrintHistoryHtml(p) {
+    const history = Array.isArray(p.printHistory) ? p.printHistory.slice(-3).reverse() : [];
+    if (!history.length) return '';
+    return `<div class="print-history"><strong>최근 묶음 출력</strong>${history.map(item => `<span>${e(formatDateTime(item.at))} · ${e(item.labels?.join(' · ') || `${item.count || 0}종`)}</span>`).join('')}</div>`;
   }
 
   function batchDocumentSelectorHtml(p) {
@@ -1034,7 +1057,7 @@
   }
 
   function oneClickSeparateDocumentsHtml() {
-    return `<details class="oneclick-gap-panel" open>
+    return `<details class="oneclick-gap-panel">
       <summary><span><strong>원클릭 엑셀에서 별도 확인할 서류</strong><small>허브에서 생성하지 않는 조건부·업체 자체 작성 서류입니다.</small></span><em>8종 + 참고 2종</em></summary>
       <div class="oneclick-gap-body">
         <div><h3>착공·현장 관련</h3><ul><li>도시가스배관 등 안전조치 협의서 <span>해당 공사</span></li><li>현장대리인계</li><li>공사예정공정표</li><li>직접시공계획서</li></ul></div>
@@ -1044,45 +1067,72 @@
     </details>`;
   }
 
+  function documentStageRowsHtml(types,p,{includeUtility=false}={}) {
+    const filter=state.documentOwnerFilter || 'all';
+    let rows='';
+    types.forEach(type=>{
+      if (includeUtility && type==='paymentRequest') rows += utilityToolCardHtml(p);
+      if (filter==='all' || DOCUMENT_DEFINITIONS[type]?.owner==='agency') rows += documentCardHtml(type,p);
+    });
+    if (includeUtility && !types.includes('paymentRequest')) rows += utilityToolCardHtml(p);
+    return rows;
+  }
+
+  function documentStageSectionHtml(number,key,title,description,types,p,{includeUtility=false,extra=''}={}) {
+    const filter=state.documentOwnerFilter || 'all';
+    const rows=documentStageRowsHtml(types,p,{includeUtility});
+    const hasRows=Boolean(rows.trim());
+    return `<section class="document-flow-stage document-list-stage ${!hasRows?'stage-empty':''}" data-doc-stage="${e(key)}">
+      <div class="document-flow-stage-head"><span class="stage-number">${number}</span><div><h3>${e(title)}</h3><p>${e(description)}</p></div></div>
+      ${hasRows?`<div class="document-list">${rows}</div>`:(filter==='agency'?'<div class="stage-empty-note">행정실에서 직접 작성하는 서류는 없습니다.</div>':'')}
+      ${extra}
+    </section>`;
+  }
+
   function documentsTabHtml(p) {
     const selected = orderedSelectedTypes(p);
     const missing = batchMissingFields(selected, p);
     const readyCount = selected.filter(type => documentMissing(type,p).length === 0 && (!isSafetyDocument(type) || safetyChecklistComplete(p,type) || !safetyRequiresCompletion(type))).length;
-    return `<div class="documents-panel document-first-panel">
-      <div class="documents-head document-first-title"><div><p class="eyebrow">행정실 공사서류 작성·출력</p><h2>필요한 서류를 선택하세요</h2><p>공사정보를 한 번 입력하면 여러 서류에 자동으로 반영됩니다. 서류를 열어 확인하고 바로 인쇄·PDF 저장하세요.</p></div><button class="text-action-button" type="button" data-detail-tab="info">공사정보 수정 →</button></div>
-      <div class="document-purpose-strip"><div><strong>입력정보를 잘못 적었나요?</strong><span>각 서류의 미리보기에서 바로 수정할 수 있고, 수정값은 다른 서류에도 함께 반영됩니다.</span></div><button class="button secondary small" type="button" data-detail-tab="info">공통정보 확인</button></div>
-      <div class="reference-program-banner compact-reference"><span class="reference-program-label">기준 자료</span><div class="reference-program-copy"><strong>${e(REFERENCE_PROGRAM)}</strong><span>서식·점검항목의 기준으로 사용합니다.</span></div></div>
-
-      <div class="document-group primary-document-group"><div class="document-group-title"><strong>행정실 작성·출력</strong><span>학교에서 직접 작성하거나 보관하는 서류를 먼저 모았습니다.</span></div><div class="document-grid simplified-document-grid">${documentCardHtml('supervisionReport',p)}${documentCardHtml('completionInspectionRecord',p)}${utilityToolCardHtml(p)}${documentCardHtml('constructionLedger',p)}${documentCardHtml('warrantyLedger',p)}${documentCardHtml('warrantyInspectionReport',p)}</div></div>
-
-      <div class="document-group vendor-document-group"><div class="document-group-title"><strong>업체에 전달할 서식</strong><span>업체가 작성·제출하는 양식도 현재 공사정보를 반영해 바로 준비할 수 있습니다.</span></div>
-        <div class="document-subgroup"><h4>계약</h4><div class="document-grid simplified-document-grid">${documentCardHtml('standardContract',p)}${documentCardHtml('acceptanceTerms',p)}${documentCardHtml('useSealForm',p)}${documentCardHtml('privateContractPledge',p)}</div></div>
-        <div class="document-subgroup"><h4>착공</h4><div class="document-grid simplified-document-grid">${documentCardHtml('startReport',p)}${documentCardHtml('utilityPaymentPledge',p)}</div></div>
-        <div class="document-subgroup"><h4>준공·지출</h4><div class="document-grid simplified-document-grid">${documentCardHtml('completionReport',p)}${documentCardHtml('completionInspectionRequest',p)}${documentCardHtml('defectSecurityDeposit',p)}${documentCardHtml('completionSettlementAgreement',p)}${documentCardHtml('paymentRequest',p)}</div></div>
-      </div>
-
-      <details class="document-group safety-document-group safety-collapsible-group">
-        <summary class="safety-document-summary"><span class="safety-summary-copy"><strong>안전·보건 체크리스트</strong><small>작성본 또는 업체 전달용 빈 양식을 필요한 방식으로 준비합니다.</small></span><span class="safety-summary-meta"><em>5종</em><span class="safety-summary-toggle" aria-hidden="true"></span></span></summary>
-        <div class="safety-document-body"><div class="document-grid simplified-document-grid">${documentCardHtml('safetyGeneral',p)}${documentCardHtml('safetyFall',p)}${documentCardHtml('safetyElectrical',p)}${documentCardHtml('safetyConfined',p)}${documentCardHtml('safetyIndustrial',p)}</div>
-          <details class="secondary-feature-details"><summary>공종·작업특성에 맞는 체크리스트 추천 보기</summary>${safetyRecommendationsHtml(p)}</details>
+    const safetyExtra = state.documentOwnerFilter==='agency' ? '' : `<details class="safety-extra-details compact-safety-details">
+          <summary><span><strong>그 외 안전·보건 체크리스트 4종</strong><small>해당 작업이 있을 때 업체가 작성·제출</small></span><span class="safety-summary-toggle" aria-hidden="true"></span></summary>
+          <div class="safety-extra-body"><div class="document-list">${documentCardHtml('safetyFall',p)}${documentCardHtml('safetyElectrical',p)}${documentCardHtml('safetyConfined',p)}${documentCardHtml('safetyIndustrial',p)}</div>
+            <details class="secondary-feature-details"><summary>공종·작업특성에 맞는 체크리스트 추천 보기</summary>${safetyRecommendationsHtml(p)}</details>
+          </div>
+        </details>`;
+    return `<div class="documents-panel document-first-panel workflow-documents-panel list-workbench-panel">
+      <div class="documents-head document-first-title"><div><p class="eyebrow">계약 → 착공 → 준공 → 하자</p><h2>공사서류</h2><p>공사 흐름대로 아래로 훑고 필요한 서류만 바로 엽니다.</p></div><button class="text-action-button" type="button" data-detail-tab="info">공사정보 수정 →</button></div>
+      <div class="document-list-toolbar">
+        <div class="document-view-toggle" role="group" aria-label="서류 보기 범위">
+          <button type="button" class="${state.documentOwnerFilter==='all'?'active':''}" data-doc-owner-filter="all">전체 서류</button>
+          <button type="button" class="${state.documentOwnerFilter==='agency'?'active':''}" data-doc-owner-filter="agency">행정실만 보기</button>
         </div>
-      </details>
+        <span class="document-filter-help">행정실 서류는 옅은 파란색으로 표시됩니다.</span>
+      </div>
+      <div class="workflow-route compact-workflow-route" aria-label="공사업무 흐름"><span>계약</span><b>→</b><span>착공</span><b>→</b><span>준공</span><b>→</b><span>하자</span></div>
+
+      ${documentStageSectionHtml(1,'contract','계약','계약 체결 단계에서 준비하는 서류',['standardContract','acceptanceTerms','useSealForm','privateContractPledge'],p)}
+
+      ${documentStageSectionHtml(2,'start','착공','공사 시작 전후에 준비하는 서류',['startReport','utilityPaymentPledge','safetyGeneral'],p,{extra:safetyExtra})}
+
+      ${documentStageSectionHtml(3,'completion','준공','공사 완료·검사·정산·대금청구까지',['completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord','constructionLedger','defectSecurityDeposit','completionSettlementAgreement','paymentRequest'],p,{includeUtility:true})}
+
+      ${documentStageSectionHtml(4,'defect','하자','준공 이후 하자검사와 이력 관리',['warrantyInspectionReport','warrantyLedger'],p)}
 
       <details class="batch-output-details" ${selected.length?'open':''}>
-        <summary><span><strong>여러 서류를 한 번에 출력</strong><small>필요할 때만 열어 서류를 선택하거나 세트를 사용합니다.</small></span><em id="batchOutputCount">${selected.length?`${selected.length}종 선택`:'선택 안 함'}</em></summary>
+        <summary><span><strong>여러 서류를 한 번에 출력</strong><small>필요할 때만 열어 선택합니다.</small></span><em id="batchOutputCount">${selected.length?`${selected.length}종 선택`:'선택 안 함'}</em></summary>
         <div class="batch-output-body">
           <div class="document-set-buttons" aria-label="서류 세트 선택">
             <button class="button secondary small" type="button" data-doc-set="agencyManagement">행정실 서류</button>
-            <button class="button secondary small" type="button" data-doc-set="safety">안전·보건 5종</button>
             <button class="button secondary small" type="button" data-doc-set="contract">계약서류 4종</button>
-            <button class="button secondary small" type="button" data-doc-set="start">착공서류 2종</button>
-            <button class="button secondary small" type="button" data-doc-set="completion">준공서류 6종</button>
+            <button class="button secondary small" type="button" data-doc-set="start">착공서류</button>
+            <button class="button secondary small" type="button" data-doc-set="completion">준공서류</button>
+            <button class="button secondary small" type="button" data-doc-set="safety">안전·보건 5종</button>
             <button class="button ghost small" type="button" data-doc-set="all">전체 21종</button>
             <button class="button ghost small" type="button" data-doc-clear>선택 해제</button>
           </div>
           ${batchDocumentSelectorHtml(p)}
           <div class="document-batch-summary" id="documentBatchSummary">
-            <div><strong>${selected.length ? `${selected.length}종 선택` : '출력할 서류를 선택하세요'}</strong><span>${selected.length ? (missing.length ? `출력 전 확인정보 ${missing.length}개 · 바로 출력 ${readyCount}종` : '선택한 서류를 한 번에 미리보기합니다.') : '개별 서류는 위 카드에서 바로 미리보기할 수 있습니다.'}</span></div>
+            <div><strong>${selected.length ? `${selected.length}종 선택` : '출력할 서류를 선택하세요'}</strong><span>${selected.length ? (missing.length ? `출력 전 확인정보 ${missing.length}개 · 바로 출력 ${readyCount}종` : '선택한 서류를 한 번에 미리보기합니다.') : '개별 서류는 위 목록에서 바로 미리보기할 수 있습니다.'}</span></div>
             <button class="button primary" type="button" id="openBatchPreviewBtn" ${selected.length?'':'disabled'}>${selected.length?`선택한 ${selected.length}종 미리보기`:'묶음 미리보기'}</button>
           </div>
         </div>
@@ -1090,9 +1140,11 @@
 
       ${oneClickSeparateDocumentsHtml()}
       ${recentPrintHistoryHtml(p)}
-      <div class="document-footnote">출력양식과 안전점검 항목은 ${e(REFERENCE_PROGRAM)} 버전을 기준으로 구현했습니다. 실제 계약·공사 상황에 맞는지 최종 확인 후 사용합니다.</div>
+      <details class="document-reference-details"><summary>기준 자료 보기</summary><div class="reference-program-banner compact-reference"><span class="reference-program-label">기준 자료</span><div class="reference-program-copy"><strong>${e(REFERENCE_PROGRAM)}</strong><span>서식·점검항목의 기준으로 사용합니다.</span></div></div></details>
+      <div class="document-footnote">실제 계약·공사 상황에 맞는지 최종 확인 후 사용합니다.</div>
     </div>`;
   }
+
 
   function refreshDocumentBatchUi(p) {
     const summary = main.querySelector('#documentBatchSummary');
@@ -1904,7 +1956,7 @@
         ${formula('2. 수도광열비', result.allowWater, result.workWaterRate, result.durationWaterRate, result.sizeWaterRate, result.waterRateSum, result.waterAverageRate, result.waterRawCost, result.waterHeatCost)}
       </div>
       <div class="utility-print-total"><span>공제금액 합계</span><strong>${won(result.total)} 원</strong></div>
-      <p class="utility-print-footnote">공사서류 작성지원에 저장된 공사정보와 입력한 직접재료비·직접노무비를 기준으로 계산</p>
+      <p class="utility-print-footnote">공사 허브에 저장된 공사정보와 입력한 직접재료비·직접노무비를 기준으로 계산</p>
     </article>`;
   }
 
@@ -2833,8 +2885,12 @@
       if (mode === 'history' && parsed.type === 'edufine') {
         throw new Error('이 파일은 K-에듀파인 자료관리목록으로 보입니다. 「에듀파인으로 정보 업데이트」에서 선택해주세요.');
       }
-      if (mode === 'edufine' && parsed.type !== 'edufine') {
-        throw new Error('이 파일은 공사관리대장으로 보입니다. 「공사관리대장 불러오기」에서 선택해주세요.');
+      if ((mode === 'edufine' || mode === 'edufine-new') && parsed.type !== 'edufine') {
+        throw new Error('이 파일은 공사관리대장으로 보입니다. 자료관리목록.xlsx 파일을 선택해주세요.');
+      }
+      if (mode === 'edufine-new') {
+        openEdufineProjectPicker(parsed);
+        return;
       }
       const analysis = analyzeImport(parsed);
       openImportPreview(parsed, analysis, mode);
@@ -2843,6 +2899,137 @@
     } finally {
       excelFileInput.value = '';
     }
+  }
+
+  const EDUFINE_CONFIRM_FIELDS = [
+    { field:'projectName', label:'공사명', type:'text', required:true },
+    { field:'contractNumber', label:'계약번호', type:'text' },
+    { field:'vendorName', label:'계약상대자', type:'text' },
+    { field:'representative', label:'대표자', type:'text' },
+    { field:'businessNumber', label:'사업자번호', type:'text' },
+    { field:'vendorAddress', label:'업체주소', type:'text', full:true },
+    { field:'vendorPhone', label:'업체 전화', type:'text' },
+    { field:'contractMethod', label:'계약방법', type:'text' },
+    { field:'procurementMethod', label:'계약 경로(G2B/S2B 등)', type:'text' },
+    { field:'estimatedPrice', label:'예정가격', type:'money' },
+    { field:'currentContractAmount', label:'계약금액', type:'money' },
+    { field:'contractDate', label:'계약연월일', type:'date' },
+    { field:'startDate', label:'착공연월일', type:'date' },
+    { field:'completionDueDate', label:'준공기한', type:'date' },
+    { field:'supervisor', label:'공사감독', type:'text' }
+  ];
+
+  function importFlowSteps(active = 1) {
+    const labels = ['공사 불러오기','정보 확인','서류 작성'];
+    return `<div class="import-flow-steps">${labels.map((label,index)=>{
+      const n=index+1;
+      const cls=n<active?'done':n===active?'active':'';
+      return `${index?'<i>›</i>':''}<span class="${cls}"><b>${n<active?'✓':n}</b>${e(label)}</span>`;
+    }).join('')}</div>`;
+  }
+
+  function edufineProjectCardHtml(p, index) {
+    return `<label class="edufine-project-card" data-edufine-card data-search-text="${e(normalizeText([p.projectName,p.vendorName,p.contractNumber].filter(Boolean).join(' ')))}">
+      <input type="radio" name="edufineProject" value="${index}">
+      <span class="edufine-project-main"><strong>${e(p.projectName || '이름 없는 공사')}</strong><small>${e(p.vendorName || '업체 미확인')} · ${e(formatMoney(p.currentContractAmount))}</small><em>${p.contractDate ? `계약연월일 ${e(formatDate(p.contractDate))}` : '계약연월일 미확인'}${p.contractNumber ? ` · ${e(p.contractNumber)}` : ''}</em></span>
+      <span class="edufine-project-check" aria-hidden="true">✓</span>
+    </label>`;
+  }
+
+  function openEdufineProjectPicker(parsed) {
+    const list = parsed.projects || [];
+    if (!list.length) { showToast('자료관리목록에서 공사 계약을 찾지 못했습니다.','warn'); return; }
+    if (list.length === 1) { openEdufineProjectConfirm(list[0], parsed); return; }
+    openModal({
+      eyebrow:'자료관리목록 · 공사 선택',
+      title:`불러올 공사를 선택하세요`,
+      wide:true,
+      body:`${importFlowSteps(1)}
+        <div class="notice"><strong>자료관리목록에서 공사 ${list.length}건을 찾았습니다.</strong><br>이번에 서류를 작성할 공사 1건을 선택하세요.${parsed.ignored ? ` 공사가 아닌 계약 ${parsed.ignored}건은 제외했습니다.` : ''}</div>
+        <div class="edufine-picker-toolbar"><input id="edufineProjectSearch" type="search" placeholder="공사명 · 업체명 · 계약번호 검색" aria-label="불러올 공사 검색"><span id="edufineVisibleCount">${list.length}건</span></div>
+        <div class="edufine-project-list" id="edufineProjectList">${list.map(edufineProjectCardHtml).join('')}</div>`,
+      actions:`<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="edufineSelectBtn" disabled>선택한 공사 확인하기</button>`
+    });
+    const search=modalBody.querySelector('#edufineProjectSearch');
+    const count=modalBody.querySelector('#edufineVisibleCount');
+    const selectBtn=modalActions.querySelector('#edufineSelectBtn');
+    const refresh=()=>{
+      const q=normalizeText(search?.value || '');
+      let visible=0;
+      modalBody.querySelectorAll('[data-edufine-card]').forEach(card=>{
+        const show=!q || String(card.dataset.searchText || '').includes(q);
+        card.hidden=!show;
+        if(show) visible++;
+      });
+      if(count) count.textContent=`${visible}건`;
+    };
+    search?.addEventListener('input',refresh);
+    modalBody.querySelectorAll('input[name="edufineProject"]').forEach(input=>input.addEventListener('change',()=>{selectBtn.disabled=false;}));
+    modalActions.querySelector('[data-modal-close]')?.addEventListener('click',closeModal);
+    selectBtn?.addEventListener('click',()=>{
+      const index=Number(modalBody.querySelector('input[name="edufineProject"]:checked')?.value);
+      if(!Number.isInteger(index) || !list[index]) { showToast('불러올 공사를 선택해주세요.','warn'); return; }
+      openEdufineProjectConfirm(list[index],parsed);
+    });
+    search?.focus();
+  }
+
+  function edufineConfirmFieldHtml(def, incoming) {
+    const value=incoming?.[def.field];
+    const imported=meaningful(value);
+    const badge=imported ? '<span class="import-field-badge loaded">자료관리목록</span>' : '<span class="import-field-badge needed">확인 필요</span>';
+    let control='';
+    const id=`import_${def.field}`;
+    if(def.type==='money') control=moneyInputHtml(id,value);
+    else if(def.type==='date') control=`${dateInputHtml(id,value)}<input id="${e(id)}" type="hidden" value="${e(validIsoDate(normalizeDateText(value)) || '')}"><span class="date-error" hidden>날짜를 YYYY-MM-DD 형식으로 확인해주세요.</span>`;
+    else control=`<input id="${e(id)}" value="${e(value || '')}" autocomplete="off">`;
+    return `<div class="field import-confirm-field ${def.full?'full':''} ${imported?'has-import':'needs-input'}"><label for="${e(id)}">${e(def.label)}${def.required?' <span class="required-mark">필수</span>':''}${badge}</label>${control}</div>`;
+  }
+
+  function openEdufineProjectConfirm(incoming, parsed) {
+    const existing=findProjectMatch(incoming);
+    const loadedCount=EDUFINE_CONFIRM_FIELDS.filter(def=>meaningful(incoming?.[def.field])).length;
+    const neededCount=EDUFINE_CONFIRM_FIELDS.length-loadedCount;
+    openModal({
+      eyebrow:'자료관리목록 · 공사정보 확인',
+      title:'불러온 정보를 확인하고 부족한 항목만 채워주세요',
+      wide:true,
+      body:`${importFlowSteps(2)}
+        ${existing ? `<div class="notice warn"><strong>비슷한 기존 공사를 찾았습니다.</strong><br>${e(existing.projectName)} · 중복 등록을 피하려면 아래 ‘기존 공사 열기’를 사용하세요.</div>` : `<div class="notice"><strong>${e(incoming.projectName || '선택한 공사')} 정보를 불러왔습니다.</strong><br>자료관리목록에 있는 값은 그대로 채웠습니다. 빈 항목은 지금 입력하지 않아도 공사를 만든 뒤 필요한 시점에 보완할 수 있습니다.</div>`}
+        <div class="import-confirm-summary"><span><b>${loadedCount}</b>개 자동입력</span><span><b>${neededCount}</b>개 확인 필요</span></div>
+        <div class="modal-grid import-confirm-grid">${EDUFINE_CONFIRM_FIELDS.map(def=>edufineConfirmFieldHtml(def,incoming)).join('')}</div>
+        <div class="import-confirm-foot"><span class="security-dot"></span>이 화면의 값과 업로드한 엑셀은 서버로 전송하지 않습니다.</div>`,
+      actions:`<button class="button secondary" type="button" id="backToEdufineList">${parsed.projects?.length>1?'공사 다시 선택':'취소'}</button>${existing?'<button class="button secondary" type="button" id="openExistingProjectBtn">기존 공사 열기</button>':''}<button class="button primary" type="button" id="createFromEdufineBtn">저장하고 서류 작성 →</button>`
+    });
+    initDateInputs(modalBody);
+    initMoneyInputs(modalBody);
+    modalActions.querySelector('#backToEdufineList')?.addEventListener('click',()=> parsed.projects?.length>1 ? openEdufineProjectPicker(parsed) : closeModal());
+    modalActions.querySelector('#openExistingProjectBtn')?.addEventListener('click',()=>{ closeModal(); openProject(existing.id); showToast('기존 공사를 열었습니다. 상단 자료 불러오기로 에듀파인 정보를 보완할 수 있습니다.'); });
+    modalActions.querySelector('#createFromEdufineBtn')?.addEventListener('click',()=>createProjectFromEdufineConfirm(incoming));
+  }
+
+  async function createProjectFromEdufineConfirm(incoming) {
+    const seed={...incoming};
+    for(const def of EDUFINE_CONFIRM_FIELDS){
+      const id=`import_${def.field}`;
+      const el=modalBody.querySelector(`#${CSS.escape(id)}`);
+      if(!el) continue;
+      seed[def.field]=def.type==='money' ? parseMoneyInput(el.value) : el.value.trim();
+    }
+    if(!seed.projectName){ showToast('공사명을 확인해주세요.','warn'); modalBody.querySelector('#import_projectName')?.focus(); return; }
+    seed.fiscalYear=seed.contractDate ? seed.contractDate.slice(0,4) : seed.fiscalYear || String(new Date().getFullYear());
+    seed.originalContractAmount=meaningful(seed.originalContractAmount) ? seed.originalContractAmount : seed.currentContractAmount;
+    seed.source='edufine';
+    seed.sourceUpdatedAt=new Date().toISOString();
+    const project=DB.createProject(seed);
+    await DB.put('projects',project);
+    await upsertVendorFromProject(project);
+    await loadState();
+    state.currentProjectId=project.id;
+    state.detailTab='documents';
+    closeModal();
+    renderProjectDetail();
+    showToast('자료관리목록에서 공사정보를 불러왔습니다. 필요한 서류를 바로 확인할 수 있습니다.');
   }
 
   function openImportPreview(parsed, analysis, mode = 'auto') {
@@ -2967,7 +3154,7 @@
     if (!file) return;
     try {
       const data = JSON.parse(await file.text());
-      if (data.app !== 'construction-info-hub') throw new Error('공사서류 작성지원 백업파일이 아닙니다.');
+      if (data.app !== 'construction-info-hub') throw new Error('공사 허브 백업파일이 아닙니다.');
       openModal({
         eyebrow:'전체 복원', title:'기존 데이터를 백업파일로 바꿀까요?',
         body:`<div class="notice warn">현재 이 브라우저의 공사·업체·지급정보를 지우고, 백업파일의 내용으로 교체합니다.</div><div class="import-summary"><div class="import-stat"><strong>${data.projects?.length||0}</strong><span>공사</span></div><div class="import-stat"><strong>${data.vendors?.length||0}</strong><span>업체</span></div><div class="import-stat"><strong>${data.payouts?.length||0}</strong><span>지급정보</span></div><div class="import-stat"><strong>${e(data.version||1)}</strong><span>백업 버전</span></div></div>`,
@@ -3058,11 +3245,11 @@
 
   function openHelp() {
     openModal({
-      eyebrow:'도움말', title:`공사서류 작성지원 v${APP_VERSION}`,
+      eyebrow:'도움말', title:`공사 허브 v${APP_VERSION}`,
       body:`<div class="notice"><strong>이 도구의 목적</strong><br>행정실에서 공사 관련 서류를 빠르게 작성·확인·출력하기 위한 도구입니다. 공통정보는 한 번만 입력하고 여러 서류에 다시 사용합니다.</div>
       <div style="display:grid;gap:16px;margin-top:18px;font-size:14px">
-        <div><strong>1. 출력할 공사를 선택</strong><p class="muted">공사를 열면 ‘서류 작성’ 화면이 먼저 보입니다. 필요한 서류를 선택해 미리보기부터 확인하세요.</p></div>
-        <div><strong>2. 공통정보는 한 번만 입력</strong><p class="muted">공사명·업체·대표자·주소·계약금액·날짜 등은 공사정보에 저장되어 여러 서류에 자동 반영됩니다. 공사관리대장.xlsx 또는 에듀파인 자료관리목록.xlsx로 기존 값을 가져올 수도 있습니다.</p></div>
+        <div><strong>1. 자료관리목록에서 시작</strong><p class="muted">에듀파인 원인행위 후 자료관리목록.xlsx를 내려받아 불러오면 이번에 작성할 공사를 선택하고 계약정보를 자동으로 채울 수 있습니다. 엑셀이 없으면 직접 입력으로 시작하세요.</p></div>
+        <div><strong>2. 불러온 값은 확인하고 부족한 값만 입력</strong><p class="muted">자료관리목록에 있는 공사명·업체·대표자·계약금액·계약일 등은 자동으로 채웁니다. 자료에 없는 착공·준공·담당자 정보는 필요한 시점에 보완하면 됩니다.</p></div>
         <div><strong>3. 미리보기에서 바로 수정</strong><p class="muted">잘못 입력한 값이나 부족한 정보는 각 서류 미리보기의 ‘입력정보 수정’에서 고칩니다. 저장한 값은 다른 서류에도 함께 반영됩니다.</p></div>
         <div><strong>4. 체크리스트 작성·빈 양식</strong><p class="muted">안전·보건 체크리스트는 ‘체크리스트 작성’과 ‘빈 양식 미리보기’로 구분합니다. 작성 화면에서는 ‘미응답 모두 예’를 사용할 수 있고, 인쇄 직전 서명을 넣거나 서명 없이 출력할 수 있습니다.</p></div>
         <div><strong>5. 여러 서류 묶음 출력</strong><p class="muted">필요한 경우 서류 화면 아래 ‘여러 서류를 한 번에 출력’을 열어 개별 선택 또는 단계별 세트를 사용합니다.</p></div>
