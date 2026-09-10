@@ -16,8 +16,10 @@
   const moreMenu = document.getElementById('moreMenu');
   const excelFileInput = document.getElementById('excelFileInput');
   const backupFileInput = document.getElementById('backupFileInput');
-  const APP_VERSION = '0.6.2';
-  const REFERENCE_PROGRAM = '서울시교육청 교육시설안전과 「공사서류 원클릭(간소화)프로그램」(2026.5.수정)';
+  const APP_VERSION = '0.6.3';
+  const REFERENCE_PROGRAM_TITLE = '서울시교육청 교육시설안전과 「공사서류 원클릭(간소화)프로그램」';
+  const REFERENCE_PROGRAM_DATE = '2026.5. 수정 기준';
+  const REFERENCE_PROGRAM = `${REFERENCE_PROGRAM_TITLE} (${REFERENCE_PROGRAM_DATE})`;
 
   const state = {
     projects: [],
@@ -79,6 +81,73 @@
 
   function meaningful(value) {
     return value !== '' && value !== null && value !== undefined;
+  }
+
+  function sequenceNumber(value) {
+    const digits = String(value ?? '').replace(/\D/g, '');
+    const n = Number(digits);
+    return Number.isInteger(n) && n > 0 ? n : 0;
+  }
+
+  function projectYear(value) {
+    const raw = String(value ?? '').trim();
+    return /^\d{4}$/.test(raw) ? raw : String(new Date().getFullYear());
+  }
+
+  function projectNumberText(project) {
+    const year = projectYear(project?.fiscalYear);
+    const seq = sequenceNumber(project?.sequence);
+    return seq ? `${year}-${String(seq).padStart(3,'0')}` : `${year}-미부여`;
+  }
+
+  function sequenceUsed(year, sequence, excludeId = '') {
+    const y = projectYear(year);
+    const seq = sequenceNumber(sequence);
+    if (!seq) return false;
+    return state.projects.some(project => project.id !== excludeId && projectYear(project.fiscalYear) === y && sequenceNumber(project.sequence) === seq);
+  }
+
+  function nextSequenceForYear(year, excludeId = '') {
+    const y = projectYear(year);
+    const used = state.projects
+      .filter(project => project.id !== excludeId && projectYear(project.fiscalYear) === y)
+      .map(project => sequenceNumber(project.sequence))
+      .filter(Boolean);
+    return (used.length ? Math.max(...used) : 0) + 1;
+  }
+
+  function seedWithSequence(seed = {}, excludeId = '') {
+    const next = { ...seed };
+    next.fiscalYear = projectYear(next.fiscalYear || next.contractDate?.slice?.(0,4));
+    const seq = sequenceNumber(next.sequence);
+    next.sequence = seq && !sequenceUsed(next.fiscalYear, seq, excludeId) ? seq : nextSequenceForYear(next.fiscalYear, excludeId);
+    return next;
+  }
+
+  function assignMissingSequences(projects) {
+    const changed = [];
+    const byYear = new Map();
+    projects.forEach(project => {
+      const year = projectYear(project.fiscalYear);
+      if (!byYear.has(year)) byYear.set(year, []);
+      byYear.get(year).push(project);
+    });
+    byYear.forEach(list => {
+      const used = new Set(list.map(project => sequenceNumber(project.sequence)).filter(Boolean));
+      let next = used.size ? Math.max(...used) + 1 : 1;
+      list
+        .filter(project => !sequenceNumber(project.sequence))
+        .sort((a,b) => String(a.createdAt || '').localeCompare(String(b.createdAt || '')))
+        .forEach(project => {
+          while (used.has(next)) next += 1;
+          project.sequence = next;
+          used.add(next);
+          next += 1;
+          project.updatedAt = project.updatedAt || new Date().toISOString();
+          changed.push(project);
+        });
+    });
+    return changed;
   }
 
   function sameValue(a, b, field) {
@@ -197,7 +266,7 @@
   }
 
   function projectSubtitle(p) {
-    const bits = [p.fiscalYear ? `${p.fiscalYear}회계연도` : '', p.workType, p.contractNumber ? `계약 ${p.contractNumber}` : ''].filter(Boolean);
+    const bits = [projectNumberText(p), p.workType, p.contractNumber ? `계약 ${p.contractNumber}` : ''].filter(Boolean);
     return bits.join(' · ') || '기본정보 입력 중';
   }
 
@@ -329,9 +398,13 @@
       DB.getAll('projects'), DB.getAll('vendors'), DB.getAll('payouts'), DB.get('settings', 'school')
     ]);
     const migrated = projects.map(normalizeProjectData);
-    state.projects = migrated.map(x=>x.project).sort((a,b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
-    const changed = migrated.filter(x=>x.changed).map(x=>x.project);
-    if (changed.length) await Promise.all(changed.map(project => DB.put('projects', project)));
+    const normalizedProjects = migrated.map(x=>x.project);
+    const sequenceChanged = assignMissingSequences(normalizedProjects);
+    state.projects = normalizedProjects.sort((a,b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+    const changedMap = new Map();
+    migrated.filter(x=>x.changed).forEach(x=>changedMap.set(x.project.id,x.project));
+    sequenceChanged.forEach(project=>changedMap.set(project.id,project));
+    if (changedMap.size) await Promise.all([...changedMap.values()].map(project => DB.put('projects', project)));
     state.vendors = vendors.sort((a,b) => (a.name || '').localeCompare(b.name || '', 'ko'));
     state.payouts = payouts || [];
     state.school = school?.value || {};
@@ -352,7 +425,7 @@
     if (state.filter === 'done') filtered = filtered.filter(p => statusOf(p).key === 'done');
     if (state.search.trim()) {
       const q = normalizeText(state.search);
-      filtered = filtered.filter(p => [p.projectName,p.vendorName,p.contractNumber,p.workType].some(v => normalizeText(v).includes(q)));
+      filtered = filtered.filter(p => [p.projectName,projectNumberText(p),p.vendorName,p.contractNumber,p.workType].some(v => normalizeText(v).includes(q)));
     }
 
     main.innerHTML = `
@@ -387,7 +460,7 @@
         <div class="recent-projects-title"><div><strong>${state.projects.length ? '최근 작업 공사' : '공사 목록'}</strong><span>${state.projects.length ? '최근 수정한 공사부터 표시합니다.' : '자료관리목록을 불러오거나 직접 공사를 등록하면 여기에 표시됩니다.'}</span></div></div>
         <div class="toolbar">
           <div class="toolbar-left">
-            <div class="search-wrap"><input id="projectSearch" type="search" value="${e(state.search)}" placeholder="공사명 · 업체명 · 계약번호 검색" aria-label="공사 검색"></div>
+            <div class="search-wrap"><input id="projectSearch" type="search" value="${e(state.search)}" placeholder="공사명 · 공사번호 · 업체명 · 계약번호 검색" aria-label="공사 검색"></div>
           </div>
           <div class="toolbar-right">
             ${state.projects.length?'<button class="button ghost small reset-projects-toolbar" id="resetProjectsBtn" type="button">공사자료 초기화</button>':''}
@@ -493,7 +566,7 @@
         <div class="current-project">
           <p class="eyebrow">현재 공사</p>
           <h1>${e(p.projectName || '이름 없는 공사')}</h1>
-          <div class="current-meta"><span>${e(p.vendorName || '업체 미입력')}</span><span class="meta-dot">·</span><strong>${e(formatMoney(p.currentContractAmount))}</strong><span class="status-chip ${status.cls}">${e(status.label)}</span></div>
+          <div class="current-meta"><span class="current-project-number" id="currentProjectNumber">${e(projectNumberText(p))}</span><span class="meta-dot">·</span><span>${e(p.vendorName || '업체 미입력')}</span><span class="meta-dot">·</span><strong>${e(formatMoney(p.currentContractAmount))}</strong><span class="status-chip ${status.cls}">${e(status.label)}</span></div>
         </div>
         <div class="detail-head-actions"><div class="save-state" id="saveState"><span class="pulse"></span><span>이 기기에 저장됨</span></div></div>
       </div>
@@ -521,6 +594,7 @@
         <section class="panel form-panel" id="projectForm">
           ${workflowSectionHtml('basic','공사 기본정보','한 번 입력해 계속 재사용하는 공사·업체 정보', {label:'기본', done:!!p.projectName && !!p.vendorName, active:status.key==='contract_prep'}, [
             field('projectName','공사명',p.projectName,'text',true),
+            projectNumberField(p),
             field('fiscalYear','회계연도',p.fiscalYear,'number'),
             selectField('workType','공종',p.workType,['','건축공사','전기공사','통신공사','소방공사','기계설비공사','토목공사','기타']),
             `<div class="field full"><label for="vendorPicker">업체 보관함에서 선택</label><select id="vendorPicker">${vendorOptions}</select><span class="hint">선택하면 대표자·사업자번호·주소·전화가 현재 공사에 자동 반영됩니다.</span></div>`,
@@ -677,6 +751,9 @@
       input.addEventListener('input', onProjectInput);
       input.addEventListener('change', onProjectInput);
     });
+    const projectSequenceInput = main.querySelector('[data-project-sequence]');
+    projectSequenceInput?.addEventListener('input', () => validateProjectSequenceInput(projectSequenceInput, p));
+    projectSequenceInput?.addEventListener('change', () => saveProjectSequenceInput(projectSequenceInput, p));
     initDateInputs(main);
     initMoneyInputs(main);
   }
@@ -1108,8 +1185,6 @@
         </div>
         <span class="document-filter-help">행정실 서류는 옅은 파란색으로 표시됩니다.</span>
       </div>
-      <div class="workflow-route compact-workflow-route" aria-label="공사업무 흐름"><span>계약</span><b>→</b><span>착공</span><b>→</b><span>준공</span><b>→</b><span>하자</span></div>
-
       ${documentStageSectionHtml(1,'contract','계약','계약 체결 단계에서 준비하는 서류',['standardContract','acceptanceTerms','useSealForm','privateContractPledge'],p)}
 
       ${documentStageSectionHtml(2,'start','착공','공사 시작 전후에 준비하는 서류',['startReport','utilityPaymentPledge','safetyGeneral'],p,{extra:safetyExtra})}
@@ -1140,8 +1215,15 @@
 
       ${oneClickSeparateDocumentsHtml()}
       ${recentPrintHistoryHtml(p)}
-      <details class="document-reference-details"><summary>기준 자료 보기</summary><div class="reference-program-banner compact-reference"><span class="reference-program-label">기준 자료</span><div class="reference-program-copy"><strong>${e(REFERENCE_PROGRAM)}</strong><span>서식·점검항목의 기준으로 사용합니다.</span></div></div></details>
-      <div class="document-footnote">실제 계약·공사 상황에 맞는지 최종 확인 후 사용합니다.</div>
+      <section class="document-reference-card" aria-label="공사서류 기준 자료">
+        <div class="document-reference-icon" aria-hidden="true">✓</div>
+        <div class="document-reference-content">
+          <div class="document-reference-kicker"><span>기준 자료</span><em>${e(REFERENCE_PROGRAM_DATE)}</em></div>
+          <strong>${e(REFERENCE_PROGRAM_TITLE)}</strong>
+          <p>이 서식과 점검항목은 위 기준자료를 바탕으로 구성했습니다.</p>
+        </div>
+      </section>
+      <div class="document-footnote">공사허브는 작성지원 도구입니다. 실제 계약·공사 상황과 최신 기준을 최종 확인 후 사용합니다.</div>
     </div>`;
   }
 
@@ -2385,6 +2467,39 @@
     return `<div class="section"><div class="section-head"><div><h2>${e(title)}</h2><p>${e(description)}</p></div></div><div class="form-grid">${fields.join('')}</div></div>`;
   }
 
+  function projectNumberField(p) {
+    const seq = sequenceNumber(p?.sequence) || nextSequenceForYear(p?.fiscalYear, p?.id || '');
+    return `<div class="field project-number-field"><label for="f_sequence">공사번호 <span class="auto-number-badge">자동 부여</span></label><div class="project-number-input-wrap"><span class="project-number-prefix" id="projectNumberPrefix">${e(projectYear(p?.fiscalYear))}-</span><input id="f_sequence" data-project-sequence type="text" inputmode="numeric" autocomplete="off" maxlength="5" value="${e(String(seq).padStart(3,'0'))}" aria-describedby="projectNumberHint projectNumberError"></div><span class="hint" id="projectNumberHint">회계연도별로 다음 번호를 자동 부여합니다. 필요한 경우 뒤 번호만 수정할 수 있습니다.</span><span class="field-error project-number-error" id="projectNumberError" hidden></span></div>`;
+  }
+
+  function validateProjectSequenceInput(input, p) {
+    if (!input || !p) return false;
+    const digits = String(input.value || '').replace(/\D/g,'').slice(0,5);
+    if (input.value !== digits) input.value = digits;
+    const error = document.getElementById('projectNumberError');
+    const seq = sequenceNumber(digits);
+    let message = '';
+    if (!seq) message = '1 이상의 번호를 입력해주세요.';
+    else if (sequenceUsed(p.fiscalYear, seq, p.id)) message = `${projectYear(p.fiscalYear)}-${String(seq).padStart(3,'0')}은 이미 사용 중입니다.`;
+    input.classList.toggle('invalid', !!message);
+    if (error) { error.textContent = message; error.hidden = !message; }
+    return !message;
+  }
+
+  function saveProjectSequenceInput(input, p) {
+    if (!validateProjectSequenceInput(input, p)) {
+      showToast('공사번호가 중복되거나 올바르지 않습니다.', 'warn');
+      return;
+    }
+    const seq = sequenceNumber(input.value);
+    p.sequence = seq;
+    input.value = String(seq).padStart(3,'0');
+    p.updatedAt = new Date().toISOString();
+    const numberLabel = document.getElementById('currentProjectNumber');
+    if (numberLabel) numberLabel.textContent = projectNumberText(p);
+    scheduleSave(p);
+  }
+
   function field(name, label, value, type = 'text', full = false) {
     if (type === 'date') return dateField(name, label, value, full);
     const step = type === 'number' ? ' step="any" inputmode="decimal"' : '';
@@ -2595,9 +2710,26 @@
     if (!p) return;
     const fieldName = ev.target.dataset.field;
     let value = ev.target.value;
-    if (ev.target.dataset.money) value = parseMoneyInput(value);
+    if (fieldName === 'fiscalYear') {
+      const rawYear = String(ev.target.value || '').trim();
+      if (ev.type === 'input' && !/^\d{4}$/.test(rawYear)) return;
+      value = projectYear(rawYear);
+    } else if (ev.target.dataset.money) value = parseMoneyInput(value);
     else if (ev.target.type === 'number' && value !== '') value = Number(value);
     p[fieldName] = value;
+    if (fieldName === 'fiscalYear') {
+      p.fiscalYear = projectYear(value);
+      if (!sequenceNumber(p.sequence) || sequenceUsed(p.fiscalYear, p.sequence, p.id)) {
+        p.sequence = nextSequenceForYear(p.fiscalYear, p.id);
+        showToast(`회계연도 기준으로 공사번호를 ${projectNumberText(p)}로 조정했습니다.`);
+      }
+      const prefix = document.getElementById('projectNumberPrefix');
+      const seqInput = document.querySelector('[data-project-sequence]');
+      const numberLabel = document.getElementById('currentProjectNumber');
+      if (prefix) prefix.textContent = `${projectYear(p.fiscalYear)}-`;
+      if (seqInput) { seqInput.value = String(sequenceNumber(p.sequence)).padStart(3,'0'); validateProjectSequenceInput(seqInput,p); }
+      if (numberLabel) numberLabel.textContent = projectNumberText(p);
+    }
     if (fieldName === 'contractDate' && value && !p.fiscalYear) p.fiscalYear = value.slice(0,4);
     if (fieldName === 'currentContractAmount' && ev.type === 'change' && !(p.contractChanges?.length)) p.originalContractAmount = value;
     if (['defectStartDate','defectPeriodYears','actualCompletionDate'].includes(fieldName)) {
@@ -2688,6 +2820,7 @@
       eyebrow: '새 공사 직접등록',
       title: '공사명만으로도 시작할 수 있어요',
       body: `<div class="notice">지금 확정된 정보만 입력하세요. 착공일·준공기한·준공일·지출일은 공사를 만든 뒤 필요한 시점에 추가하면 됩니다.</div>
+        <div class="new-project-number-preview"><span>공사번호</span><strong id="newProjectNumberPreview">${e(`${projectYear(new Date().getFullYear())}-${String(nextSequenceForYear(new Date().getFullYear())).padStart(3,'0')}`)}</strong><em>자동 부여</em></div>
         <div class="modal-grid new-project-grid" style="margin-top:16px">
           <div class="field full"><label>공사명 <span class="required-mark">필수</span></label><input id="newProjectName" autocomplete="off" placeholder="예: 체육관 환경개선공사"></div>
           <div class="field"><label>공종</label><select id="newWorkType"><option value="">나중에 입력</option><option>건축공사</option><option>전기공사</option><option>통신공사</option><option>소방공사</option><option>기계설비공사</option><option>토목공사</option><option>기타</option></select></div>
@@ -2701,6 +2834,13 @@
     });
     initDateInputs(modalBody);
     initMoneyInputs(modalBody);
+    const refreshNewProjectNumber = () => {
+      const contractDate = modalBody.querySelector('#newContractDate')?.value || '';
+      const year = projectYear(contractDate ? contractDate.slice(0,4) : new Date().getFullYear());
+      const preview = modalBody.querySelector('#newProjectNumberPreview');
+      if (preview) preview.textContent = `${year}-${String(nextSequenceForYear(year)).padStart(3,'0')}`;
+    };
+    modalBody.querySelector('#newContractDate')?.addEventListener('change', refreshNewProjectNumber);
     modalBody.querySelector('#newProjectName')?.focus();
     modalActions.querySelector('[data-modal-close]').addEventListener('click', closeModal);
     modalActions.querySelector('#createProjectBtn').addEventListener('click', createProjectFromModal);
@@ -2712,9 +2852,10 @@
     const vendorId = modalBody.querySelector('#newVendorId').value;
     const vendor = state.vendors.find(v => v.id === vendorId);
     const contractDate = modalBody.querySelector('#newContractDate').value;
-    const p = DB.createProject({
+    const fiscalYear = contractDate ? contractDate.slice(0,4) : String(new Date().getFullYear());
+    const p = DB.createProject(seedWithSequence({
       projectName,
-      fiscalYear: contractDate ? contractDate.slice(0,4) : String(new Date().getFullYear()),
+      fiscalYear,
       workType: modalBody.querySelector('#newWorkType').value,
       contractMethod: modalBody.querySelector('#newContractMethod').value,
       currentContractAmount: parseMoneyInput(modalBody.querySelector('#newContractAmount').value),
@@ -2723,7 +2864,7 @@
       vendorId: vendor?.id || '',
       vendorName: vendor?.name || '', representative: vendor?.representative || '', businessNumber: vendor?.businessNumber || '',
       vendorAddress: vendor?.address || '', vendorPhone: vendor?.phone || '', licenseType: vendor?.licenseType || ''
-    });
+    }));
     await DB.put('projects', p);
     state.projects.unshift(p);
     closeModal();
@@ -3021,7 +3162,7 @@
     seed.originalContractAmount=meaningful(seed.originalContractAmount) ? seed.originalContractAmount : seed.currentContractAmount;
     seed.source='edufine';
     seed.sourceUpdatedAt=new Date().toISOString();
-    const project=DB.createProject(seed);
+    const project=DB.createProject(seedWithSequence(seed));
     await DB.put('projects',project);
     await upsertVendorFromProject(project);
     await loadState();
@@ -3078,8 +3219,9 @@
     for (const a of analysis) {
       let p;
       if (!a.match) {
-        p = DB.createProject(a.incoming);
+        p = DB.createProject(seedWithSequence(a.incoming));
         await DB.put('projects', p);
+        state.projects.push(p);
         created++;
       } else {
         p = a.match;

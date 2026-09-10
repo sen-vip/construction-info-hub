@@ -2219,3 +2219,100 @@ input, select, textarea { font-size: 14px; }
   .document-list-stage .document-flow-stage-head { padding:10px 12px; }
   .stage-empty-note { padding-left:44px; }
 }
+
+
+/* v0.6.3 — 공사번호 자동부여 / 서류 가독성 / 기준자료 신뢰 카드 / 고해상도 아이콘 */
+.current-project-number {
+  display:inline-flex; align-items:center; min-height:23px; padding:2px 8px;
+  border:1px solid #cbd9eb; border-radius:7px; background:#f3f7fc;
+  color:#315b96; font-size:11.5px; font-weight:800; letter-spacing:.02em;
+}
+.project-number-field label { display:flex; align-items:center; gap:7px; }
+.auto-number-badge {
+  display:inline-flex; align-items:center; min-height:19px; padding:1px 6px;
+  border-radius:999px; background:#eaf2fb; color:#315b96; font-size:9.5px; font-weight:800;
+}
+.project-number-input-wrap {
+  display:flex; align-items:stretch; min-height:39px; overflow:hidden;
+  border:1px solid var(--border); border-radius:9px; background:#fff;
+}
+.project-number-input-wrap:focus-within { border-color:#7fa2ce; box-shadow:0 0 0 3px rgba(49,91,150,.09); }
+.project-number-prefix {
+  display:flex; align-items:center; padding:0 0 0 11px; color:#315b96;
+  background:#f7faff; font-size:13px; font-weight:800; letter-spacing:.02em;
+}
+.project-number-input-wrap input {
+  width:82px; min-width:0; border:0!important; border-radius:0!important; box-shadow:none!important;
+  padding-left:2px!important; color:#1f2937; font-weight:800; letter-spacing:.04em;
+}
+.project-number-input-wrap input.invalid { color:#b42318; background:#fff7f6; }
+.project-number-error { display:block; margin-top:5px; color:#b42318; font-size:10.5px; line-height:1.4; }
+.new-project-number-preview {
+  display:flex; align-items:center; gap:8px; margin-top:14px; padding:10px 12px;
+  border:1px solid #d7e3f2; border-radius:10px; background:#f7faff;
+}
+.new-project-number-preview span { color:#64748b; font-size:11px; font-weight:750; }
+.new-project-number-preview strong { color:#214f86; font-size:14px; letter-spacing:.025em; }
+.new-project-number-preview em {
+  margin-left:auto; padding:2px 7px; border-radius:999px; background:#e4eef9;
+  color:#315b96; font-size:9.5px; font-style:normal; font-weight:800;
+}
+
+/* 서류 작업대: 중복 단계표시를 제거한 뒤 본문을 바로 시작하고 글자 위계를 한 단계 키움 */
+.list-workbench-panel .document-first-title h2 { font-size:28px; }
+.list-workbench-panel .document-first-title > div > p:last-child { font-size:14.5px; line-height:1.55; }
+.document-list-toolbar { margin-top:15px; margin-bottom:10px; padding:10px 11px; }
+.document-view-toggle button { min-height:34px; padding:6px 12px; font-size:13px; }
+.document-filter-help { font-size:12px; }
+.document-list-stage { margin-top:11px; }
+.document-list-stage .document-flow-stage-head { padding:13px 15px; }
+.document-list-stage .document-flow-stage-head .stage-number { width:25px; height:25px; flex-basis:25px; font-size:11.5px; }
+.document-list-stage .document-flow-stage-head h3 { font-size:15.5px; font-weight:800; }
+.document-list-stage .document-flow-stage-head p { margin-top:3px; font-size:12px; line-height:1.4; }
+.document-row { min-height:62px; padding:10px 13px 10px 16px; }
+.document-row-title-line h4 { font-size:14px; line-height:1.4; font-weight:780; }
+.document-row-main > p { font-size:12px; line-height:1.4; }
+.document-row .button.small.document-row-primary { min-height:33px; padding:5px 11px; font-size:12px; }
+.document-row-text-action { font-size:11.5px; }
+.document-row .document-owner-pill, .document-row .document-status-pill { min-height:20px; padding:1px 6px; font-size:9.5px; }
+.compact-safety-details > summary strong { font-size:13px; }
+.compact-safety-details > summary small { font-size:11px; }
+
+/* 기준자료를 접힌 참고영역이 아닌 항상 보이는 신뢰 카드로 표시 */
+.document-reference-card {
+  display:grid; grid-template-columns:38px minmax(0,1fr); gap:13px; align-items:flex-start;
+  margin-top:16px; padding:16px 17px; border:1px solid #b9cde6; border-radius:13px;
+  background:linear-gradient(135deg,#eef5ff 0%,#f8fbff 72%,#ffffff 100%);
+  box-shadow:0 5px 16px rgba(49,91,150,.07);
+}
+.document-reference-icon {
+  display:grid; place-items:center; width:36px; height:36px; border-radius:10px;
+  background:#315b96; color:#fff; font-size:18px; font-weight:900; box-shadow:0 2px 5px rgba(49,91,150,.18);
+}
+.document-reference-content { min-width:0; }
+.document-reference-kicker { display:flex; align-items:center; flex-wrap:wrap; gap:7px; margin-bottom:5px; }
+.document-reference-kicker span {
+  display:inline-flex; align-items:center; min-height:22px; padding:2px 7px; border-radius:999px;
+  background:#315b96; color:#fff; font-size:10px; font-weight:850;
+}
+.document-reference-kicker em {
+  color:#315b96; font-size:10.5px; font-style:normal; font-weight:800;
+}
+.document-reference-content > strong { display:block; color:#173f70; font-size:14px; line-height:1.45; font-weight:800; }
+.document-reference-content > p { margin:4px 0 0; color:#526b87; font-size:11.5px; line-height:1.5; }
+.list-workbench-panel .document-footnote { margin-top:9px; color:#718096; font-size:10.5px; line-height:1.45; }
+
+@media (max-width:720px) {
+  .current-meta { flex-wrap:wrap; }
+  .list-workbench-panel .document-first-title h2 { font-size:25px; }
+  .list-workbench-panel .document-first-title > div > p:last-child { font-size:13.5px; }
+  .document-view-toggle button { font-size:12px; }
+  .document-list-stage .document-flow-stage-head h3 { font-size:14.5px; }
+  .document-list-stage .document-flow-stage-head p { font-size:11.5px; }
+  .document-row-title-line h4 { font-size:13px; }
+  .document-row-main > p { font-size:11.5px; max-width:55vw; }
+  .document-row .button.small.document-row-primary { font-size:11.5px; }
+  .document-reference-card { grid-template-columns:32px minmax(0,1fr); gap:10px; padding:14px; }
+  .document-reference-icon { width:32px; height:32px; border-radius:9px; font-size:16px; }
+  .document-reference-content > strong { font-size:13px; }
+}
