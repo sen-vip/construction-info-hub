@@ -16,7 +16,7 @@
   const moreMenu = document.getElementById('moreMenu');
   const excelFileInput = document.getElementById('excelFileInput');
   const backupFileInput = document.getElementById('backupFileInput');
-  const APP_VERSION = '0.6.3';
+  const APP_VERSION = '0.6.4';
   const REFERENCE_PROGRAM_TITLE = '서울시교육청 교육시설안전과 「공사서류 원클릭(간소화)프로그램」';
   const REFERENCE_PROGRAM_DATE = '2026.5. 수정 기준';
   const REFERENCE_PROGRAM = `${REFERENCE_PROGRAM_TITLE} (${REFERENCE_PROGRAM_DATE})`;
@@ -332,7 +332,7 @@
     const title = isNewFlow ? '자료관리목록에서 공사 불러오기' : isEdufine ? '에듀파인 자료 불러오기' : '공사관리대장 불러오기';
     const expected = isEdufine ? '자료관리목록.xlsx' : '공사관리대장.xlsx';
     const guide = isEdufine
-      ? `<div class="import-path-guide"><strong>다운로드 경로</strong><span>에듀파인 <b>›</b> 학교회계 <b>›</b> 계약관리 <b>›</b> 계약자료관리 <b>›</b> 자료관리</span></div>`
+      ? `<div class="import-path-guide"><strong>다운로드 경로</strong><span class="import-path-main">에듀파인 <b>›</b> 학교회계 <b>›</b> 계약관리 <b>›</b> 계약자료관리 <b>›</b> 자료관리</span><span class="import-path-note">목적물: 공사로 놓고 조회 후 [파일] 다운로드</span></div>`
       : `<div class="import-path-guide"><strong>불러올 파일</strong><span>공사관리대장.xlsx</span></div>`;
     openModal({
       eyebrow:'엑셀 불러오기 · 드래그앤드롭',
