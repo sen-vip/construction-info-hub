@@ -2280,28 +2280,30 @@ input, select, textarea { font-size: 14px; }
 .compact-safety-details > summary strong { font-size:13px; }
 .compact-safety-details > summary small { font-size:11px; }
 
-/* 기준자료를 접힌 참고영역이 아닌 항상 보이는 신뢰 카드로 표시 */
+/* v0.6.5 — 기준자료를 서류 화면 최상단의 신뢰 배너로 이동 */
 .document-reference-card {
-  display:grid; grid-template-columns:38px minmax(0,1fr); gap:13px; align-items:flex-start;
-  margin-top:16px; padding:16px 17px; border:1px solid #b9cde6; border-radius:13px;
-  background:linear-gradient(135deg,#eef5ff 0%,#f8fbff 72%,#ffffff 100%);
-  box-shadow:0 5px 16px rgba(49,91,150,.07);
+  position:relative; overflow:hidden;
+  margin:14px 0 12px; padding:16px 18px 15px 20px;
+  border:1px solid #aec6e4; border-radius:13px;
+  background:linear-gradient(135deg,#edf5ff 0%,#f7fbff 62%,#ffffff 100%);
+  box-shadow:0 6px 18px rgba(49,91,150,.08);
 }
-.document-reference-icon {
-  display:grid; place-items:center; width:36px; height:36px; border-radius:10px;
-  background:#315b96; color:#fff; font-size:18px; font-weight:900; box-shadow:0 2px 5px rgba(49,91,150,.18);
+.document-reference-card::before {
+  content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:#315b96;
 }
+.document-reference-card-top { margin-top:14px; }
 .document-reference-content { min-width:0; }
-.document-reference-kicker { display:flex; align-items:center; flex-wrap:wrap; gap:7px; margin-bottom:5px; }
+.document-reference-kicker { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:7px; }
 .document-reference-kicker span {
-  display:inline-flex; align-items:center; min-height:22px; padding:2px 7px; border-radius:999px;
-  background:#315b96; color:#fff; font-size:10px; font-weight:850;
+  display:inline-flex; align-items:center; min-height:23px; padding:2px 8px; border-radius:999px;
+  background:#315b96; color:#fff; font-size:10.5px; font-weight:850; letter-spacing:.01em;
 }
 .document-reference-kicker em {
-  color:#315b96; font-size:10.5px; font-style:normal; font-weight:800;
+  display:inline-flex; align-items:center; min-height:23px; padding:2px 8px; border-radius:999px;
+  background:#e5effb; color:#315b96; font-size:10.5px; font-style:normal; font-weight:850;
 }
-.document-reference-content > strong { display:block; color:#173f70; font-size:14px; line-height:1.45; font-weight:800; }
-.document-reference-content > p { margin:4px 0 0; color:#526b87; font-size:11.5px; line-height:1.5; }
+.document-reference-content > strong { display:block; color:#123b6d; font-size:15px; line-height:1.48; font-weight:850; }
+.document-reference-content > p { margin:5px 0 0; color:#4b6480; font-size:12px; line-height:1.5; }
 .list-workbench-panel .document-footnote { margin-top:9px; color:#718096; font-size:10.5px; line-height:1.45; }
 
 @media (max-width:720px) {
@@ -2314,7 +2316,9 @@ input, select, textarea { font-size: 14px; }
   .document-row-title-line h4 { font-size:13px; }
   .document-row-main > p { font-size:11.5px; max-width:55vw; }
   .document-row .button.small.document-row-primary { font-size:11.5px; }
-  .document-reference-card { grid-template-columns:32px minmax(0,1fr); gap:10px; padding:14px; }
-  .document-reference-icon { width:32px; height:32px; border-radius:9px; font-size:16px; }
-  .document-reference-content > strong { font-size:13px; }
+  .document-reference-card { margin:12px 0 10px; padding:14px 14px 13px 17px; }
+  .document-reference-content > strong { font-size:13.5px; }
+  .document-reference-content > p { font-size:11.5px; }
 }
+
+/* v0.6.6 — 시작 화면 소개 문구에서 저장된 학교명 자동 노출 제거 */

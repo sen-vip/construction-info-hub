@@ -16,7 +16,7 @@
   const moreMenu = document.getElementById('moreMenu');
   const excelFileInput = document.getElementById('excelFileInput');
   const backupFileInput = document.getElementById('backupFileInput');
-  const APP_VERSION = '0.6.4';
+  const APP_VERSION = '0.6.6';
   const REFERENCE_PROGRAM_TITLE = '서울시교육청 교육시설안전과 「공사서류 원클릭(간소화)프로그램」';
   const REFERENCE_PROGRAM_DATE = '2026.5. 수정 기준';
   const REFERENCE_PROGRAM = `${REFERENCE_PROGRAM_TITLE} (${REFERENCE_PROGRAM_DATE})`;
@@ -433,7 +433,7 @@
         <div>
           <p class="eyebrow">공사정보 시작하기</p>
           <h1>에듀파인에 입력한 공사정보를 다시 입력하지 마세요</h1>
-          <p>${state.school.name ? `${e(state.school.name)} · ` : ''}원인행위 후 내려받은 자료관리목록에서 공사를 선택하면 계약정보를 먼저 채우고, 부족한 항목만 이어서 입력할 수 있습니다.</p>
+          <p>원인행위 후 내려받은 자료관리목록에서 공사를 선택하면 계약정보를 먼저 채우고, 부족한 항목만 이어서 입력할 수 있습니다.</p>
           <div class="security-note"><span class="security-dot"></span>엑셀은 이 브라우저에서만 읽음 · 서버 미전송</div>
         </div>
       </section>
@@ -1178,6 +1178,13 @@
         </details>`;
     return `<div class="documents-panel document-first-panel workflow-documents-panel list-workbench-panel">
       <div class="documents-head document-first-title"><div><p class="eyebrow">계약 → 착공 → 준공 → 하자</p><h2>공사서류</h2><p>공사 흐름대로 아래로 훑고 필요한 서류만 바로 엽니다.</p></div><button class="text-action-button" type="button" data-detail-tab="info">공사정보 수정 →</button></div>
+      <section class="document-reference-card document-reference-card-top" aria-label="공사서류 기준 자료">
+        <div class="document-reference-content">
+          <div class="document-reference-kicker"><span>기준 자료</span><em>${e(REFERENCE_PROGRAM_DATE)}</em></div>
+          <strong>${e(REFERENCE_PROGRAM_TITLE)}</strong>
+          <p>이 서식과 점검항목은 위 기준자료를 바탕으로 구성했습니다.</p>
+        </div>
+      </section>
       <div class="document-list-toolbar">
         <div class="document-view-toggle" role="group" aria-label="서류 보기 범위">
           <button type="button" class="${state.documentOwnerFilter==='all'?'active':''}" data-doc-owner-filter="all">전체 서류</button>
@@ -1215,14 +1222,6 @@
 
       ${oneClickSeparateDocumentsHtml()}
       ${recentPrintHistoryHtml(p)}
-      <section class="document-reference-card" aria-label="공사서류 기준 자료">
-        <div class="document-reference-icon" aria-hidden="true">✓</div>
-        <div class="document-reference-content">
-          <div class="document-reference-kicker"><span>기준 자료</span><em>${e(REFERENCE_PROGRAM_DATE)}</em></div>
-          <strong>${e(REFERENCE_PROGRAM_TITLE)}</strong>
-          <p>이 서식과 점검항목은 위 기준자료를 바탕으로 구성했습니다.</p>
-        </div>
-      </section>
       <div class="document-footnote">공사허브는 작성지원 도구입니다. 실제 계약·공사 상황과 최신 기준을 최종 확인 후 사용합니다.</div>
     </div>`;
   }
