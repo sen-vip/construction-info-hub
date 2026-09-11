@@ -16,7 +16,7 @@
   const moreMenu = document.getElementById('moreMenu');
   const excelFileInput = document.getElementById('excelFileInput');
   const backupFileInput = document.getElementById('backupFileInput');
-  const APP_VERSION = '0.6.8';
+  const APP_VERSION = '0.6.9';
   const REFERENCE_PROGRAM_TITLE = '서울시교육청 교육시설안전과 「공사서류 원클릭(간소화)프로그램」';
   const REFERENCE_PROGRAM_DATE = '2026.5. 수정 기준';
   const REFERENCE_PROGRAM = `${REFERENCE_PROGRAM_TITLE} (${REFERENCE_PROGRAM_DATE})`;
@@ -27,7 +27,7 @@
     payouts: [],
     school: {},
     currentProjectId: null,
-    filter: 'active',
+    filter: 'all',
     search: '',
     autosaveTimer: null,
     saveToken: 0,
@@ -457,17 +457,17 @@
       </div>
 
       <section class="panel recent-projects-panel">
-        <div class="recent-projects-title"><div><strong>${state.projects.length ? '최근 작업 공사' : '공사 목록'}</strong><span>${state.projects.length ? '최근 수정한 공사부터 표시합니다.' : '자료관리목록을 불러오거나 직접 공사를 등록하면 여기에 표시됩니다.'}</span></div></div>
+        <div class="recent-projects-title"><div><strong>공사 목록</strong><span>${state.projects.length ? '전체 공사를 최근 수정한 순서로 표시합니다.' : '자료관리목록을 불러오거나 직접 공사를 등록하면 여기에 표시됩니다.'}</span></div></div>
         <div class="toolbar">
           <div class="toolbar-left">
             <div class="search-wrap"><input id="projectSearch" type="search" value="${e(state.search)}" placeholder="공사명 · 공사번호 · 업체명 · 계약번호 검색" aria-label="공사 검색"></div>
           </div>
           <div class="toolbar-right">
             ${state.projects.length?'<button class="button ghost small reset-projects-toolbar" id="resetProjectsBtn" type="button">공사자료 초기화</button>':''}
-            <div class="segmented" aria-label="공사 상태 필터">
-              <button type="button" data-filter="active" class="${state.filter==='active'?'active':''}">진행중</button>
-              <button type="button" data-filter="done" class="${state.filter==='done'?'active':''}">완료</button>
-              <button type="button" data-filter="all" class="${state.filter==='all'?'active':''}">전체</button>
+            <div class="segmented project-status-filter" aria-label="공사 상태 필터">
+              <button type="button" data-filter="all" class="${state.filter==='all'?'active':''}">전체 <span class="filter-count">${state.projects.length}</span></button>
+              <button type="button" data-filter="active" class="${state.filter==='active'?'active':''}">진행중 <span class="filter-count">${active}</span></button>
+              <button type="button" data-filter="done" class="${state.filter==='done'?'active':''}">완료 <span class="filter-count">${done}</span></button>
             </div>
           </div>
         </div>
@@ -484,6 +484,7 @@
       if (input) input.setSelectionRange(input.value.length, input.value.length);
     });
     main.querySelectorAll('[data-filter]').forEach(btn => btn.addEventListener('click', () => { state.filter = btn.dataset.filter; renderDashboard(); }));
+    main.querySelector('[data-empty-show-all]')?.addEventListener('click', () => { state.filter = 'all'; state.search = ''; renderDashboard(); });
     main.querySelectorAll('[data-project-id]').forEach(row => row.addEventListener('click', () => openProject(row.dataset.projectId)));
     main.querySelector('[data-start-edufine-new]')?.addEventListener('click', () => openExcelDropModal('edufine-new'));
     main.querySelector('[data-start-new]')?.addEventListener('click', openNewProjectModal);
@@ -524,8 +525,11 @@
   }
 
   function emptyStateHtml() {
+    if (state.projects.length && state.filter === 'active' && !state.search.trim()) {
+      return `<div class="empty-state"><div class="empty-icon">✓</div><h3>진행중인 공사가 없어요</h3><p>등록된 공사는 전체 목록에서 확인할 수 있습니다.</p><div class="empty-actions"><button class="button secondary small" type="button" data-empty-show-all>전체 공사 보기</button></div></div>`;
+    }
     if (state.projects.length && (state.search || state.filter !== 'all')) {
-      return `<div class="empty-state"><div class="empty-icon">⌕</div><h3>조건에 맞는 공사가 없어요</h3><p>검색어나 상태 필터를 바꿔보세요.</p></div>`;
+      return `<div class="empty-state"><div class="empty-icon">⌕</div><h3>조건에 맞는 공사가 없어요</h3><p>검색어나 상태 필터를 바꿔보세요.</p><div class="empty-actions"><button class="button secondary small" type="button" data-empty-show-all>전체 공사 보기</button></div></div>`;
     }
     return `<div class="empty-state">
       <div class="empty-icon">工</div>

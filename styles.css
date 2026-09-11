@@ -2710,3 +2710,26 @@ input:focus, select:focus, textarea:focus {
   .document-reference-content > strong { font-size: 14px; }
   .document-list-stage .document-flow-stage-head h3 { font-size: 15px; }
 }
+
+/* v0.6.9 — 공사 목록은 전체를 기본으로, 상태별 건수로 존재감 즉시 확인 */
+.project-status-filter .filter-count {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:20px;
+  height:20px;
+  margin-left:4px;
+  padding:0 6px;
+  border-radius:999px;
+  background:rgba(102,112,133,.10);
+  color:#667085;
+  font-size:10.5px;
+  font-weight:850;
+  line-height:1;
+}
+.project-status-filter button.active .filter-count {
+  background:rgba(255,255,255,.24);
+  color:inherit;
+}
+.recent-projects-title strong { color:#172033; }
+.recent-projects-title span { color:#7a8597; }
