@@ -16,7 +16,7 @@
   const moreMenu = document.getElementById('moreMenu');
   const excelFileInput = document.getElementById('excelFileInput');
   const backupFileInput = document.getElementById('backupFileInput');
-  const APP_VERSION = '0.6.6';
+  const APP_VERSION = '0.6.7';
   const REFERENCE_PROGRAM_TITLE = '서울시교육청 교육시설안전과 「공사서류 원클릭(간소화)프로그램」';
   const REFERENCE_PROGRAM_DATE = '2026.5. 수정 기준';
   const REFERENCE_PROGRAM = `${REFERENCE_PROGRAM_TITLE} (${REFERENCE_PROGRAM_DATE})`;
@@ -1069,7 +1069,7 @@
       <div class="document-row-actions">
         <button class="document-row-text-action" type="button" data-doc-open="${e(type)}" data-preview-mode="blank">빈 양식</button>
         <button class="button ${answered?'secondary':'primary'} small document-row-primary" type="button" data-pledge-edit>${answered?'수정':'작성'}</button>
-        ${answered?`<button class="button primary small document-row-primary" type="button" data-doc-open="${e(type)}" data-preview-mode="filled">작성본</button>`:''}
+        ${answered?`<button class="button secondary small document-row-primary" type="button" data-doc-open="${e(type)}" data-preview-mode="filled">작성본</button>`:''}
       </div>
     </article>`;
   }
@@ -1083,7 +1083,7 @@
     const status=record?(missing.length?`출력 전 확인 ${missing.length}개`:'검사기록을 확인·출력합니다.'):'검사일·검사결과는 미리보기에서 입력할 수 있습니다.';
     return `<article class="document-row owner-agency ${missing.length?'needs-info':'ready'}" data-document-card="${e(type)}" data-document-owner="agency">
       <div class="document-row-main"><div class="document-row-title-line"><h4>${e(def.label)}</h4><span class="document-owner-pill">행정실</span>${documentRowStatusHtml(statusTitle,statusTone)}</div><p>${e(status)}</p></div>
-      <div class="document-row-actions"><button class="button primary small document-row-primary" type="button" data-doc-open="${e(type)}" data-preview-mode="default">미리보기</button></div>
+      <div class="document-row-actions"><button class="button secondary small document-row-primary" type="button" data-doc-open="${e(type)}" data-preview-mode="default">미리보기</button></div>
     </article>`;
   }
 
@@ -1104,7 +1104,7 @@
         <div class="document-row-title-line"><h4>${e(def.label)}</h4>${isAgency?'<span class="document-owner-pill">행정실</span>':''}${documentRowStatusHtml(missing.length?'정보 확인':'출력 가능',missing.length?'warn':'ready')}</div>
         <p>${e(status)}</p>
       </div>
-      <div class="document-row-actions"><button class="button ${missing.length?'secondary':'primary'} small document-row-primary" type="button" data-doc-open="${e(type)}">미리보기</button></div>
+      <div class="document-row-actions"><button class="button secondary small document-row-primary" type="button" data-doc-open="${e(type)}">미리보기</button></div>
     </article>`;
   }
 
@@ -1190,7 +1190,7 @@
           <button type="button" class="${state.documentOwnerFilter==='all'?'active':''}" data-doc-owner-filter="all">전체 서류</button>
           <button type="button" class="${state.documentOwnerFilter==='agency'?'active':''}" data-doc-owner-filter="agency">행정실만 보기</button>
         </div>
-        <span class="document-filter-help">행정실 서류는 옅은 파란색으로 표시됩니다.</span>
+        <span class="document-filter-help">행정실 서류는 중립 라벨과 왼쪽 표시선으로 구분됩니다.</span>
       </div>
       ${documentStageSectionHtml(1,'contract','계약','계약 체결 단계에서 준비하는 서류',['standardContract','acceptanceTerms','useSealForm','privateContractPledge'],p)}
 
@@ -3404,6 +3404,11 @@
   }
 
   function wireGlobal() {
+    const scrollTopBtn = document.getElementById('scrollTopBtn');
+    const syncScrollTopBtn = () => { if (scrollTopBtn) scrollTopBtn.hidden = window.scrollY < 320; };
+    scrollTopBtn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    window.addEventListener('scroll', syncScrollTopBtn, { passive: true });
+    syncScrollTopBtn();
     document.getElementById('goHomeBtn').addEventListener('click',()=>{state.currentProjectId=null;renderDashboard();});
     document.getElementById('newProjectBtn').addEventListener('click',openNewProjectModal);
     document.getElementById('importBtn').addEventListener('click',()=>openExcelPicker('auto'));
