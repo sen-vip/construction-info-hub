@@ -2472,3 +2472,241 @@ html, body { background: var(--bg); }
   .document-reference-content > strong { font-size:14px; }
   .document-reference-content > p { font-size:12px; }
 }
+
+
+/* v0.6.8 — 관내여비 콕검 톤으로 재정렬: 선명한 블루 복귀 / 소프트 블루 배지 / 카드 표면 개선 */
+:root {
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --surface-soft: #f3f6fb;
+  --line: #e1e6ef;
+  --line-strong: #cfd7e5;
+  --border: var(--line);
+  --text: #1c2434;
+  --muted: #667085;
+  --muted-2: #8791a4;
+  --primary: #3159d8;
+  --primary-strong: #2446b5;
+  --primary-soft: #eef2ff;
+  --shadow: 0 14px 40px rgba(32, 43, 69, 0.07);
+  --text-primary: var(--text);
+  --text-secondary: var(--muted);
+  --surface-subtle: #fbfcff;
+}
+html, body { background: var(--bg); }
+.topbar,
+.detail-tabs { background: rgba(255,255,255,.96); }
+.main { padding-top: 30px; }
+.brand-mark,
+.primary-start .start-step,
+.document-view-toggle button.active,
+.scroll-top-button,
+.document-reference-kicker span,
+.current-project-number,
+.button.primary,
+.workflow-route .route-current,
+.new-project-number-preview em { background: var(--primary); }
+.button.primary,
+.scroll-top-button { box-shadow: 0 8px 20px rgba(49, 89, 216, .18); }
+.button.primary:hover,
+.scroll-top-button:hover,
+.document-view-toggle button.active:hover { background: var(--primary-strong); }
+.button.secondary {
+  background: var(--primary-soft);
+  border-color: transparent;
+  color: var(--primary);
+}
+.button.secondary:hover { background: #e3e9ff; border-color: transparent; }
+.button.ghost:hover { background: #f0f4fa; }
+input:focus, select:focus, textarea:focus {
+  border-color: #7f96ea;
+  box-shadow: 0 0 0 3px rgba(49,89,216,.10);
+}
+.hero h1,
+.current-project h1,
+.document-first-title h2,
+.document-reference-content > strong { color: #172033; }
+.eyebrow,
+.document-row-text-action:hover,
+.workflow-route,
+.route-active,
+.route-strong,
+.project-number-prefix,
+.auto-number-badge,
+.new-project-number-preview strong { color: var(--primary); }
+.start-card {
+  border-color: var(--line);
+  box-shadow: 0 4px 18px rgba(28,36,52,.03);
+}
+.start-card:hover { border-color: #bfd0ff; box-shadow: 0 10px 24px rgba(49,89,216,.09); }
+.start-card.primary-start {
+  border-color: #ced8ff;
+  background: linear-gradient(180deg,#ffffff 0%,#f7f9ff 100%);
+}
+.start-step { background: var(--primary-soft); color: var(--primary); }
+.primary-start .start-step { color:#fff; }
+.project-number-input-wrap:focus-within { border-color:#7f96ea; box-shadow:0 0 0 3px rgba(49,89,216,.10); }
+.project-number-prefix,
+.current-project-number,
+.new-project-number-preview,
+.document-reference-kicker em,
+.document-owner-pill,
+.document-row .document-owner-pill {
+  border-color: #d8e1fb;
+}
+.current-project-number,
+.project-number-prefix,
+.new-project-number-preview,
+.document-reference-kicker em,
+.document-owner-pill,
+.document-row .document-owner-pill,
+.document-status-pill.neutral {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.documents-panel.document-first-panel,
+.document-list-stage,
+.document-reference-card {
+  border-color: var(--line);
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+.document-list-toolbar {
+  border-color: var(--line);
+  background: #fbfcff;
+  border-radius: 14px;
+}
+.document-view-toggle {
+  border-color: #dbe3f1;
+  background: #fff;
+}
+.document-view-toggle button {
+  min-height: 34px;
+  padding: 6px 12px;
+  color: #667085;
+}
+.document-view-toggle button:hover { background: #f2f6ff; color: var(--primary); }
+.document-list-stage {
+  margin-top: 12px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.document-list-stage .document-flow-stage-head {
+  padding: 14px 16px;
+  border-bottom-color: #e9edf4;
+  background: #fcfdff;
+}
+.document-list-stage .document-flow-stage-head .stage-number {
+  width: 26px;
+  height: 26px;
+  flex-basis: 26px;
+  border-radius: 8px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 850;
+}
+.document-list-stage .document-flow-stage-head h3 {
+  font-size: 16px;
+  color: #172033;
+}
+.document-list-stage .document-flow-stage-head p {
+  color: #7a8597;
+}
+.document-filter-help { color: #768195; }
+.document-row,
+.document-row.owner-agency,
+.document-row.owner-agency:hover {
+  background: #fff;
+}
+.document-row {
+  min-height: 64px;
+  padding: 10px 14px 10px 16px;
+  border-bottom-color: #edf1f6;
+}
+.document-row:hover { background: #fbfcff; }
+.document-row.owner-agency::before {
+  top: 11px;
+  bottom: 11px;
+  width: 3px;
+  background: #aac2ff;
+}
+.document-row-title-line h4 {
+  color: #1f2a3d;
+  font-size: 14px;
+  font-weight: 780;
+}
+.document-row-main > p { color: #748094; }
+.document-owner-pill,
+.document-row .document-owner-pill {
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 850;
+}
+.document-status-pill.ready {
+  background: #eaf8f1;
+  color: #21855a;
+}
+.document-status-pill.warn {
+  background: #fff5df;
+  color: #a95f00;
+}
+.document-row .button.secondary.document-row-primary {
+  background: var(--primary-soft);
+  border-color: transparent;
+  color: var(--primary);
+}
+.document-row .button.secondary.document-row-primary:hover {
+  background: #e3e9ff;
+  border-color: transparent;
+}
+.document-row .button.primary.document-row-primary {
+  background: var(--primary);
+  box-shadow: 0 7px 16px rgba(49,89,216,.15);
+}
+.document-reference-card {
+  margin: 15px 0 13px;
+  padding: 18px 20px 17px 22px;
+  border-color: #dfe6f2;
+  border-radius: 16px;
+  background: linear-gradient(180deg,#ffffff 0%,#fcfdff 100%);
+  box-shadow: var(--shadow);
+}
+.document-reference-card::before { background: var(--primary); }
+.document-reference-kicker { gap: 9px; margin-bottom: 8px; }
+.document-reference-kicker span,
+.document-reference-kicker em {
+  min-height: 24px;
+  padding: 3px 9px;
+  font-size: 10.5px;
+  font-weight: 850;
+}
+.document-reference-kicker span { color:#fff; }
+.document-reference-kicker em {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.document-reference-content > strong {
+  color: #172033;
+  font-size: 16px;
+  letter-spacing: -.02em;
+}
+.document-reference-content > p {
+  margin-top: 6px;
+  color: #667085;
+  font-size: 12.5px;
+}
+.stage-empty-note { background: #fcfdff; }
+.scroll-top-button {
+  border: 0;
+  background: var(--primary);
+  box-shadow: 0 12px 28px rgba(49,89,216,.24);
+}
+.scroll-top-button:hover { background: var(--primary-strong); }
+
+@media (max-width: 720px) {
+  .document-reference-card {
+    padding: 15px 14px 14px 17px;
+  }
+  .document-reference-content > strong { font-size: 14px; }
+  .document-list-stage .document-flow-stage-head h3 { font-size: 15px; }
+}
