@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
-  <title>공사 허브 v0.6.9</title>
+  <title>공사 허브 v0.6.10</title>
   <meta name="description" content="에듀파인 자료관리목록의 공사정보를 불러와 빠르게 확인·보완·출력하는 브라우저 기반 작성지원 도구" />
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="./favicon.ico" sizes="any" />
@@ -24,7 +24,7 @@
           <span class="brand-mark" aria-hidden="true">工</span>
           <span>
             <span class="brand-title-row"><strong>공사 허브</strong></span>
-            <small>에듀파인 불러오고 바로 확인·출력 · v0.6.9</small>
+            <small>에듀파인 불러오고 바로 확인·출력 · v0.6.10</small>
           </span>
         </button>
       </div>
@@ -32,6 +32,7 @@
         <button class="button secondary" id="importBtn" type="button">자료 불러오기</button>
         <button class="button secondary desktop-only" id="exportAuditBtn" type="button">공사관리대장 엑셀</button>
         <button class="button primary" id="newProjectBtn" type="button">+ 새 공사</button>
+        <button class="button top-help-button" id="helpBtn" type="button" aria-label="도움말 열기"><span class="top-help-icon" aria-hidden="true">?</span><span class="top-help-label">도움말</span></button>
         <button class="icon-button" id="moreBtn" type="button" aria-label="더보기" aria-expanded="false">•••</button>
         <div class="popover" id="moreMenu" hidden>
           <button type="button" data-action="import">자료 자동판별 불러오기</button>
@@ -41,7 +42,6 @@
           <button type="button" data-action="backup">전체 백업</button>
           <button type="button" data-action="restore">백업 불러오기</button>
           <button type="button" class="popover-danger" data-action="reset-projects">공사자료 전체 초기화</button>
-          <button type="button" data-action="help">도움말</button>
         </div>
       </div>
     </header>
@@ -51,7 +51,7 @@
     <footer class="footer">
       <span>학돌랩</span>
       <span class="dot">·</span>
-      <span>공사 허브 v0.6.9</span>
+      <span>공사 허브 v0.6.10</span>
       <span class="dot">·</span>
       <span>입력한 공사정보와 업로드한 엑셀 내용은 서버로 전송하지 않습니다.</span>
     </footer>

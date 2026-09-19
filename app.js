@@ -16,7 +16,7 @@
   const moreMenu = document.getElementById('moreMenu');
   const excelFileInput = document.getElementById('excelFileInput');
   const backupFileInput = document.getElementById('backupFileInput');
-  const APP_VERSION = '0.6.9';
+  const APP_VERSION = '0.6.10';
   const REFERENCE_PROGRAM_TITLE = '서울시교육청 교육시설안전과 「공사서류 원클릭(간소화)프로그램」';
   const REFERENCE_PROGRAM_DATE = '2026.5. 수정 기준';
   const REFERENCE_PROGRAM = `${REFERENCE_PROGRAM_TITLE} (${REFERENCE_PROGRAM_DATE})`;
@@ -332,7 +332,7 @@
     const title = isNewFlow ? '자료관리목록에서 공사 불러오기' : isEdufine ? '에듀파인 자료 불러오기' : '공사관리대장 불러오기';
     const expected = isEdufine ? '자료관리목록.xlsx' : '공사관리대장.xlsx';
     const guide = isEdufine
-      ? `<div class="import-path-guide"><strong>다운로드 경로</strong><span class="import-path-main">에듀파인 <b>›</b> 학교회계 <b>›</b> 계약관리 <b>›</b> 계약자료관리 <b>›</b> 자료관리</span><span class="import-path-note">목적물: 공사로 놓고 조회 후 [파일] 다운로드</span></div>`
+      ? `<div class="import-path-guide"><strong>다운로드 경로</strong><span class="import-path-main">에듀파인 <b>›</b> 학교회계 <b>›</b> 계약관리 <b>›</b> 계약자료관리 <b>›</b> 자료관리</span><span class="import-path-note">회계연도 선택 → 목적물: 공사 → 계약일자 설정 → [조회] → [파일] 다운로드</span></div>`
       : `<div class="import-path-guide"><strong>불러올 파일</strong><span>공사관리대장.xlsx</span></div>`;
     openModal({
       eyebrow:'엑셀 불러오기 · 드래그앤드롭',
@@ -441,7 +441,7 @@
       <section class="start-grid start-grid-060" aria-label="공사 시작 방법">
         <button class="start-card primary-start recommended-start" type="button" data-start-edufine-new>
           <span class="start-step">↧</span>
-          <span class="start-copy"><span class="start-recommend">추천</span><strong>자료관리목록 불러오기</strong><small>에듀파인 원인행위 후 내려받은 자료관리목록.xlsx에서 공사를 골라 자동으로 시작합니다.</small></span>
+          <span class="start-copy"><span class="start-recommend">추천</span><strong>자료관리목록 불러오기</strong><small>에듀파인에서 내려받은 자료관리목록.xlsx를 불러오면 공사를 골라 바로 시작할 수 있습니다.</small><em class="start-drop-hint">엑셀 파일을 여기로 끌어오거나 클릭해서 선택하세요.</em></span>
           <span class="start-arrow">›</span>
         </button>
         <button class="start-card" type="button" data-start-new>
@@ -486,7 +486,24 @@
     main.querySelectorAll('[data-filter]').forEach(btn => btn.addEventListener('click', () => { state.filter = btn.dataset.filter; renderDashboard(); }));
     main.querySelector('[data-empty-show-all]')?.addEventListener('click', () => { state.filter = 'all'; state.search = ''; renderDashboard(); });
     main.querySelectorAll('[data-project-id]').forEach(row => row.addEventListener('click', () => openProject(row.dataset.projectId)));
-    main.querySelector('[data-start-edufine-new]')?.addEventListener('click', () => openExcelDropModal('edufine-new'));
+    const edufineStartCard = main.querySelector('[data-start-edufine-new]');
+    edufineStartCard?.addEventListener('click', () => openExcelDropModal('edufine-new'));
+    edufineStartCard?.addEventListener('dragenter', ev => { ev.preventDefault(); edufineStartCard.classList.add('drag-active'); });
+    edufineStartCard?.addEventListener('dragover', ev => { ev.preventDefault(); if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'copy'; edufineStartCard.classList.add('drag-active'); });
+    edufineStartCard?.addEventListener('dragleave', ev => { if (!edufineStartCard.contains(ev.relatedTarget)) edufineStartCard.classList.remove('drag-active'); });
+    edufineStartCard?.addEventListener('drop', ev => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      edufineStartCard.classList.remove('drag-active');
+      const file = ev.dataTransfer?.files?.[0] || null;
+      if (!file) return;
+      if (!/\.xlsx$/i.test(file.name || '')) {
+        showToast('자료관리목록.xlsx 파일을 선택해주세요.', 'warn');
+        return;
+      }
+      state.importMode = 'edufine-new';
+      handleExcelFile(file);
+    });
     main.querySelector('[data-start-new]')?.addEventListener('click', openNewProjectModal);
     main.querySelector('[data-start-history]')?.addEventListener('click', () => openExcelDropModal('history'));
     main.querySelector('[data-start-edufine]')?.addEventListener('click', () => openExcelDropModal('edufine'));
@@ -3390,10 +3407,31 @@
 
   function openHelp() {
     openModal({
-      eyebrow:'도움말', title:`공사 허브 v${APP_VERSION}`,
+      eyebrow:'도움말', title:`공사 허브 v${APP_VERSION}`, wide:true,
       body:`<div class="notice"><strong>이 도구의 목적</strong><br>행정실에서 공사 관련 서류를 빠르게 작성·확인·출력하기 위한 도구입니다. 공통정보는 한 번만 입력하고 여러 서류에 다시 사용합니다.</div>
-      <div style="display:grid;gap:16px;margin-top:18px;font-size:14px">
-        <div><strong>1. 자료관리목록에서 시작</strong><p class="muted">에듀파인 원인행위 후 자료관리목록.xlsx를 내려받아 불러오면 이번에 작성할 공사를 선택하고 계약정보를 자동으로 채울 수 있습니다. 엑셀이 없으면 직접 입력으로 시작하세요.</p></div>
+
+      <section class="help-download-guide" aria-labelledby="helpDownloadTitle">
+        <div class="help-section-head">
+          <div><span class="help-kicker">처음이라면 여기부터</span><h3 id="helpDownloadTitle">자료관리목록은 어디서 받나요?</h3></div>
+          <span class="help-file-badge">자료관리목록.xlsx</span>
+        </div>
+        <div class="help-path-line"><strong>에듀파인</strong><span>학교회계</span><b>›</b><span>계약관리</span><b>›</b><span>계약자료관리</span><b>›</b><span>자료관리</span></div>
+        <ol class="help-download-steps">
+          <li><b>회계연도</b>를 선택합니다.</li>
+          <li><b>목적물</b>을 <strong>공사</strong>로 선택합니다.</li>
+          <li><b>계약일자</b>를 조회하려는 기간으로 설정합니다.</li>
+          <li>오른쪽 위 <b>[조회]</b>를 누릅니다.</li>
+          <li>조회 결과가 나오면 오른쪽의 <b>[파일]</b> 버튼을 눌러 엑셀을 저장합니다.</li>
+          <li>내려받은 <b>자료관리목록.xlsx</b>를 공사 허브에 끌어오거나 선택합니다.</li>
+        </ol>
+        <div class="help-screenshot-grid">
+          <figure><img src="./assets/help/edufine-menu-path.png" alt="에듀파인 학교회계 계약관리 메뉴에서 계약자료관리의 자료관리 메뉴 위치"><figcaption><b>1</b><span>계약관리 → 계약자료관리 → 자료관리로 들어갑니다.</span></figcaption></figure>
+          <figure><img src="./assets/help/edufine-download-list.png" alt="에듀파인 자료관리 화면에서 목적물 공사와 계약일자를 설정하고 조회 후 파일을 내려받는 화면"><figcaption><b>2</b><span>목적물을 공사로 조회한 뒤 오른쪽 [파일]에서 내려받습니다.</span></figcaption></figure>
+        </div>
+      </section>
+
+      <div class="help-topic-grid">
+        <div><strong>1. 자료관리목록에서 시작</strong><p class="muted">자료관리목록.xlsx를 불러오면 이번에 작성할 공사를 선택하고 계약정보를 자동으로 채울 수 있습니다. 엑셀이 없으면 직접 입력으로 시작하세요.</p></div>
         <div><strong>2. 불러온 값은 확인하고 부족한 값만 입력</strong><p class="muted">자료관리목록에 있는 공사명·업체·대표자·계약금액·계약일 등은 자동으로 채웁니다. 자료에 없는 착공·준공·담당자 정보는 필요한 시점에 보완하면 됩니다.</p></div>
         <div><strong>3. 미리보기에서 바로 수정</strong><p class="muted">잘못 입력한 값이나 부족한 정보는 각 서류 미리보기의 ‘입력정보 수정’에서 고칩니다. 저장한 값은 다른 서류에도 함께 반영됩니다.</p></div>
         <div><strong>4. 체크리스트 작성·빈 양식</strong><p class="muted">안전·보건 체크리스트는 ‘체크리스트 작성’과 ‘빈 양식 미리보기’로 구분합니다. 작성 화면에서는 ‘미응답 모두 예’를 사용할 수 있고, 인쇄 직전 서명을 넣거나 서명 없이 출력할 수 있습니다.</p></div>
@@ -3415,13 +3453,14 @@
     syncScrollTopBtn();
     document.getElementById('goHomeBtn').addEventListener('click',()=>{state.currentProjectId=null;renderDashboard();});
     document.getElementById('newProjectBtn').addEventListener('click',openNewProjectModal);
+    document.getElementById('helpBtn')?.addEventListener('click',openHelp);
     document.getElementById('importBtn').addEventListener('click',()=>openExcelPicker('auto'));
     document.getElementById('exportAuditBtn').addEventListener('click',openExportAuditModal);
     document.getElementById('moreBtn').addEventListener('click',(ev)=>{ev.stopPropagation();moreMenu.hidden=!moreMenu.hidden;ev.currentTarget.setAttribute('aria-expanded',String(!moreMenu.hidden));});
     document.addEventListener('click',(ev)=>{if(!moreMenu.hidden&&!moreMenu.contains(ev.target)&&ev.target.id!=='moreBtn'){moreMenu.hidden=true;document.getElementById('moreBtn').setAttribute('aria-expanded','false');}});
     moreMenu.addEventListener('click',ev=>{
       const action=ev.target.dataset.action;if(!action)return;moreMenu.hidden=true;
-      if(action==='import')openExcelPicker('auto'); if(action==='export')openExportAuditModal(); if(action==='vendors')openVendorLibrary(); if(action==='school')openSchoolModal(); if(action==='backup')backupAll(); if(action==='restore')backupFileInput.click(); if(action==='reset-projects')confirmResetProjects(); if(action==='help')openHelp();
+      if(action==='import')openExcelPicker('auto'); if(action==='export')openExportAuditModal(); if(action==='vendors')openVendorLibrary(); if(action==='school')openSchoolModal(); if(action==='backup')backupAll(); if(action==='restore')backupFileInput.click(); if(action==='reset-projects')confirmResetProjects();
     });
     excelFileInput.addEventListener('change',()=>handleExcelFile(excelFileInput.files[0]));
     backupFileInput.addEventListener('change',()=>handleBackupFile(backupFileInput.files[0]));
