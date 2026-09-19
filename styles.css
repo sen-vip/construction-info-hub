@@ -2735,7 +2735,7 @@ input:focus, select:focus, textarea:focus {
 .recent-projects-title span { color:#7a8597; }
 
 
-/* v0.6.10 — 도움말 접근성 / 자료관리목록 드래그앤드롭 / 기준자료 카드 정리 */
+/* v0.6.11 — 자동부여 가독성 복구 / 기준자료 카드 컬러 재정리 */
 .top-help-button {
   display:inline-flex;
   align-items:center;
@@ -2762,6 +2762,12 @@ input:focus, select:focus, textarea:focus {
   line-height:1;
 }
 .top-help-label { font-size:13px; font-weight:800; }
+
+.new-project-number-preview em {
+  background: var(--primary);
+  color:#fff;
+  box-shadow: 0 1px 0 rgba(255,255,255,.12) inset;
+}
 
 .start-grid-060 .recommended-start { position:relative; }
 .start-drop-hint {
@@ -2865,21 +2871,29 @@ input:focus, select:focus, textarea:focus {
 .help-topic-grid > div > strong { color:#26354a; }
 .help-topic-grid p { margin:5px 0 0; font-size:12.5px; line-height:1.55; }
 
-/* 왼쪽 굵은 선 대신 상단 포인트 라인으로 기준자료 위계를 유지 */
+/* 기준자료 카드는 별도 라인 없이 배경 톤과 배지 대비로 강조 */
 .document-reference-card {
   padding:18px 20px 17px;
-  border-color:#dce5f3;
-  background:linear-gradient(180deg,#f8faff 0%,#ffffff 100%);
-  box-shadow:0 7px 20px rgba(49,89,216,.055);
+  border-color:#d8e0ef;
+  border-radius:16px;
+  background:linear-gradient(135deg,#f3f6ff 0%,#f7f9fc 52%,#ffffff 100%);
+  box-shadow:0 8px 24px rgba(49,89,216,.06);
 }
 .document-reference-card::before {
-  left:0;
-  right:0;
-  top:0;
-  bottom:auto;
-  width:auto;
-  height:3px;
-  background:var(--primary);
+  content:none;
+  display:none;
+}
+.document-reference-kicker span {
+  background:#2f57d5;
+  color:#fff;
+}
+.document-reference-kicker em {
+  background:rgba(255,255,255,.92);
+  color:#3657a4;
+  border:1px solid #d7def4;
+}
+.document-reference-content > p {
+  color:#5f6f86;
 }
 
 @media (max-width:720px) {
