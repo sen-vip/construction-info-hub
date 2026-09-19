@@ -16,7 +16,7 @@
   const moreMenu = document.getElementById('moreMenu');
   const excelFileInput = document.getElementById('excelFileInput');
   const backupFileInput = document.getElementById('backupFileInput');
-  const APP_VERSION = '0.6.12';
+  const APP_VERSION = '0.6.13';
   const REFERENCE_PROGRAM_TITLE = '서울시교육청 교육시설안전과 「공사서류 원클릭(간소화)프로그램」';
   const REFERENCE_PROGRAM_DATE = '2026.5. 수정 기준';
   const REFERENCE_PROGRAM = `${REFERENCE_PROGRAM_TITLE} (${REFERENCE_PROGRAM_DATE})`;
@@ -431,7 +431,7 @@
     main.innerHTML = `
       <section class="hero document-output-hero import-first-hero">
         <div>
-          <p class="eyebrow">공사정보 시작하기</p>
+          <p class="eyebrow">공사정보 시작하기 <span class="scope-badge">서울시교육청 기준</span></p>
           <h1>에듀파인에 입력한 공사정보를 다시 입력하지 마세요</h1>
           <p>자료관리목록을 불러오면 에듀파인에 입력한 계약정보를 가져오고, 부족한 항목만 이어서 입력할 수 있습니다.</p>
           <div class="security-note"><span class="security-dot"></span>엑셀은 이 브라우저에서만 읽음 · 서버 미전송</div>
@@ -919,6 +919,32 @@
     return !!data.date && !!data.inspector && resultCount===def.items.length;
   }
 
+  const SAFETY_RELATED_TYPE_MAP = {
+    fall:'safetyFall',
+    electrical:'safetyElectrical',
+    confined:'safetyConfined',
+    industrial:'safetyIndustrial'
+  };
+
+  function relatedSafetyTypesFromGeneral(p) {
+    const related=p?.safetyChecklists?.safetyGeneral?.relatedChecklistResults||{};
+    return Object.entries(SAFETY_RELATED_TYPE_MAP)
+      .filter(([key])=>related[key]==='o')
+      .map(([,type])=>type);
+  }
+
+  function syncAutoSafetyDocuments(p, relatedChecklistResults={}) {
+    const previousAuto=new Set(Array.isArray(p?.autoSafetyDocuments)?p.autoSafetyDocuments:[]);
+    const nextAuto=Object.entries(SAFETY_RELATED_TYPE_MAP)
+      .filter(([key])=>relatedChecklistResults[key]==='o')
+      .map(([,type])=>type);
+    const selected=new Set(Array.isArray(p?.selectedDocuments)?p.selectedDocuments:[]);
+    previousAuto.forEach(type=>selected.delete(type));
+    nextAuto.forEach(type=>selected.add(type));
+    p.autoSafetyDocuments=nextAuto;
+    p.selectedDocuments=[...selected];
+  }
+
   function myDocumentTypes(p) {
     return (Array.isArray(p?.selectedDocuments)?p.selectedDocuments:[]).filter(type=>DOCUMENT_DEFINITIONS[type]);
   }
@@ -1028,7 +1054,11 @@
     }
     p.safetyChecklists={...(p.safetyChecklists||{}),[type]:{date,inspector,notes:modalBody.querySelector('#safetyChecklistNotes')?.value?.trim()||'',results,relatedChecklistResults,updatedAt:new Date().toISOString()}};
     if(!p.selectedDocuments?.includes(type))p.selectedDocuments=[...(p.selectedDocuments||[]),type];
-    p.updatedAt=new Date().toISOString();await DB.put('projects',p);await loadState();state.currentProjectId=p.id;closeModal();renderProjectDetail();showToast(`${def.label}을 저장했습니다.`);if(typeof afterSave==='function')afterSave();
+    if(type==='safetyGeneral')syncAutoSafetyDocuments(p,relatedChecklistResults);
+    p.updatedAt=new Date().toISOString();await DB.put('projects',p);await loadState();state.currentProjectId=p.id;closeModal();renderProjectDetail();
+    const linkedCount=type==='safetyGeneral'?relatedSafetyTypesFromGeneral(p).length:0;
+    showToast(linkedCount?`${def.label}을 저장했습니다. O로 선택한 추가 체크리스트 ${linkedCount}종을 표시합니다.`:`${def.label}을 저장했습니다.`);
+    if(typeof afterSave==='function')afterSave();
   }
 
 
@@ -1112,15 +1142,15 @@
     const amount = Number(p?.currentContractAmount || 0);
     if (!amount) return '';
     const rules = {
-      standardContract: { max: 50000000, text: '계약금액 5천만원 이하 작성 생략 가능' },
+      standardContract: { max: 50000000, inclusive: true, text: '계약금액 5천만원 이하 작성 생략 가능' },
       startReport: { max: 10000000, text: '계약금액 1천만원 미만 작성 생략 가능' },
       completionReport: { max: 10000000, text: '계약금액 1천만원 미만 작성 생략 가능' },
       completionInspectionRequest: { max: 10000000, text: '계약금액 1천만원 미만 작성 생략 가능' },
       completionInspectionRecord: { max: 30000000, text: '계약금액 3천만원 미만 작성 생략 가능' }
     };
     const rule = rules[type];
-    if (!rule || amount >= rule.max) return '';
-    return `<span class="document-guideline-note"><b>2023 계약업무 처리지침 참고</b> · ${e(rule.text)}</span>`;
+    if (!rule || (rule.inclusive ? amount > rule.max : amount >= rule.max)) return '';
+    return `<span class="document-guideline-note"><b>서울시교육청 「계약업무 처리지침」 2023.12.27. 개정본 참고</b> · ${e(rule.text)}</span>`;
   }
 
   function documentCardHtml(type, p) {
@@ -1207,8 +1237,12 @@
     const selected = orderedSelectedTypes(p);
     const missing = batchMissingFields(selected, p);
     const readyCount = selected.filter(type => documentMissing(type,p).length === 0 && (!isSafetyDocument(type) || safetyChecklistComplete(p,type) || !safetyRequiresCompletion(type))).length;
-    const safetyExtra = state.documentOwnerFilter==='agency' ? '' : `<details class="safety-extra-details compact-safety-details">
-          <summary><span><strong>그 외 안전·보건 체크리스트 4종</strong><small>해당 작업이 있을 때 업체가 작성·제출</small></span><span class="safety-summary-toggle" aria-hidden="true"></span></summary>
+    const linkedSafetyTypes=relatedSafetyTypesFromGeneral(p);
+    const linkedSafetyCards=linkedSafetyTypes.map(type=>documentCardHtml(type,p)).join('');
+    const safetyExtra = state.documentOwnerFilter==='agency' ? '' : linkedSafetyTypes.length
+      ? `<section class="safety-linked-section"><div class="safety-linked-head"><div><strong>공통 체크리스트에서 O로 선택한 추가 체크리스트</strong><small>${linkedSafetyTypes.length}종 · 업체 작성·제출용</small></div><span class="safety-linked-count">${linkedSafetyTypes.length}</span></div><div class="document-list">${linkedSafetyCards}</div></section>`
+      : `<details class="safety-extra-details compact-safety-details">
+          <summary><span><strong>추가 안전·보건 체크리스트 4종</strong><small>공통 체크리스트의 6번에서 O로 선택하면 여기에 자동으로 표시됩니다.</small></span><span class="safety-summary-toggle" aria-hidden="true"></span></summary>
           <div class="safety-extra-body"><div class="document-list">${documentCardHtml('safetyFall',p)}${documentCardHtml('safetyElectrical',p)}${documentCardHtml('safetyConfined',p)}${documentCardHtml('safetyIndustrial',p)}</div>
             <details class="secondary-feature-details"><summary>공종·작업특성에 맞는 체크리스트 추천 보기</summary>${safetyRecommendationsHtml(p)}</details>
           </div>
@@ -3425,7 +3459,8 @@
   function openHelp() {
     openModal({
       eyebrow:'도움말', title:`공사 허브 v${APP_VERSION}`, wide:true,
-      body:`<div class="notice"><strong>이 도구의 목적</strong><br>행정실에서 공사 관련 서류를 빠르게 작성·확인·출력하기 위한 도구입니다. 공통정보는 한 번만 입력하고 여러 서류에 다시 사용합니다.</div>
+      body:`<div class="notice help-scope-notice"><strong>서울특별시교육청 기준으로 구성된 도구입니다.</strong><br>다른 시·도교육청은 서식·지침·업무기준이 다를 수 있으므로 그대로 적용하지 말고 해당 교육청 기준을 확인해주세요.</div>
+      <div class="notice"><strong>이 도구의 목적</strong><br>에듀파인에 이미 입력한 공사정보를 다시 입력하는 반복업무를 줄이고, 같은 정보를 여러 공사서류에 재사용하기 위한 작성지원 도구입니다.</div>
 
       <section class="help-download-guide" aria-labelledby="helpDownloadTitle">
         <div class="help-section-head">
@@ -3454,7 +3489,7 @@
         <div><strong>4. 체크리스트 작성·빈 양식</strong><p class="muted">안전·보건 체크리스트는 ‘체크리스트 작성’과 ‘빈 양식 미리보기’로 구분합니다. 작성 화면에서는 ‘미응답 모두 예’를 사용할 수 있고, 인쇄 직전 서명을 넣거나 서명 없이 출력할 수 있습니다.</p></div>
         <div><strong>5. 여러 서류 묶음 출력</strong><p class="muted">필요한 경우 서류 화면 아래 ‘여러 서류를 한 번에 출력’을 열어 개별 선택 또는 단계별 세트를 사용합니다.</p></div>
         <div><strong>6. 원클릭 엑셀 별도 확인</strong><p class="muted">현장대리인계·공정표·직접시공계획서와 도시가스·노무비 관련 서류는 서류 화면의 별도 확인 목록에서 안내합니다.</p></div>
-        <div><strong>기준 자료</strong><p class="muted">${e(REFERENCE_PROGRAM)} 버전을 기준으로 서식과 점검항목을 구성했습니다.</p></div>
+        <div><strong>기준 자료</strong><p class="muted"><strong class="help-reference-strong">${e(REFERENCE_PROGRAM)} 버전</strong>을 기준으로 서식과 점검항목을 구성했습니다.<br><span class="help-guideline-source">금액별 생략 안내는 서울특별시교육청 「계약업무 처리지침」 2023.12.27. 개정본을 참고했습니다.</span></p></div>
         <div><strong>보안</strong><p class="muted">공사정보와 업로드한 엑셀 내용은 서버로 전송하지 않고 이 브라우저에 저장합니다. 공용 Windows 계정에서는 PC 접근통제와 백업이 필요합니다.</p></div>
       </div>`,
       actions:`<button class="button primary" type="button" data-modal-close>확인</button>`
