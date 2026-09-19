@@ -16,7 +16,7 @@
   const moreMenu = document.getElementById('moreMenu');
   const excelFileInput = document.getElementById('excelFileInput');
   const backupFileInput = document.getElementById('backupFileInput');
-  const APP_VERSION = '0.6.13';
+  const APP_VERSION = '0.6.14';
   const REFERENCE_PROGRAM_TITLE = '서울시교육청 교육시설안전과 「공사서류 원클릭(간소화)프로그램」';
   const REFERENCE_PROGRAM_DATE = '2026.5. 수정 기준';
   const REFERENCE_PROGRAM = `${REFERENCE_PROGRAM_TITLE} (${REFERENCE_PROGRAM_DATE})`;
@@ -995,12 +995,10 @@
     const statusTitle=complete?'작성 완료':(vendorForm?'빈 양식 가능':'작성 필요');
     const statusTone=complete?'ready':(vendorForm?'neutral':'warn');
     const statusDesc=saved?.date?`최근 점검 ${formatDate(saved.date)}`:(vendorForm?'업체 제출용 체크리스트':'학교 점검용 공통 체크리스트');
-    const mainAction = vendorForm
-      ? `<button class="button secondary small document-row-primary" type="button" data-doc-open="${e(type)}" data-preview-mode="blank">빈 양식</button>`
-      : `<button class="button primary small document-row-primary" type="button" data-safety-edit="${e(type)}">작성</button>`;
-    const secondaryAction = vendorForm
-      ? `<button class="document-row-text-action" type="button" data-safety-edit="${e(type)}">작성</button>`
-      : `<button class="document-row-text-action" type="button" data-doc-open="${e(type)}" data-preview-mode="blank">빈 양식</button>`;
+    // 안전·보건 체크리스트는 소유자와 관계없이 액션 순서를 통일합니다.
+    // 왼쪽: 빈 양식 / 오른쪽 강조 버튼: 작성
+    const mainAction = `<button class="button primary small document-row-primary" type="button" data-safety-edit="${e(type)}">작성</button>`;
+    const secondaryAction = `<button class="document-row-text-action" type="button" data-doc-open="${e(type)}" data-preview-mode="blank">빈 양식</button>`;
     return `<article class="document-row safety-document-row ${isAgency?'owner-agency':'owner-vendor'} ${complete||vendorForm?'ready':'needs-info'}" data-document-card="${e(type)}" data-document-owner="${isAgency?'agency':'vendor'}">
       <div class="document-row-main">
         <div class="document-row-title-line"><h4>${e(def.label)}</h4>${isAgency?'<span class="document-owner-pill">행정실</span>':''}${documentRowStatusHtml(statusTitle,statusTone)}</div>
