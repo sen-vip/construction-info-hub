@@ -2908,3 +2908,54 @@ input:focus, select:focus, textarea:focus {
   .help-topic-grid { grid-template-columns:1fr; gap:10px; }
   .document-reference-card { padding:15px 14px 14px; }
 }
+
+
+/* v0.6.12 — 반복입력 경감 메시지 / 자료관리목록 경로 / 2023 지침 생략 안내 / 맨위로 버튼 축소 */
+.start-source-path {
+  display:block;
+  margin-top:7px;
+  color:#52627a;
+  font-size:11.5px;
+  font-weight:650;
+  line-height:1.5;
+}
+.start-source-path b { color:var(--primary); font-weight:850; }
+.guideline-basis-note {
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  margin:0 0 12px;
+  padding:9px 12px;
+  border:1px solid #e2e7f0;
+  border-radius:10px;
+  background:#fafbfe;
+  color:#697589;
+  font-size:11px;
+  line-height:1.45;
+}
+.guideline-basis-note strong { flex:none; color:#42516a; font-size:11px; }
+.document-guideline-note {
+  display:block;
+  margin-top:3px;
+  color:#6a7180;
+  font-size:10.5px;
+  line-height:1.4;
+}
+.document-guideline-note b { color:#4f5d73; font-weight:800; }
+.scroll-top-button {
+  width:38px;
+  height:38px;
+  min-height:38px;
+  padding:0;
+  border-radius:50%;
+  gap:0;
+  font-size:18px;
+  line-height:1;
+}
+.scroll-top-button > span { transform:translateY(2px); }
+@media (max-width:720px) {
+  .start-source-path { font-size:11px; }
+  .guideline-basis-note { flex-direction:column; gap:3px; }
+  .document-guideline-note { font-size:10px; }
+  .scroll-top-button { width:36px; height:36px; min-height:36px; padding:0; font-size:17px; }
+}

@@ -16,7 +16,7 @@
   const moreMenu = document.getElementById('moreMenu');
   const excelFileInput = document.getElementById('excelFileInput');
   const backupFileInput = document.getElementById('backupFileInput');
-  const APP_VERSION = '0.6.11';
+  const APP_VERSION = '0.6.12';
   const REFERENCE_PROGRAM_TITLE = '서울시교육청 교육시설안전과 「공사서류 원클릭(간소화)프로그램」';
   const REFERENCE_PROGRAM_DATE = '2026.5. 수정 기준';
   const REFERENCE_PROGRAM = `${REFERENCE_PROGRAM_TITLE} (${REFERENCE_PROGRAM_DATE})`;
@@ -433,7 +433,7 @@
         <div>
           <p class="eyebrow">공사정보 시작하기</p>
           <h1>에듀파인에 입력한 공사정보를 다시 입력하지 마세요</h1>
-          <p>원인행위 후 내려받은 자료관리목록에서 공사를 선택하면 계약정보를 먼저 채우고, 부족한 항목만 이어서 입력할 수 있습니다.</p>
+          <p>자료관리목록을 불러오면 에듀파인에 입력한 계약정보를 가져오고, 부족한 항목만 이어서 입력할 수 있습니다.</p>
           <div class="security-note"><span class="security-dot"></span>엑셀은 이 브라우저에서만 읽음 · 서버 미전송</div>
         </div>
       </section>
@@ -441,7 +441,7 @@
       <section class="start-grid start-grid-060" aria-label="공사 시작 방법">
         <button class="start-card primary-start recommended-start" type="button" data-start-edufine-new>
           <span class="start-step">↧</span>
-          <span class="start-copy"><span class="start-recommend">추천</span><strong>자료관리목록 불러오기</strong><small>에듀파인에서 내려받은 자료관리목록.xlsx를 불러오면 공사를 골라 바로 시작할 수 있습니다.</small><em class="start-drop-hint">엑셀 파일을 여기로 끌어오거나 클릭해서 선택하세요.</em></span>
+          <span class="start-copy"><span class="start-recommend">추천</span><strong>자료관리목록 불러오기</strong><small>에듀파인에서 내려받은 자료관리목록.xlsx를 불러오면 공사를 골라 바로 시작할 수 있습니다.</small><span class="start-source-path"><b>다운로드 경로</b> 에듀파인 학교회계 › 계약관리 › 계약자료관리 › 자료관리</span><em class="start-drop-hint">엑셀 파일을 여기로 끌어오거나 클릭해서 선택하세요.</em></span>
           <span class="start-arrow">›</span>
         </button>
         <button class="start-card" type="button" data-start-new>
@@ -1108,6 +1108,21 @@
     </article>`;
   }
 
+  function legacyGuidelineOmissionNote(type, p) {
+    const amount = Number(p?.currentContractAmount || 0);
+    if (!amount) return '';
+    const rules = {
+      standardContract: { max: 50000000, text: '계약금액 5천만원 이하 작성 생략 가능' },
+      startReport: { max: 10000000, text: '계약금액 1천만원 미만 작성 생략 가능' },
+      completionReport: { max: 10000000, text: '계약금액 1천만원 미만 작성 생략 가능' },
+      completionInspectionRequest: { max: 10000000, text: '계약금액 1천만원 미만 작성 생략 가능' },
+      completionInspectionRecord: { max: 30000000, text: '계약금액 3천만원 미만 작성 생략 가능' }
+    };
+    const rule = rules[type];
+    if (!rule || amount >= rule.max) return '';
+    return `<span class="document-guideline-note"><b>2023 계약업무 처리지침 참고</b> · ${e(rule.text)}</span>`;
+  }
+
   function documentCardHtml(type, p) {
     if (isSafetyDocument(type)) return safetyDocumentCardHtml(type,p);
     if (isPrivateContractPledge(type)) return privateContractPledgeCardHtml(type,p);
@@ -1124,6 +1139,7 @@
       <div class="document-row-main">
         <div class="document-row-title-line"><h4>${e(def.label)}</h4>${isAgency?'<span class="document-owner-pill">행정실</span>':''}${documentRowStatusHtml(missing.length?'정보 확인':'출력 가능',missing.length?'warn':'ready')}</div>
         <p>${e(status)}</p>
+        ${legacyGuidelineOmissionNote(type,p)}
       </div>
       <div class="document-row-actions"><button class="button secondary small document-row-primary" type="button" data-doc-open="${e(type)}">미리보기</button></div>
     </article>`;
@@ -1206,6 +1222,7 @@
           <p>이 서식과 점검항목은 위 기준자료를 바탕으로 구성했습니다.</p>
         </div>
       </section>
+      <div class="guideline-basis-note"><strong>금액별 생략 안내 기준</strong><span>서울시교육청 「계약업무 처리지침」 2023.12.27. 개정본 참고 · 업무 진행 전 최신 개정 여부를 확인해주세요.</span></div>
       <div class="document-list-toolbar">
         <div class="document-view-toggle" role="group" aria-label="서류 보기 범위">
           <button type="button" class="${state.documentOwnerFilter==='all'?'active':''}" data-doc-owner-filter="all">전체 서류</button>
