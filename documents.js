@@ -11,7 +11,7 @@
 
   const DEFINITIONS = {
     standardContract: {
-      key:'standardContract', label:'공사도급표준계약서', outputTitle:'공 사 도 급 표 준 계 약 서', stage:'계약', version:'2026.05 수정', pages:1, owner:'vendor',
+      key:'standardContract', label:'공사도급표준계약서', outputTitle:'공 사 도 급 표 준 계 약 서', stage:'계약', version:'2026.10 수정', pages:1, owner:'vendor',
       description:'발주기관과 계약상대자가 체결하는 공사도급 표준계약서',
       required:['schoolName','schoolAddress','principal','projectName','contractNumber','currentContractAmount','contractSecurityAmount','contractDate','plannedStartDate','completionDueDate','vendorName','businessNumber','vendorAddress','vendorPhone','representative','workType','delayPenaltyRate','priceAdjustmentMethod','defectSecurityRate','defectSecurityAmount','defectPeriodYears']
     },
@@ -31,98 +31,98 @@
       required:['schoolName','projectName','currentContractAmount','defectSecurityAmount','contractDate','actualCompletionDate','defectStartDate','defectEndDate','vendorName','representative']
     },
     acceptanceTerms: {
-      key:'acceptanceTerms', label:'승낙사항', outputTitle:'승 낙 사 항 (공 사 집 행)', stage:'계약', version:'2026.05 수정', pages:1, owner:'vendor',
+      key:'acceptanceTerms', label:'승낙사항', outputTitle:'승 낙 사 항 (공 사 집 행)', stage:'계약', version:'2026.10 수정', pages:1, owner:'vendor',
       description:'공사 집행 시 계약상대자가 확인하는 승낙사항',
       required:['projectName','contractDate','plannedStartDate','completionDueDate','vendorName','businessNumber','vendorAddress','representative','delayPenaltyRate','defectPeriodYears']
     },
     useSealForm: {
-      key:'useSealForm', label:'사용인감계', outputTitle:'사 용 인 감 계', stage:'계약', version:'2026.05 수정', pages:1, owner:'vendor',
+      key:'useSealForm', label:'사용인감계', outputTitle:'사 용 인 감 계', stage:'계약', version:'2026.10 수정', pages:1, owner:'vendor',
       description:'계약 관련 업무에 사용할 사용인감을 신고하는 서류',
       required:['schoolName','projectName','contractDate','vendorName','vendorAddress','representative']
     },
     privateContractPledge: {
-      key:'privateContractPledge', label:'수의계약 통합서약서', outputTitle:'수 의 계 약 통 합 서 약 서', stage:'계약', version:'2026.05 수정', pages:2, owner:'vendor',
+      key:'privateContractPledge', label:'수의계약 통합서약서', outputTitle:'수 의 계 약 통 합 서 약 서', stage:'계약', version:'2026.10 수정', pages:2, owner:'vendor',
       description:'수의계약 관련 각서·청렴·안전·개인정보 동의를 통합한 서약서. 예·아니오를 미리 선택하거나 빈 양식으로 출력할 수 있습니다.',
       required:['schoolName','projectName','contractDate','vendorName','businessNumber','vendorAddress','vendorPhone','representative']
     },
     startReport: {
-      key:'startReport', label:'착공계', outputTitle:'착 공 신 고 서', stage:'착공', version:'2026.05 수정', pages:1, owner:'vendor',
+      key:'startReport', label:'착공계', outputTitle:'착 공 신 고 서', stage:'착공', version:'2026.10 수정', pages:1, owner:'vendor',
       description:'착공 신고 시 제출하는 기본 착공계',
       required:['schoolName','projectName','currentContractAmount','contractDate','startDate','completionDueDate','vendorName','businessNumber','vendorAddress','representative']
     },
     utilityPaymentPledge: {
-      key:'utilityPaymentPledge', label:'수도·전기료 납부각서', outputTitle:'각 서', stage:'착공', version:'2026.05 수정', pages:1, owner:'vendor',
+      key:'utilityPaymentPledge', label:'수도·전기료 납부각서', outputTitle:'각 서', stage:'착공', version:'2026.10 수정', pages:1, owner:'vendor',
       description:'학교의 수도·전력을 사용한 경우 계산된 사용료를 납부하겠다는 업체 각서. 현장대리인 이름은 공란으로도 출력할 수 있습니다.',
       required:['schoolName','projectName','currentContractAmount','contractDate','startDate','completionDueDate','vendorName','representative']
     },
     completionReport: {
-      key:'completionReport', label:'준공계', outputTitle:'준 공 계', stage:'준공', version:'2026.05 수정', pages:1, owner:'vendor',
+      key:'completionReport', label:'준공계', outputTitle:'준 공 계', stage:'준공', version:'2026.10 수정', pages:1, owner:'vendor',
       description:'공사 완료 후 제출하는 준공계',
       required:['schoolName','projectName','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','vendorName','businessNumber','vendorAddress','representative']
     },
     completionInspectionRequest: {
-      key:'completionInspectionRequest', label:'준공검사원', outputTitle:'준 공 검 사 원', stage:'준공', version:'2026.05 수정', pages:1, owner:'vendor',
+      key:'completionInspectionRequest', label:'준공검사원', outputTitle:'준 공 검 사 원', stage:'준공', version:'2026.10 수정', pages:1, owner:'vendor',
       description:'준공 사실을 확인하고 검사를 요청하는 서류',
       required:['schoolName','projectName','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','vendorName','businessNumber','vendorAddress','representative']
     },
     supervisionReport: {
-      key:'supervisionReport', label:'공사감독조서', outputTitle:'공 사 감 독 조 서', stage:'준공', version:'2026.05 수정', pages:1, owner:'agency',
+      key:'supervisionReport', label:'공사감독조서', outputTitle:'공 사 감 독 조 서', stage:'준공', version:'2026.10 수정', pages:1, owner:'agency',
       description:'공사감독자가 현장 감독 결과를 확인하는 기관용 조서',
       required:['schoolName','projectName','vendorName','representative','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','supervisor']
     },
     completionInspectionRecord: {
-      key:'completionInspectionRecord', label:'준공검사조서', outputTitle:'준 공 검 사 조 서', stage:'준공', version:'2026.05 수정', pages:1, owner:'agency',
+      key:'completionInspectionRecord', label:'준공검사조서', outputTitle:'준 공 검 사 조 서', stage:'준공', version:'2026.10 수정', pages:1, owner:'agency',
       description:'준공검사 결과와 검사자·입회자를 기록하는 기관용 조서',
       required:['schoolName','projectName','vendorName','representative','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','completionInspectionDate','settlementAmount','inspector','witness']
     },
     defectSecurityDeposit: {
-      key:'defectSecurityDeposit', label:'하자보증금납부서', outputTitle:'하 자 보 수 보 증 금 납 부 서', stage:'준공', version:'2026.05 수정', pages:1, owner:'vendor',
+      key:'defectSecurityDeposit', label:'하자보증금납부서', outputTitle:'하 자 보 수 보 증 금 납 부 서', stage:'준공', version:'2026.10 수정', pages:1, owner:'vendor',
       description:'하자보수보증금의 금액·기간·납부방법을 확인하여 제출하는 서류',
       required:['schoolName','projectName','currentContractAmount','contractDate','actualCompletionDate','defectSecurityRate','defectSecurityAmount','defectStartDate','defectEndDate','defectSecurityType','vendorName','businessNumber','vendorAddress','representative']
     },
     completionSettlementAgreement: {
-      key:'completionSettlementAgreement', label:'준공정산동의서', outputTitle:'준 공 정 산 동 의 서', stage:'준공', version:'2026.05 수정', pages:1, owner:'vendor',
+      key:'completionSettlementAgreement', label:'준공정산동의서', outputTitle:'준 공 정 산 동 의 서', stage:'준공', version:'2026.10 수정', pages:1, owner:'vendor',
       description:'계약금액과 준공정산금액의 차액 및 감액 사유에 동의하는 업체 서류',
       required:['schoolName','projectName','currentContractAmount','settlementAmount','settlementReductionReason','actualCompletionDate','vendorName','vendorAddress','representative']
     },
     paymentRequest: {
-      key:'paymentRequest', label:'대금청구서', outputTitle:'대 금 청 구 서', stage:'준공', version:'2026.05 수정', pages:1, owner:'vendor',
+      key:'paymentRequest', label:'대금청구서', outputTitle:'대 금 청 구 서', stage:'준공', version:'2026.10 수정', pages:1, owner:'vendor',
       description:'준공 후 계약대금을 지정계좌로 청구하는 서류',
       required:['schoolName','projectName','currentContractAmount','settlementAmount','priorPaymentAmount','deductionAmount','completionInspectionDate','vendorName','vendorAddress','representative','bankName','accountNumber','accountHolder']
     },
     constructionLedger: {
-      key:'constructionLedger', label:'공사대장', outputTitle:'공  사  대  장', stage:'준공', version:'2026.05 수정', pages:1, owner:'agency',
+      key:'constructionLedger', label:'공사대장', outputTitle:'공  사  대  장', stage:'준공', version:'2026.10 수정', pages:1, owner:'agency',
       description:'개별 공사의 계약·공정·지급·검사·하자 내용을 한 장에 관리하는 기관용 대장',
       required:['projectName','vendorName','currentContractAmount','contractMethod','contractDate','startDate','completionDueDate']
     },
     warrantyInspectionReport: {
-      key:'warrantyInspectionReport', label:'하자검사조서', outputTitle:'하  자  검  사  조  서', stage:'하자', version:'2026.05 수정', pages:1, owner:'agency',
+      key:'warrantyInspectionReport', label:'하자검사조서', outputTitle:'하  자  검  사  조  서', stage:'하자', version:'2026.10 수정', pages:1, owner:'agency',
       description:'완료공사의 하자(만료)검사 결과를 기록하는 기관용 조서. 미리보기에서 검사자·입회자를 기본값·공란·입력값 중 선택하고 수정할 수 있습니다.',
       required:['projectName','vendorName','representative','workType','currentContractAmount','startDate','actualCompletionDate','defectEndDate','warrantyInspectionDate']
     },
     warrantyLedger: {
-      key:'warrantyLedger', label:'하자대장', outputTitle:'하 자 검 사 대 장', stage:'하자', version:'2026.05 수정', pages:1, owner:'agency',
+      key:'warrantyLedger', label:'하자대장', outputTitle:'하 자 검 사 대 장', stage:'하자', version:'2026.10 수정', pages:1, owner:'agency',
       description:'공사별 하자보증기간과 정기 하자검사 이력을 누적 관리하는 기관용 대장',
       required:['projectName','vendorName','currentContractAmount','contractDate','startDate','completionDueDate','actualCompletionDate','defectStartDate','defectEndDate']
     },
     safetyGeneral: {
-      key:'safetyGeneral', label:'안전·보건 체크리스트', outputTitle:'공사(용역) 안전·보건 체크리스트(공통)', stage:'착공', version:'2026.05 수정', pages:1, owner:'agency',
+      key:'safetyGeneral', label:'안전·보건 체크리스트', outputTitle:'공사(용역) 안전·보건 체크리스트(공통)', stage:'착공', version:'2026.10 수정', pages:1, owner:'agency',
       description:'기관(학교)에서 점검하고 업체에서 확인하여 자체 보관하는 공통 체크리스트', required:['schoolName','projectName','vendorName']
     },
     safetyFall: {
-      key:'safetyFall', label:'추락재해 예방 체크리스트', outputTitle:'추락재해 예방 체크리스트', stage:'착공', version:'2026.05 수정', pages:2, owner:'vendor',
+      key:'safetyFall', label:'추락재해 예방 체크리스트', outputTitle:'추락재해 예방 체크리스트', stage:'착공', version:'2026.10 수정', pages:2, owner:'vendor',
       description:'추락위험 작업 시 공사업체가 작성·제출하고 기관이 확인하는 체크리스트', required:['projectName','vendorName']
     },
     safetyElectrical: {
-      key:'safetyElectrical', label:'감전재해 예방 체크리스트', outputTitle:'전기공사 감전재해 예방 체크리스트', stage:'착공', version:'2026.05 수정', pages:1, owner:'vendor',
+      key:'safetyElectrical', label:'감전재해 예방 체크리스트', outputTitle:'전기공사 감전재해 예방 체크리스트', stage:'착공', version:'2026.10 수정', pages:1, owner:'vendor',
       description:'감전위험 작업 시 공사(용역)업체가 작성·제출하고 기관이 확인하는 체크리스트', required:['projectName','vendorName']
     },
     safetyConfined: {
-      key:'safetyConfined', label:'밀폐공간 질식재해예방 체크리스트', outputTitle:'밀폐공간 질식재해예방 체크리스트', stage:'착공', version:'2026.05 수정', pages:1, owner:'vendor',
+      key:'safetyConfined', label:'밀폐공간 질식재해예방 체크리스트', outputTitle:'밀폐공간 질식재해예방 체크리스트', stage:'착공', version:'2026.10 수정', pages:1, owner:'vendor',
       description:'밀폐공간 작업 시 공사(용역)업체가 작성·제출하고 기관이 확인하는 체크리스트', required:['projectName','vendorName']
     },
     safetyIndustrial: {
-      key:'safetyIndustrial', label:'일반 산업재해 예방 체크리스트', outputTitle:'일반 산업재해 예방 체크리스트', stage:'착공', version:'2026.05 수정', pages:1, owner:'vendor',
+      key:'safetyIndustrial', label:'일반 산업재해 예방 체크리스트', outputTitle:'일반 산업재해 예방 체크리스트', stage:'착공', version:'2026.10 수정', pages:1, owner:'vendor',
       description:'일반 산업재해 우려 작업 시 공사(용역)업체가 작성·제출하고 기관이 확인하는 체크리스트', required:['projectName','vendorName']
     }
   };
@@ -716,11 +716,15 @@
           <h2>공사(용역)업체 확인·서약서</h2>
           <p>학교(기관)로부터 위 점검항목에 대하여 안내(주지)받았으며, 공사(용역) 전 과정에 걸쳐 참여하는 근로자에게 안전보건교육을 실시하고, 필요한 개인보호구를 지급 및 착용하며, 작업 시 안전수칙을 준수할 것을 서약합니다.</p>
           <div><span>소속(회사) :</span><strong>${h.e(p.vendorName||'')}</strong></div>
-          <div><span>공사업체 책임자 :</span><strong>${h.e(p.siteManager||'')}</strong><span>(서명)</span></div>
+          <div><span>공사업체 책임자 :</span><strong>${h.e(p.safetyResponsibleName||'')}</strong><span>(서명)</span></div>
         </section>` : '';
     const page1 = `<article class="paper-a4 admin-document safety-checklist ${h.e(type)} document-print-page"><h1>${h.e(type==='safetyGeneral'?'공사(용역) 안전·보건 체크리스트(공통)':def.label)}</h1><p class="safety-subtitle">[ ${h.e(def.subtitle)} ]</p>${header}<table class="safety-check-table"><thead><tr><th>번호</th><th>점 검 내 용</th><th>예</th><th>아니요</th><th>해당없음</th></tr></thead><tbody>${rows}</tbody></table><p class="safety-footer">※ ${h.e(def.footer || '')}</p>${saved.notes?`<div class="safety-written-note"><strong>비고</strong><span>${h.e(saved.notes)}</span></div>`:''}${confirm}</article>`;
+    if (type === 'safetyConfined') {
+      const note = '<p class="safety-support-note">※ 공기측정기, 환기팬(송풍기), 공기호흡기를 무상 대여 받거나 구입비용 지원을 받고자 하는 경우 가까운 한국산업안전보건공단에 문의하세요.</p>';
+      return [page1.replace('</article>',note+'</article>')];
+    }
     if (type !== 'safetyFall' || !(def.notes||[]).length) return [page1];
-    const page2 = `<article class="paper-a4 admin-document safety-reference-page document-print-page"><h1>안전보건 점검사항 및 조치사항(예시)</h1><ol>${def.notes.map(x=>`<li>${h.e(x)}</li>`).join('')}</ol><div class="safety-risk-note"><strong>위험공종 안전관리 담당자 안내</strong><p>2m 이상 고소작업, 1.5m 이상 굴착·가설공사, 철골 구조물 공사, 2m 이상 외부도장 공사, 승강기 설치공사는 위험작업 전 공사감독자에게 작업계획 제출·검토·확인이 필요합니다.</p></div></article>`;
+    const page2 = `<article class="paper-a4 admin-document safety-reference-page document-print-page"><h1>안전보건 점검사항 및 조치사항(예시)</h1><ol>${def.notes.map(x=>`<li>${h.e(x)}</li>`).join('')}</ol><div class="safety-risk-note"><strong>위험공종 안전관리 담당자 안내</strong><p>2m 이상 고소작업, 1.5m 이상 굴착·가설공사, 철골 구조물 공사, 2m 이상 외부도장 공사, 승강기 설치공사는 위험작업 전 공사감독자에게 작업계획 제출·검토·확인이 필요합니다.</p><p>원본 엑셀에는 안전관리 담당자 연락망·표지판 설치 규격·QR 안내 예시가 포함되어 있습니다. 실제 공사 현장과 담당자가 정해진 경우 해당 원본 자료를 확인하여 별도로 작성·게시하세요. 예시 연락처를 실제 연락처로 사용하지 마세요.</p></div></article>`;
     return [page1,page2];
   }
 
