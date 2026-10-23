@@ -1264,20 +1264,20 @@
         </div>
         <span class="document-filter-help">행정실 서류는 중립 라벨과 왼쪽 표시선으로 구분됩니다.</span>
       </div>
-      ${documentStageSectionHtml(1,'contract','계약','계약 체결 단계에서 준비하는 서류',['standardContract','acceptanceTerms','useSealForm','privateContractPledge'],p)}
+      ${documentStageSectionHtml(1,'contract','계약','계약 체결 단계에서 준비하는 서류',['standardContract','acceptanceTerms','useSealForm','privateContractPledge','contractSecurityDeposit','contractSecurityPledge'],p)}
 
       ${documentStageSectionHtml(2,'start','착공','공사 시작 전후에 준비하는 서류',['startReport','utilityPaymentPledge','safetyGeneral'],p,{extra:safetyExtra})}
 
       ${documentStageSectionHtml(3,'completion','준공','공사 완료·검사·정산·대금청구까지',['completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord','constructionLedger','defectSecurityDeposit','completionSettlementAgreement','paymentRequest'],p,{includeUtility:true})}
 
-      ${documentStageSectionHtml(4,'defect','하자','준공 이후 하자검사와 이력 관리',['warrantyInspectionReport','warrantyLedger'],p)}
+      ${documentStageSectionHtml(4,'defect','하자','준공 이후 하자검사와 이력 관리',['warrantyInspectionReport','warrantyLedger','defectSecurityPledge'],p)}
 
       <details class="batch-output-details" ${selected.length?'open':''}>
         <summary><span><strong>여러 서류를 한 번에 출력</strong><small>필요할 때만 열어 선택합니다.</small></span><em id="batchOutputCount">${selected.length?`${selected.length}종 선택`:'선택 안 함'}</em></summary>
         <div class="batch-output-body">
           <div class="document-set-buttons" aria-label="서류 세트 선택">
             <button class="button secondary small" type="button" data-doc-set="agencyManagement">행정실 서류</button>
-            <button class="button secondary small" type="button" data-doc-set="contract">계약서류 4종</button>
+            <button class="button secondary small" type="button" data-doc-set="contract">계약서류 기본 4종</button>
             <button class="button secondary small" type="button" data-doc-set="start">착공서류</button>
             <button class="button secondary small" type="button" data-doc-set="completion">준공서류</button>
             <button class="button secondary small" type="button" data-doc-set="safety">안전·보건 5종</button>
