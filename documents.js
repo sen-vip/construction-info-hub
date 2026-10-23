@@ -15,6 +15,21 @@
       description:'발주기관과 계약상대자가 체결하는 공사도급 표준계약서',
       required:['schoolName','schoolAddress','principal','projectName','contractNumber','currentContractAmount','contractSecurityAmount','contractDate','plannedStartDate','completionDueDate','vendorName','businessNumber','vendorAddress','vendorPhone','representative','workType','delayPenaltyRate','priceAdjustmentMethod','defectSecurityRate','defectSecurityAmount','defectPeriodYears']
     },
+    contractSecurityDeposit: {
+      key:'contractSecurityDeposit',label:'계약보증금납부서',outputTitle:'계 약 보 증 금 납 부 서',stage:'계약',version:'2026.10 수정',pages:1,owner:'vendor',
+      description:'계약보증금을 실제 납부하는 경우 사용(지급각서·면제와 구분하여 선택).',
+      required:['schoolName','projectName','contractDate','currentContractAmount','contractSecurityAmount','contractSecurityType','vendorName','representative']
+    },
+    contractSecurityPledge: {
+      key:'contractSecurityPledge',label:'계약보증금 지급각서',outputTitle:'계약보증금 지급각서',stage:'계약',version:'2026.10 수정',pages:1,owner:'vendor',
+      description:'계약보증금 납부 면제 후 지급확약이 필요한 경우 선택. 승낙사항과 중복 여부 확인.',
+      required:['schoolName','projectName','contractDate','currentContractAmount','contractSecurityAmount','vendorName','representative']
+    },
+    defectSecurityPledge: {
+      key:'defectSecurityPledge',label:'하자보수보증금 지급각서',outputTitle:'하 자 보 수 보 증 금 지 급 각 서',stage:'하자',version:'2026.10 수정',pages:1,owner:'vendor',
+      description:'하자보수보증금 납부 면제와 지급확약이 필요한 경우 선택.',
+      required:['schoolName','projectName','currentContractAmount','defectSecurityAmount','contractDate','actualCompletionDate','defectStartDate','defectEndDate','vendorName','representative']
+    },
     acceptanceTerms: {
       key:'acceptanceTerms', label:'승낙사항', outputTitle:'승 낙 사 항 (공 사 집 행)', stage:'계약', version:'2026.05 수정', pages:1, owner:'vendor',
       description:'공사 집행 시 계약상대자가 확인하는 승낙사항',
@@ -127,19 +142,19 @@
   };
 
   const PRINT_ORDER = [
-    'standardContract','acceptanceTerms','useSealForm','privateContractPledge',
+    'standardContract','acceptanceTerms','useSealForm','privateContractPledge','contractSecurityDeposit','contractSecurityPledge',
     'startReport','utilityPaymentPledge','safetyGeneral','safetyFall','safetyElectrical','safetyConfined','safetyIndustrial',
     'completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord','constructionLedger','defectSecurityDeposit','completionSettlementAgreement','paymentRequest',
-    'warrantyInspectionReport','warrantyLedger'
+    'warrantyInspectionReport','warrantyLedger','defectSecurityPledge'
   ];
 
   const SETS = {
-    contract: { label:'계약서류 4종', types:['standardContract','acceptanceTerms','useSealForm','privateContractPledge'] },
+    contract: { label:'계약서류 기본 4종', types:['standardContract','acceptanceTerms','useSealForm','privateContractPledge'] },
     start: { label:'착공서류', types:['startReport','utilityPaymentPledge','safetyGeneral'] },
     completion: { label:'준공서류', types:['completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord','constructionLedger','defectSecurityDeposit','completionSettlementAgreement','paymentRequest'] },
     agencyManagement: { label:'행정실 서류', types:['constructionLedger','supervisionReport','completionInspectionRecord','safetyGeneral','warrantyInspectionReport','warrantyLedger'] },
     safety: { label:'안전·보건 서류', types:['safetyGeneral','safetyFall','safetyElectrical','safetyConfined','safetyIndustrial'] },
-    all: { label:'전체 21종', types:[...PRINT_ORDER] }
+    all: { label:'전체 24종', types:[...PRINT_ORDER] }
   };
 
   function common(ctx) {
@@ -410,6 +425,60 @@
     </article>`];
   }
 
+  function bondSignature(p,h,school,date) {
+    return `<p class="vendor-form-date">${h.e(h.formatKoreanDate(date))}</p>
+      <div class="vendor-form-signatures">
+      <div><span>업&nbsp;&nbsp;&nbsp;체&nbsp;&nbsp;&nbsp;명 :</span><strong>${h.e(p.vendorName)}</strong></div>
+      <div><span>사업자등록번호 :</span><strong>${h.e(h.businessNumber(p.businessNumber))}</strong></div>
+      <div><span>주&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;소 :</span><strong>${h.e(p.vendorAddress)}</strong></div>
+      <div><span>대&nbsp;&nbsp;&nbsp;표&nbsp;&nbsp;&nbsp;자 :</span><strong>${h.e(h.representativeWithSeal(p.representative))}</strong></div></div>
+      <p class="doc-recipient">${h.e(h.recipientFor(school.name))}</p>`;
+  }
+
+  function renderContractSecurityDeposit(ctx) {
+    const {p,school,h}=common(ctx);
+    return [`<article class="paper-a4 admin-document vendor-form-page defect-security-deposit document-print-page">
+      <h1 class="vendor-form-title defect-deposit-title">계 약 보 증 금&nbsp;&nbsp;납 부 서</h1>
+      <table class="vendor-form-table defect-deposit-table"><tbody>
+      <tr><th>계 약 건 명</th><td colspan="3">${h.e(p.projectName)}</td></tr>
+      <tr><th>계 약 번 호</th><td>${h.e(p.contractNumber)}</td><th>계약(예정)연월일</th><td>${h.e(h.formatKoreanDate(p.contractDate))}</td></tr>
+      <tr><th>계 약 금 액</th><td colspan="3">${h.e(h.documentMoney(p.currentContractAmount))}</td></tr>
+      <tr><th>계약보증금액</th><td colspan="3">${h.e(h.documentMoney(ctx.value('contractSecurityAmount')))}</td></tr>
+      <tr><th>보증금납부방법</th><td colspan="3">${h.e(p.contractSecurityType||'')}</td></tr>
+      <tr><th>계약이행기간</th><td>${h.e(h.formatKoreanDate(p.plannedStartDate||p.startDate))}</td><th>~</th><td>${h.e(h.formatKoreanDate(p.completionDueDate))}</td></tr>
+      </tbody></table><p class="vendor-form-declaration">위의 금액을 계약보증금으로 납부합니다.</p>
+      ${bondSignature(p,h,school,p.contractDate)}
+      </article>`];
+  }
+
+  function renderContractSecurityPledge(ctx) {
+    const {p,school,h}=common(ctx);
+    return [`<article class="paper-a4 admin-document vendor-form-page defect-security-deposit document-print-page">
+      <h1 class="vendor-form-title defect-deposit-title">계약보증금 지급각서</h1>
+      <p class="vendor-form-declaration">${h.e(school.name||'')}장과 체결한 ${h.e(p.projectName)} 계약에 대하여 「지방자치단체를 당사자로 하는 계약에 관한 법률 시행령」 제53조제1항에 따라 계약보증금을 면제받았으나, 같은 영 제54조에 따른 계약보증금 세입조치 사유가 발생한 경우 지체 없이 해당 금액을 현금으로 납부할 것을 확약합니다.</p>
+      <table class="vendor-form-table defect-deposit-table"><tbody>
+      <tr><th>계 약 건 명</th><td>${h.e(p.projectName)}</td></tr>
+      <tr><th>계 약 금 액</th><td>${h.e(h.documentMoney(p.currentContractAmount))}</td></tr>
+      <tr><th>계약보증금</th><td>${h.e(h.documentMoney(ctx.value('contractSecurityAmount')))}</td></tr>
+      </tbody></table>${bondSignature(p,h,school,p.contractDate)}
+      </article>`];
+  }
+
+  function renderDefectSecurityPledge(ctx) {
+    const {p,school,h}=common(ctx);
+    return [`<article class="paper-a4 admin-document vendor-form-page defect-security-deposit document-print-page">
+      <h1 class="vendor-form-title defect-deposit-title">하 자 보 수 보 증 금&nbsp;&nbsp;지 급 각 서</h1>
+      <table class="vendor-form-table defect-deposit-table"><tbody>
+      <tr><th>공 사 명</th><td colspan="3">${h.e(p.projectName)}</td></tr>
+      <tr><th>계약금액</th><td colspan="3">${h.e(h.documentMoney(p.currentContractAmount))}</td></tr>
+      <tr><th>하자보증금액</th><td colspan="3">${h.e(h.documentMoney(ctx.value('defectSecurityAmount')))} (계약금액의 ${h.e(h.percentText(p.defectSecurityRate))}%)</td></tr>
+      <tr><th>계약일자</th><td>${h.e(h.formatKoreanDate(p.contractDate))}</td><th>준공일자</th><td>${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td></tr>
+      <tr><th>하자담보책임기간</th><td>${h.e(h.formatKoreanDate(p.defectStartDate))}</td><th>~</th><td>${h.e(h.formatKoreanDate(p.defectEndDate))}</td></tr></tbody></table>
+      <p class="vendor-form-declaration">위 계약의 하자보수보증금 납부를 면제받는 경우 「지방자치단체를 당사자로 하는 계약에 관한 법률 시행령」 제71조, 제71조의2 및 제72조 등에 따른 세입조치 사유가 발생하면 그 사유 발생일부터 30일 이내에 하자보수보증금 상당액을 현금으로 납부할 것을 확약합니다. 기한 내 납부하지 않을 경우 귀 기관의 조치에 이의를 제기하지 않겠습니다.</p>
+      ${bondSignature(p,h,school,p.defectStartDate||p.actualCompletionDate)}
+      </article>`];
+  }
+
   function renderDefectSecurityDeposit(ctx) {
     const { p, school, h } = common(ctx);
     const recordDate = p.defectStartDate || p.actualCompletionDate;
@@ -651,6 +720,9 @@
   const RENDERERS = {
     standardContract: renderStandardContract,
     acceptanceTerms: renderAcceptanceTerms,
+    contractSecurityDeposit: renderContractSecurityDeposit,
+    contractSecurityPledge: renderContractSecurityPledge,
+    defectSecurityPledge: renderDefectSecurityPledge,
     useSealForm: renderUseSeal,
     privateContractPledge: renderPrivateContractPledge,
     startReport: renderStartReport,
