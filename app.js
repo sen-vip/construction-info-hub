@@ -1268,9 +1268,9 @@
 
       ${documentStageSectionHtml(2,'start','착공','공사 시작 전후에 준비하는 서류',['startReport','utilityPaymentPledge','safetyGeneral'],p,{extra:safetyExtra})}
 
-      ${documentStageSectionHtml(3,'completion','준공','공사 완료·검사·정산·대금청구까지',['completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord','constructionLedger','defectSecurityDeposit','completionSettlementAgreement','paymentRequest'],p,{includeUtility:true})}
+      ${documentStageSectionHtml(3,'completion','준공','공사 완료·검사·정산·대금청구까지',['completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord','constructionLedger','defectSecurityDeposit','defectSecurityPledge','completionSettlementAgreement','paymentRequest'],p,{includeUtility:true})}
 
-      ${documentStageSectionHtml(4,'defect','하자','준공 이후 하자검사와 이력 관리',['warrantyInspectionReport','warrantyLedger','defectSecurityPledge'],p)}
+      ${documentStageSectionHtml(4,'defect','하자','준공 이후 하자검사와 이력 관리',['warrantyInspectionReport','warrantyLedger'],p)}
 
       <details class="batch-output-details" ${selected.length?'open':''}>
         <summary><span><strong>여러 서류를 한 번에 출력</strong><small>필요할 때만 열어 선택합니다.</small></span><em id="batchOutputCount">${selected.length?`${selected.length}종 선택`:'선택 안 함'}</em></summary>
@@ -1281,7 +1281,7 @@
             <button class="button secondary small" type="button" data-doc-set="start">착공서류</button>
             <button class="button secondary small" type="button" data-doc-set="completion">준공서류</button>
             <button class="button secondary small" type="button" data-doc-set="safety">안전·보건 5종</button>
-            <button class="button ghost small" type="button" data-doc-set="all">전체 24종</button>
+            <button class="button ghost small" type="button" data-doc-set="all">기본 21종</button>
             <button class="button ghost small" type="button" data-doc-clear>선택 해제</button>
           </div>
           ${batchDocumentSelectorHtml(p)}
@@ -1994,7 +1994,7 @@
   }
 
   function utilitySizeRate(contractAmount,rateYear='2025') {
-    const base=Number(contractAmount||0)/1.1; // 원본 계산식: 부가세 제외 계약금액 기준
+    const base=Math.round(Number(contractAmount||0)/1.1); // 부가세 제외 원 단위 금액으로 경계값 판정(부동소수점 오차 방지)
     const size=utilityRatesForYear(rateYear).size;
     return size.find(x=>base<x.max) || size[size.length-1];
   }
@@ -3524,8 +3524,8 @@
         <div><strong>5. 여러 서류 묶음 출력</strong><p class="muted">필요한 경우 서류 화면 아래 ‘여러 서류를 한 번에 출력’을 열어 개별 선택 또는 단계별 세트를 사용합니다.</p></div>
         <div><strong>6. 전력비·수도광열비 계산</strong><p class="muted">공사서류 → 준공 단계의 ‘전력비·수도광열비 계산’을 엽니다. 신규 공사는 ‘2025년 완성공사원가분석’을 선택하고, 직접재료비·직접노무비와 공사종류·기간을 확인한 뒤 ‘계산·저장’을 누르세요. 공사규모는 부가세 제외 계약금액 기준이며 결과는 10원 미만을 절사합니다.</p></div>
         <div><strong>7. 기존 계산결과 보호</strong><p class="muted">기존에 저장된 계산결과가 있으면 이전 적용 요율(연도 정보가 없는 과거 데이터는 2024년)과 금액을 그대로 보여줍니다. 계산기를 열거나 적용 연도 선택을 변경하는 것만으로는 저장된 금액이 바뀌지 않습니다. ‘계산·저장’ 또는 ‘공제금액에 반영’을 누른 경우에만 다시 산출·저장됩니다. ‘계산식 인쇄 / PDF’는 저장값을 변경하지 않습니다.</p></div>
-        <div><strong>8. 계약보증금 서류 선택</strong><p class="muted">계약 단계에 ‘계약보증금납부서’와 ‘계약보증금 지급각서’를 추가했습니다. 보증금을 실제 납부하는지, 납부 면제 후 지급확약이 필요한지에 따라 해당 서류만 선택하세요. 5천만원 이하 등 면제 대상, 계약서 작성 여부, 기존 승낙사항으로 대체 가능한지 등을 확인하고 중복 징구하지 마세요. 기본 4종 묶음에는 두 서식이 자동 포함되지 않습니다.</p></div>
-        <div><strong>9. 하자보수보증금 지급각서</strong><p class="muted">하자 단계에 ‘하자보수보증금 지급각서’를 추가했습니다. 준공 단계의 기존 ‘하자보증금납부서’와 용도가 다르므로, 실제 보증금 납부 또는 면제·확약 요건에 따라 구분하여 사용하세요.</p></div>
+        <div><strong>8. 계약보증금 서류 선택</strong><p class="muted">계약 단계에 ‘계약보증금납부서’와 ‘계약보증금 지급각서’를 추가했습니다. 보증금을 실제 납부하는지, 납부 면제 후 지급확약이 필요한지에 따라 해당 서류만 선택하세요. 5천만원 이하 등 면제 대상, 계약서 작성 여부, 기존 승낙사항으로 대체 가능한지 등을 확인하고 중복 징구하지 마세요. 기본 4종 묶음과 ‘기본 21종’ 일괄선택에는 보증금 납부서·지급각서가 자동 포함되지 않습니다. 전체 지원 서식은 24종입니다.</p></div>
+        <div><strong>9. 하자보수보증금 지급각서</strong><p class="muted">준공 단계에 ‘하자보수보증금 지급각서’를 추가했습니다. 같은 단계의 기존 ‘하자보증금납부서’와 용도가 다르므로, 실제 보증금 납부 또는 면제·확약 요건에 따라 구분하여 사용하세요.</p></div>
         <div><strong>10. 계약보증금률 유의사항</strong><p class="muted">2026.6.30.까지의 한시특례(5%) 안내는 새 원클릭 엑셀에서 삭제됐습니다. 2026.7.1. 이후 계약은 원칙적인 10% 기준과 후속 특례·적용 예외를 함께 확인하세요. 계약보증금률과 금액은 자동으로 변경하지 않으므로 계약일·계약방법·면제 여부에 따라 담당자가 확인하여 입력합니다.</p></div>
         <div><strong>11. 원클릭 엑셀 별도 확인</strong><p class="muted">현장대리인계·공정표·직접시공계획서와 도시가스·노무비 관련 서류는 서류 화면의 별도 확인 목록에서 안내합니다. 이들 서류는 자동 생성 대상이 아닙니다.</p></div>
         <div><strong>기준 자료·적용 범위</strong><p class="muted"><strong class="help-reference-strong">${e(REFERENCE_PROGRAM)}</strong>을 참고했습니다. 2026년 10월판의 요율 및 다시 활성화된 보증금 서류를 반영했고, 바뀌지 않은 기존 서식은 유지했습니다. 모든 법령과 서식이 자동으로 최신화되는 것은 아닙니다.<br><span class="help-guideline-source">금액별 생략 안내는 서울특별시교육청 「계약업무 처리지침」 2023.12.27. 개정본 참고 · 최신 지침과 계약조건을 최종 확인하세요.</span></p></div>
