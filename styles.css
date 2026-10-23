@@ -3027,3 +3027,12 @@ input:focus, select:focus, textarea:focus {
   .scope-badge { margin-left:5px; font-size:10px; }
   .safety-linked-head { align-items:flex-start; }
 }
+
+/* v0.6.15 QA — 수도광열비 공제 반영 확인 및 공통 안전·보건 서약란 */
+.utility-applied-status:not([hidden]){display:block;margin-top:12px;padding:12px 14px;border:1px solid #bcd8cc;border-radius:10px;background:#f3faf6;color:#235943;font-size:13px;line-height:1.5;font-weight:600}
+.safety-vendor-confirm{break-inside:avoid;page-break-inside:avoid;margin-top:4mm;padding-top:2mm;border-top:.25mm solid #aaa}
+.safety-vendor-confirm h2{margin:0 0 2mm;font-size:10pt}
+.safety-vendor-confirm p{font-size:7.5pt;line-height:1.35;margin:0 0 2mm}
+.safety-vendor-confirm>div{display:flex;justify-content:flex-end;gap:4mm;margin-top:1mm;padding-right:7mm;font-size:8pt}
+.safety-vendor-confirm>div strong{font-weight:600;min-width:26mm}
+@media print {.safetyGeneral .safety-vendor-confirm{margin-top:3mm}.safetyGeneral .safety-check-table th,.safetyGeneral .safety-check-table td{padding:1mm 1.2mm}.safetyGeneral .safety-check-table{font-size:7.8pt}}
