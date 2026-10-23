@@ -26,7 +26,7 @@
       required:['schoolName','projectName','contractDate','currentContractAmount','contractSecurityAmount','vendorName','representative']
     },
     defectSecurityPledge: {
-      key:'defectSecurityPledge',label:'하자보수보증금 지급각서',outputTitle:'하 자 보 수 보 증 금 지 급 각 서',stage:'하자',version:'2026.10 수정',pages:1,owner:'vendor',
+      key:'defectSecurityPledge',label:'하자보수보증금 지급각서',outputTitle:'하 자 보 수 보 증 금 지 급 각 서',stage:'준공',version:'2026.10 수정',pages:1,owner:'vendor',
       description:'하자보수보증금 납부 면제와 지급확약이 필요한 경우 선택.',
       required:['schoolName','projectName','currentContractAmount','defectSecurityAmount','contractDate','actualCompletionDate','defectStartDate','defectEndDate','vendorName','representative']
     },
@@ -154,7 +154,7 @@
     completion: { label:'준공서류', types:['completionReport','completionInspectionRequest','supervisionReport','completionInspectionRecord','constructionLedger','defectSecurityDeposit','completionSettlementAgreement','paymentRequest'] },
     agencyManagement: { label:'행정실 서류', types:['constructionLedger','supervisionReport','completionInspectionRecord','safetyGeneral','warrantyInspectionReport','warrantyLedger'] },
     safety: { label:'안전·보건 서류', types:['safetyGeneral','safetyFall','safetyElectrical','safetyConfined','safetyIndustrial'] },
-    all: { label:'전체 24종', types:[...PRINT_ORDER] }
+    all: { label:'기본 21종', types:PRINT_ORDER.filter(key=>!['contractSecurityDeposit','contractSecurityPledge','defectSecurityPledge'].includes(key)) }
   };
 
   function common(ctx) {
@@ -474,7 +474,7 @@
       <tr><th>하자보증금액</th><td colspan="3">${h.e(h.documentMoney(ctx.value('defectSecurityAmount')))} (계약금액의 ${h.e(h.percentText(p.defectSecurityRate))}%)</td></tr>
       <tr><th>계약일자</th><td>${h.e(h.formatKoreanDate(p.contractDate))}</td><th>준공일자</th><td>${h.e(h.formatKoreanDate(p.actualCompletionDate))}</td></tr>
       <tr><th>하자담보책임기간</th><td>${h.e(h.formatKoreanDate(p.defectStartDate))}</td><th>~</th><td>${h.e(h.formatKoreanDate(p.defectEndDate))}</td></tr></tbody></table>
-      <p class="vendor-form-declaration">위 계약의 하자보수보증금 납부를 면제받는 경우 「지방자치단체를 당사자로 하는 계약에 관한 법률 시행령」 제71조, 제71조의2 및 제72조 등에 따른 세입조치 사유가 발생하면 그 사유 발생일부터 30일 이내에 하자보수보증금 상당액을 현금으로 납부할 것을 확약합니다. 기한 내 납부하지 않을 경우 귀 기관의 조치에 이의를 제기하지 않겠습니다.</p>
+      <p class="vendor-form-declaration">위의 계약을 체결함에 있어 「지방계약법 시행령」 제71조 및 동법 시행규칙 제70조 제2항의 규정에 의거 하자보수보증금 납부를 면제 받는바 동법 시행령 제71조, 제71조의2 및 제72조의 규정에 의한 지방자치단체 세입조치의 사유가 발생할 때에는 동 사유 발생일로부터 30일 이내에 하자보수보증금에 해당하는 금액을 현금으로 납부할 것을 확약하며 동 기한까지 납부하지 않을 경우 귀 교(기관)의 어떠한 조치에도 이의를 제기하지 않을 것을 확약하며 이에 각서를 제출합니다.</p>
       ${bondSignature(p,h,school,p.defectStartDate||p.actualCompletionDate)}
       </article>`];
   }
