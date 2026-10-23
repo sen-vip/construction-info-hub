@@ -61,10 +61,10 @@
     warrantyInspectionReport:['warrantyIssueDetails','warrantyActions','warrantyNotes','warrantyInspectorName','warrantyWitnessName'],
     warrantyLedger:['supervisor','designer','defectSecurityAmount','completionInspectionDate'],
     paymentRequest:['paymentAmount'],
-    safetyGeneral:[], safetyFall:[], safetyElectrical:[], safetyConfined:[], safetyIndustrial:[]
+    safetyGeneral:['safetyResponsibleName'], safetyFall:[], safetyElectrical:[], safetyConfined:[], safetyIndustrial:[]
   };
   const PREVIEW_FIELD_GROUPS = [
-    ['기관·업체', new Set(['schoolName','schoolAddress','principal','vendorName','businessNumber','vendorAddress','vendorPhone','representative'])],
+    ['기관·업체', new Set(['schoolName','schoolAddress','principal','vendorName','businessNumber','vendorAddress','vendorPhone','representative','safetyResponsibleName'])],
     ['계약·금액', new Set(['contractNumber','contractMethod','workType','estimatedPrice','originalContractAmount','currentContractAmount','contractSecurityAmount','contractSecurityType','settlementAmount','priorPaymentAmount','deductionAmount','paymentAmount','defectSecurityRate','defectSecurityAmount','defectSecurityType','defectPeriodYears','delayPenaltyRate','priceAdjustmentMethod'])],
     ['일정', DATE_FIELDS],
     ['담당자·하자', new Set(['siteManager','supervisor','inspector','witness','warrantyInspectionResult','warrantyIssueDetails','warrantyActions','warrantyNotes','warrantyInspectorName','warrantyWitnessName'])],
@@ -1017,8 +1017,11 @@
     const rows=def.items.map((item,i)=>{const key=String(i+1),v=results[key]||'';return `<div class="safety-edit-row"><div class="safety-edit-number">${i+1}</div><div class="safety-edit-question">${e(item)}</div><div class="safety-edit-options"><label><input type="radio" name="safety_${i}" value="yes" ${v==='yes'?'checked':''}> 예</label><label><input type="radio" name="safety_${i}" value="no" ${v==='no'?'checked':''}> 아니요</label><label><input type="radio" name="safety_${i}" value="na" ${v==='na'?'checked':''}> 해당없음</label></div></div>`;}).join('');
     const signatureNotice = '<div class="safety-signature-edit-note"><strong>출력 시 점검자 서명을 넣을 수 있습니다.</strong><span>작성한 체크리스트는 인쇄 직전 마우스·터치·펜으로 서명하거나 서명 없이 출력할 수 있으며, 서명 이미지는 저장하지 않습니다.</span></div>';
     const related=saved.relatedChecklistResults||{};
+    const responsibleEditor=agency
+      ? `<div class="field full"><label for="safetyResponsibleName">공사업체 책임자(확인·서약서)</label><input id="safetyResponsibleName" type="text" autocomplete="off" value="${e(p.safetyResponsibleName||'')}" placeholder="공사업체 책임자 성명"><span class="hint">서식 하단 확인·서약서에 출력됩니다. 점검자·현장대리인과 다를 수 있어 별도로 저장합니다.</span></div>`
+      : '';
     const relatedEditor=agency?`<section class="safety-related-checklist-editor"><div><strong>6번 · 점검 체크리스트 해당여부</strong><span>원클릭 엑셀과 같이 해당 여부를 O / X로 표시합니다.</span></div><div class="safety-related-grid">${[['fall','추락재해 예방 체크리스트'],['electrical','감전재해 예방 체크리스트'],['confined','밀폐공간 질식재해예방 체크리스트'],['industrial','일반 산업재해 예방 체크리스트']].map(([key,label])=>`<div><span>${e(label)}</span><label><input type="radio" name="safety_related_${key}" value="o" ${related[key]==='o'?'checked':''}> O</label><label><input type="radio" name="safety_related_${key}" value="x" ${related[key]==='x'?'checked':''}> X</label></div>`).join('')}</div></section>`:'';
-    openModal({eyebrow:`안전·보건 · ${agency?'기관 점검':'업체 작성·기관 확인'}`,title:def.label,wide:true,body:`<div class="notice"><strong>${e(def.subtitle)}</strong><br>${e(REFERENCE_PROGRAM)}의 점검항목을 기준으로 작성합니다.</div>${signatureNotice}<div class="modal-grid safety-meta-edit" style="margin-top:16px">${modalDateField('safetyChecklistDate','점검일',saved.date||p.startDate||p.contractDate||'')}${modalField('safetyChecklistInspector',agency?'점검자':'점검자 직접 입력',defaultInspector)}${agency?'':'<div class="field full"><span class="hint">회사 대표자가 아니라 실제 점검한 사람의 이름을 입력합니다.</span></div>'}<div class="field full"><label for="safetyChecklistNotes">비고</label><input id="safetyChecklistNotes" value="${e(saved.notes||'')}"></div></div><div class="safety-bulk-toolbar"><div><strong>빠른 입력</strong><span>미응답 항목만 ‘예’로 채우며, 이미 선택한 ‘아니요·해당없음’은 유지합니다.</span></div><div class="safety-bulk-actions"><button class="button secondary small" type="button" id="fillUnansweredSafetyYesBtn">미응답 모두 예</button><button class="button ghost small" type="button" id="resetSafetyAnswersBtn">응답 초기화</button></div></div><div class="safety-edit-list">${rows}</div>${relatedEditor}${def.footer?`<p class="safety-edit-footer">※ ${e(def.footer)}</p>`:''}`,actions:`<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="saveSafetyChecklistBtn">저장${afterSave?'하고 계속':''}</button>`});
+    openModal({eyebrow:`안전·보건 · ${agency?'기관 점검':'업체 작성·기관 확인'}`,title:def.label,wide:true,body:`<div class="notice"><strong>${e(def.subtitle)}</strong><br>${e(REFERENCE_PROGRAM)}의 점검항목을 기준으로 작성합니다.</div>${signatureNotice}<div class="modal-grid safety-meta-edit" style="margin-top:16px">${modalDateField('safetyChecklistDate','점검일',saved.date||p.startDate||p.contractDate||'')}${modalField('safetyChecklistInspector',agency?'점검자':'점검자 직접 입력',defaultInspector)}${agency?'':'<div class="field full"><span class="hint">회사 대표자가 아니라 실제 점검한 사람의 이름을 입력합니다.</span></div>'}${responsibleEditor}<div class="field full"><label for="safetyChecklistNotes">비고</label><input id="safetyChecklistNotes" value="${e(saved.notes||'')}"></div></div><div class="safety-bulk-toolbar"><div><strong>빠른 입력</strong><span>미응답 항목만 ‘예’로 채우며, 이미 선택한 ‘아니요·해당없음’은 유지합니다.</span></div><div class="safety-bulk-actions"><button class="button secondary small" type="button" id="fillUnansweredSafetyYesBtn">미응답 모두 예</button><button class="button ghost small" type="button" id="resetSafetyAnswersBtn">응답 초기화</button></div></div><div class="safety-edit-list">${rows}</div>${relatedEditor}${def.footer?`<p class="safety-edit-footer">※ ${e(def.footer)}</p>`:''}`,actions:`<button class="button secondary" type="button" data-modal-close>취소</button><button class="button primary" type="button" id="saveSafetyChecklistBtn">저장${afterSave?'하고 계속':''}</button>`});
     initDateInputs(modalBody);
     modalActions.querySelector('[data-modal-close]').addEventListener('click',closeModal);
     modalActions.querySelector('#saveSafetyChecklistBtn').addEventListener('click',()=>saveSafetyChecklist(type,afterSave));
@@ -1051,6 +1054,7 @@
         relatedChecklistResults[key]=value;
       }
     }
+    if (type==='safetyGeneral') p.safetyResponsibleName=modalBody.querySelector('#safetyResponsibleName')?.value?.trim()||'';
     p.safetyChecklists={...(p.safetyChecklists||{}),[type]:{date,inspector,notes:modalBody.querySelector('#safetyChecklistNotes')?.value?.trim()||'',results,relatedChecklistResults,updatedAt:new Date().toISOString()}};
     if(!p.selectedDocuments?.includes(type))p.selectedDocuments=[...(p.selectedDocuments||[]),type];
     if(type==='safetyGeneral')syncAutoSafetyDocuments(p,relatedChecklistResults);
@@ -3544,7 +3548,7 @@
         <div><strong>1. 자료관리목록에서 시작</strong><p class="muted">자료관리목록.xlsx를 불러오면 이번에 작성할 공사를 선택하고 계약정보를 자동으로 채울 수 있습니다. 엑셀이 없으면 직접 입력으로 시작하세요.</p></div>
         <div><strong>2. 불러온 값은 확인하고 부족한 값만 입력</strong><p class="muted">자료관리목록에 있는 공사명·업체·대표자·계약금액·계약일 등은 자동으로 채웁니다. 자료에 없는 착공·준공·담당자 정보는 필요한 시점에 보완하면 됩니다.</p></div>
         <div><strong>3. 미리보기에서 바로 수정</strong><p class="muted">잘못 입력한 값이나 부족한 정보는 각 서류 미리보기의 ‘입력정보 수정’에서 고칩니다. 저장한 값은 다른 서류에도 함께 반영됩니다.</p></div>
-        <div><strong>4. 체크리스트 작성·빈 양식</strong><p class="muted">안전·보건 체크리스트는 ‘체크리스트 작성’과 ‘빈 양식 미리보기’로 구분합니다. 작성 화면에서는 ‘미응답 모두 예’를 사용할 수 있고, 인쇄 직전 서명을 넣거나 서명 없이 출력할 수 있습니다.</p></div>
+        <div><strong>4. 체크리스트 작성·빈 양식</strong><p class="muted">안전·보건 체크리스트는 ‘체크리스트 작성’과 ‘빈 양식 미리보기’로 구분합니다. 작성 화면에서는 ‘미응답 모두 예’를 사용할 수 있고, 인쇄 직전 서명을 넣거나 서명 없이 출력할 수 있습니다. 공통 체크리스트의 공사업체 책임자 성명은 작성 화면 또는 미리보기의 ‘이 서류에 사용되는 정보’에서 별도로 입력할 수 있으며 하단 확인·서약서에 반영됩니다.</p></div>
         <div><strong>5. 여러 서류 묶음 출력</strong><p class="muted">필요한 경우 서류 화면 아래 ‘여러 서류를 한 번에 출력’을 열어 개별 선택 또는 단계별 세트를 사용합니다.</p></div>
         <div><strong>6. 전력비·수도광열비 계산</strong><p class="muted">공사서류 → 준공 단계의 ‘전력비·수도광열비 계산’을 엽니다. 신규 공사는 ‘2025년 완성공사원가분석’을 선택하고, 직접재료비·직접노무비와 공사종류·기간을 확인한 뒤 ‘계산·저장’을 누르세요. 공사규모는 부가세 제외 계약금액 기준이며 결과는 10원 미만을 절사합니다.</p></div>
         <div><strong>7. 기존 계산결과 보호</strong><p class="muted">기존에 저장된 계산결과가 있으면 이전 적용 요율(연도 정보가 없는 과거 데이터는 2024년)과 금액을 그대로 보여줍니다. 계산기를 열거나 적용 연도 선택을 변경하는 것만으로는 저장된 금액이 바뀌지 않습니다. ‘계산·저장’ 또는 ‘공제금액에 반영’을 누른 경우에만 다시 산출·저장됩니다. ‘계산식 인쇄 / PDF’는 저장값을 변경하지 않습니다.</p></div>
