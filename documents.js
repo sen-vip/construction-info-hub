@@ -134,7 +134,7 @@
     vendorName:'업체명', businessNumber:'사업자등록번호', vendorAddress:'사업장 주소', vendorPhone:'업체 전화번호', representative:'대표자',
     contractSecurityAmount:'계약보증금액', delayPenaltyRate:'지연배상금률', priceAdjustmentMethod:'물가변동 계약금액 조정방법',
     defectSecurityType:'하자보증방법', defectSecurityRate:'하자보증률', defectSecurityAmount:'하자보증금액', defectPeriodYears:'하자담보기간(년)', defectStartDate:'하자 시작일', defectEndDate:'하자 종료일',
-    siteManager:'현장대리인', supervisor:'공사감독', inspector:'검사자', witness:'준공검사 입회자', bankName:'은행명', accountNumber:'계좌번호', accountHolder:'예금주명',
+    safetyResponsibleName:'공사업체 책임자', siteManager:'현장대리인', supervisor:'공사감독', inspector:'검사자', witness:'준공검사 입회자', bankName:'은행명', accountNumber:'계좌번호', accountHolder:'예금주명',
     contractMethod:'계약방법', contractSecurityType:'계약보증방법', fundingSource:'재원', paymentDate:'지출일', paymentAmount:'지급금액', designer:'설계자',
     budgetPolicyProject:'정책사업', budgetUnitProject:'단위사업', budgetDetailProject:'세부사업', budgetDetailItem:'세부항목', costStatisticsItem:'원가통계목', budgetCalculationDetails:'산출내역',
     warrantyInspectionDate:'하자검사일', warrantyInspector:'하자검사자', warrantyInspectorPosition:'하자검사자 직위', warrantyInspectorName:'하자검사자 성명', warrantyWitness:'하자검사 입회자', warrantyWitnessPosition:'하자검사 입회자 직위', warrantyWitnessName:'하자검사 입회자 성명', warrantyInspectionResult:'검사결과', warrantyIssueDetails:'하자발생내용', warrantyActions:'처리사항', warrantyNotes:'기타참고사항'
@@ -716,7 +716,7 @@
           <h2>공사(용역)업체 확인·서약서</h2>
           <p>학교(기관)로부터 위 점검항목에 대하여 안내(주지)받았으며, 공사(용역) 전 과정에 걸쳐 참여하는 근로자에게 안전보건교육을 실시하고, 필요한 개인보호구를 지급 및 착용하며, 작업 시 안전수칙을 준수할 것을 서약합니다.</p>
           <div><span>소속(회사) :</span><strong>${h.e(p.vendorName||'')}</strong></div>
-          <div><span>공사업체 책임자 :</span><strong>${h.e(p.safetyResponsibleName||'')}</strong><span>(서명)</span></div>
+          <div><span>공사업체 책임자 :</span><strong>${h.e(blankSafety?'':(p.safetyResponsibleName||''))}</strong><span>(서명)</span></div>
         </section>` : '';
     const page1 = `<article class="paper-a4 admin-document safety-checklist ${h.e(type)} document-print-page"><h1>${h.e(type==='safetyGeneral'?'공사(용역) 안전·보건 체크리스트(공통)':def.label)}</h1><p class="safety-subtitle">[ ${h.e(def.subtitle)} ]</p>${header}<table class="safety-check-table"><thead><tr><th>번호</th><th>점 검 내 용</th><th>예</th><th>아니요</th><th>해당없음</th></tr></thead><tbody>${rows}</tbody></table><p class="safety-footer">※ ${h.e(def.footer || '')}</p>${saved.notes?`<div class="safety-written-note"><strong>비고</strong><span>${h.e(saved.notes)}</span></div>`:''}${confirm}</article>`;
     if (type === 'safetyConfined') {
