@@ -2063,7 +2063,8 @@
         <div class="field"><label>현재 계약금액</label><input value="${e(formatMoneyInput(p.currentContractAmount))}" disabled><span class="hint">부가세 제외 금액으로 공사규모 요율을 자동 판단합니다.</span></div>
         <div class="field"><label for="utilityMaterial">직접재료비</label>${moneyInputHtml('utilityMaterial',u.directMaterialCost||'')}</div>
         <div class="field"><label for="utilityLabor">직접노무비</label>${moneyInputHtml('utilityLabor',u.directLaborCost||'')}</div>
-      </div><div id="utilityResult" class="utility-result-panel">${utilityResultHtml(existing)}</div>`,
+      </div><div id="utilityResult" class="utility-result-panel">${utilityResultHtml(existing)}</div>
+      <p id="utilityAppliedStatus" class="utility-applied-status" role="status" aria-live="polite" hidden></p>`,
       actions:`<button class="button secondary" type="button" data-modal-close>닫기</button><button class="button secondary" type="button" id="calculateUtilityBtn">계산·저장</button><button class="button secondary" type="button" id="printUtilityBtn">계산식 인쇄 / PDF</button><button class="button primary" type="button" id="applyUtilityDeductionBtn">공제금액에 반영</button>`});
     initMoneyInputs(modalBody);
     modalActions.querySelector('[data-modal-close]').addEventListener('click',closeModal);
@@ -2076,14 +2077,37 @@
     const p=currentProject(); if(!p)return;
     const inputs=utilityInputsFromModal(p);
     if (!meaningful(inputs.directMaterialCost) && !meaningful(inputs.directLaborCost)) { showToast('직접재료비 또는 직접노무비를 입력해주세요.','warn'); return; }
-    const result=calculateUtilityCost(inputs);
-    p.utilityCost={...inputs,...result,calculatedAt:new Date().toISOString()};
-    if (applyDeduction) p.deductionAmount=result.total;
-    p.updatedAt=new Date().toISOString();
-    await DB.put('projects',p); await loadState(); state.currentProjectId=p.id;
-    const resultEl=modalBody.querySelector('#utilityResult'); if(resultEl) resultEl.innerHTML=utilityResultHtml(result);
-    showToast(applyDeduction ? `공제금액 ${formatMoney(result.total)}에 반영했습니다.` : '전력비·수도광열비 계산값을 저장했습니다.');
-    if (applyDeduction) { closeModal(); renderProjectDetail(); }
+    const button=modalActions.querySelector(applyDeduction?'#applyUtilityDeductionBtn':'#calculateUtilityBtn');
+    if (button?.disabled) return;
+    if (button) button.disabled=true;
+    try {
+      const result=calculateUtilityCost(inputs);
+      p.utilityCost={...inputs,...result,calculatedAt:new Date().toISOString()};
+      if (applyDeduction) p.deductionAmount=result.total;
+      p.updatedAt=new Date().toISOString();
+      await DB.put('projects',p);
+      await loadState();
+      state.currentProjectId=p.id;
+      // 목록과 준공 공제금액은 갱신하되 현재 계산 모달은 사용자에게 그대로 보여줍니다.
+      renderProjectDetail();
+      const resultEl=modalBody.querySelector('#utilityResult');
+      if (resultEl) resultEl.innerHTML=utilityResultHtml(result);
+      if (applyDeduction) {
+        const status=modalBody.querySelector('#utilityAppliedStatus');
+        if (status) {
+          status.hidden=false;
+          status.textContent=`준공 단계의 공제금액에 ${formatMoney(result.total)}을(를) 반영했습니다. 계산창은 닫기 버튼을 누르면 종료됩니다.`;
+        }
+        const deductionField=main.querySelector('[data-field="deductionAmount"]');
+        if (deductionField) deductionField.value=formatMoneyInput(result.total);
+      }
+      showToast(applyDeduction ? `공제금액 ${formatMoney(result.total)} 반영 완료` : '전력비·수도광열비 계산값을 저장했습니다.');
+    } catch (error) {
+      console.error('전력비·수도광열비 계산 저장 오류',error);
+      showToast('저장 중 오류가 발생했습니다. 공제금액이 반영됐는지 확인해주세요.','warn');
+    } finally {
+      if (button?.isConnected) button.disabled=false;
+    }
   }
 
   function utilityRateTableHtml(inputs, result) {
