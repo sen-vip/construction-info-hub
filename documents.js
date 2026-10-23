@@ -711,7 +711,14 @@
     const relatedLabels=[['fall','추락재해 예방 체크리스트'],['electrical','감전재해 예방 체크리스트'],['confined','밀폐공간 질식재해예방 체크리스트'],['industrial','일반 산업재해 예방 체크리스트']];
     const relatedTable=isAgency?`<table class="safety-related-print"><thead><tr><th>점검 체크리스트</th><th>해당여부(O, X)</th></tr></thead><tbody>${relatedLabels.map(([key,label])=>`<tr><td>${h.e(label)}</td><td>${related[key]==='o'?'O':related[key]==='x'?'X':''}</td></tr>`).join('')}</tbody></table><p class="safety-related-note">※ 공사업체의 경우 자율점검관리를 위해 ‘사업장 자체 점검표’ 제공</p>`:'';
     const rows = def.items.map((item,i)=>{ const status=results[String(i+1)] || ''; const extra=isAgency&&i===5?relatedTable:''; return `<tr><td>${i+1}</td><td>${h.e(item).replace(/\n/g,'<br>')}${extra}</td><td>${checklistMark(status,'yes')}</td><td>${checklistMark(status,'no')}</td><td>${checklistMark(status,'na')}</td></tr>`; }).join('');
-    const page1 = `<article class="paper-a4 admin-document safety-checklist ${h.e(type)} document-print-page"><h1>${h.e(type==='safetyGeneral'?'공사(용역) 안전·보건 체크리스트(공통)':def.label)}</h1><p class="safety-subtitle">[ ${h.e(def.subtitle)} ]</p>${header}<table class="safety-check-table"><thead><tr><th>번호</th><th>점 검 내 용</th><th>예</th><th>아니요</th><th>해당없음</th></tr></thead><tbody>${rows}</tbody></table><p class="safety-footer">※ ${h.e(def.footer || '')}</p>${saved.notes?`<div class="safety-written-note"><strong>비고</strong><span>${h.e(saved.notes)}</span></div>`:''}</article>`;
+    const confirm = type==='safetyGeneral'
+      ? `<section class="safety-vendor-confirm">
+          <h2>공사(용역)업체 확인·서약서</h2>
+          <p>학교(기관)로부터 위 점검항목에 대하여 안내(주지)받았으며, 공사(용역) 전 과정에 걸쳐 참여하는 근로자에게 안전보건교육을 실시하고, 필요한 개인보호구를 지급 및 착용하며, 작업 시 안전수칙을 준수할 것을 서약합니다.</p>
+          <div><span>소속(회사) :</span><strong>${h.e(p.vendorName||'')}</strong></div>
+          <div><span>공사업체 책임자 :</span><strong>${h.e(p.siteManager||'')}</strong><span>(서명)</span></div>
+        </section>` : '';
+    const page1 = `<article class="paper-a4 admin-document safety-checklist ${h.e(type)} document-print-page"><h1>${h.e(type==='safetyGeneral'?'공사(용역) 안전·보건 체크리스트(공통)':def.label)}</h1><p class="safety-subtitle">[ ${h.e(def.subtitle)} ]</p>${header}<table class="safety-check-table"><thead><tr><th>번호</th><th>점 검 내 용</th><th>예</th><th>아니요</th><th>해당없음</th></tr></thead><tbody>${rows}</tbody></table><p class="safety-footer">※ ${h.e(def.footer || '')}</p>${saved.notes?`<div class="safety-written-note"><strong>비고</strong><span>${h.e(saved.notes)}</span></div>`:''}${confirm}</article>`;
     if (type !== 'safetyFall' || !(def.notes||[]).length) return [page1];
     const page2 = `<article class="paper-a4 admin-document safety-reference-page document-print-page"><h1>안전보건 점검사항 및 조치사항(예시)</h1><ol>${def.notes.map(x=>`<li>${h.e(x)}</li>`).join('')}</ol><div class="safety-risk-note"><strong>위험공종 안전관리 담당자 안내</strong><p>2m 이상 고소작업, 1.5m 이상 굴착·가설공사, 철골 구조물 공사, 2m 이상 외부도장 공사, 승강기 설치공사는 위험작업 전 공사감독자에게 작업계획 제출·검토·확인이 필요합니다.</p></div></article>`;
     return [page1,page2];
